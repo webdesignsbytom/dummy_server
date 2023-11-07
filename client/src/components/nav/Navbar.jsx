@@ -73,7 +73,7 @@ function Navbar() {
               }
             >
               <Link className='w-full' to='/'>
-                Home
+                Homea
               </Link>
             </li>
 
