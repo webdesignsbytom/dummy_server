@@ -30,26 +30,10 @@ function HomePage() {
               <div>
                 <h2 className='text-xl font-semibold'>Welcome To</h2>
                 <h1 className='text-3xl font-poppins font-bold'>
-                  POLYGON CUTTER
+                  Kaliko Server
                 </h1>
               </div>
-              <div className='mt-4 grid'>
-                <p>
-                  <span className='text-hyperlink-blue font-semibold'>
-                    <Link to='/sign-up'>Sign up</Link>
-                  </span>{' '}
-                  today and draw, <br /> plot or program the exact shape your
-                  project requires. <br /> Save your results or download the
-                  code <br /> straight to your cutting device.
-                </p>
-              </div>
             </article>
-            {/* cta */}
-            <div className='mt-6'>
-              <button id='/design' onClick={navigateToPage} className='px-4 py-2 bg-white outline-black outline outline-2 active:scale-95 no__highlights hover:bg-yellow-100 rounded-xl'>
-                Try Now For Free
-              </button>
-            </div>
           </div>
         </section>
       </main>
