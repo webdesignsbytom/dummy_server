@@ -10,9 +10,7 @@ import { NoPermissionEvent, NoValidationEvent } from '../event/utils/errorUtils.
 import { sendDataResponse, sendMessageResponse } from '../utils/responses.js';
 
 export async function validateAdminRole(req, res, next) {
-  console.log('ADMIN_ROLE', req.user);
   const { role } = req.user
-  console.log('role', role);
 
   if (!req.user) {
     const error = new NoValidationEvent(

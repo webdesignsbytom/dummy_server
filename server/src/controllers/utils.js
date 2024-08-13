@@ -15,6 +15,12 @@ export async function createVerificationInDB(userId, uniqueString) {
 
     return newVerification;
   } catch (err) {
+    //
+    const serverError = new ServerErrorEvent(
+      userId,
+      `Reset password server error: ${err.message}`
+    );
+    myEmitterErrors.emit('error', serverError);
     throw err;
   }
 }
@@ -31,8 +37,11 @@ export async function createPasswordResetInDB(userId, uniqueString) {
 
     return newPasswordResetRequest;
   } catch (err) {
-
-    const serverError = new ServerErrorEvent(userId, `Reset password`);
+    //
+    const serverError = new ServerErrorEvent(
+      userId,
+      `Reset password server error: ${err.message}`
+    );
     myEmitterErrors.emit('error', serverError);
     throw err;
   }

@@ -1,15 +1,9 @@
 // Emitters
 import { myEmitterErrors } from '../event/errorEvents.js';
-import { myEmitterEvents } from '../event/eventsLog.js';
-// Domain
-import { findAllEvents } from '../domain/events.js';
 // Response messages
-import { EVENT_MESSAGES, sendDataResponse, sendMessageResponse } from '../utils/responses.js';
+import { sendDataResponse, sendMessageResponse } from '../utils/responses.js';
 import {
-  NotFoundEvent,
   ServerErrorEvent,
-  MissingFieldEvent,
-  RegistrationServerErrorEvent,
 } from '../event/utils/errorUtils.js';
 
 export const testError2025Handler = async (req, res, next) => { 

@@ -1,68 +1,22 @@
-import dbClient from '../../utils/dbClient.js';
 // Response strings
 import { RESPONSE_MESSAGES } from '../../utils/responses.js';
+// Error event creation functions
+import { createErrorEvent } from './events.js';
 
-// Error event creation
-export const createErrorEvent = async (errorEvent) => {
-  console.log('TTTTT', errorEvent);
-  let userId = errorEvent.user || null
-
-  if (userId) {
-    userId = errorEvent.user.id;
-  }
-
-  let codeId;
-  if (errorEvent.code) {
-    codeId = errorEvent.code;
-  }
-  await dbClient.event.create({
-    data: {
-      type: 'ERROR',
-      topic: errorEvent.topic,
-      content: `${errorEvent.code} ${errorEvent.message}`,
-      receivedById: userId,
-      code: codeId,
-    },
-  });
+// Exported error event creation functions
+export const createGenericErrorEvent = async (errorEvent) => {
+  await createErrorEvent(errorEvent);
 };
 
 export const createLoginErrorEvent = async (errorEvent) => {
-  console.log('SSSS', errorEvent.user);
-
-  let codeId;
-  if (errorEvent.code) {
-    codeId = errorEvent.code;
-  }
-
-  await dbClient.event.create({
-    data: {
-      type: 'ERROR',
-      topic: errorEvent.topic,
-      content: `${errorEvent.code} ${errorEvent.message} ${userEmail}`,
-      code: codeId,
-    },
-  });
+  await createErrorEvent(errorEvent, errorEvent.user?.email || 'unknown');
 };
 
 export const createResendVerifyErrorEvent = async (errorEvent) => {
-  let userEmail = errorEvent.user;
-
-  let codeId;
-  if (errorEvent.code) {
-    codeId = errorEvent.code;
-  }
-
-  await dbClient.event.create({
-    data: {
-      type: 'ERROR',
-      topic: errorEvent.topic,
-      content: `${errorEvent.code} ${errorEvent.message} ${userEmail}`,
-      code: codeId,
-    },
-  });
+  await createErrorEvent(errorEvent, errorEvent.user?.email || 'unknown');
 };
 
-// Error event types
+// Define error event classes
 class ErrorEventBase {
   constructor(user, topic) {
     this.user = user;
@@ -99,7 +53,7 @@ export class NotFoundEvent extends ErrorEventBase {
   constructor(user, topic, target) {
     super(user, topic);
     this.code = 404;
-    this.message = `${target} ` + RESPONSE_MESSAGES.NotFoundEvent;
+    this.message = `${target} ${RESPONSE_MESSAGES.NotFoundEvent}`;
   }
 }
 
@@ -111,11 +65,11 @@ export class MissingFieldEvent extends ErrorEventBase {
   }
 }
 
-export class ConfictEvent extends ErrorEventBase {
+export class ConflictEvent extends ErrorEventBase {
   constructor(user, topic) {
     super(user, topic);
     this.code = 409;
-    this.message = RESPONSE_MESSAGES.ConfictEvent;
+    this.message = RESPONSE_MESSAGES.ConflictEvent;
   }
 }
 
@@ -150,6 +104,7 @@ export class RegistrationServerErrorEvent extends ErrorEventBase {
     this.message = RESPONSE_MESSAGES.ServerErrorEvent;
   }
 }
+
 export class LoginServerErrorEvent extends ErrorEventBase {
   constructor(user, topic) {
     super(user, topic);
@@ -160,8 +115,9 @@ export class LoginServerErrorEvent extends ErrorEventBase {
 
 export class CreateEventError extends ServerErrorEvent {
   constructor(userId, topic, message = RESPONSE_MESSAGES.CreateEventError) {
-    super(userId, topic, message);
+    super(userId, topic);
     this.code = 403;
+    this.message = message;
   }
 }
 

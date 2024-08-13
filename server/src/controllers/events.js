@@ -1,6 +1,6 @@
 // Emitters
 import { myEmitterErrors } from '../event/errorEvents.js';
-import { myEmitterEvents } from '../event/eventsLog.js';
+import { myEmitterEvents } from '../event/eventEvents.js';
 // Domain
 import { findAllEvents } from '../domain/events.js';
 // Response messages
@@ -35,6 +35,7 @@ export const getAllEvents = async (req, res) => {
       event.createdAt = createdDate;
       event.updatedAt = updatedDate;
     });
+
     // // myEmitterEvents.emit('get-all-events', req.user);
     return sendDataResponse(res, 200, { events: foundEvents });
   } catch (err) {
