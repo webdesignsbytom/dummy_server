@@ -3,7 +3,7 @@ import dbClient from '../utils/dbClient.js';
 import { ServerErrorEvent } from '../event/utils/errorUtils.js';
 import { myEmitterErrors } from '../event/errorEvents.js';
 
-export async function createVerificationInDB(userId, uniqueString) {
+export async function createVerificationEmailHandler(userId, uniqueString) {
   try {
     const newVerification = await dbClient.userVerification.create({
       data: {
@@ -25,7 +25,7 @@ export async function createVerificationInDB(userId, uniqueString) {
   }
 }
 
-export async function createPasswordResetInDB(userId, uniqueString) {
+export async function createPasswordResetEmailHandler(userId, uniqueString) {
   try {
     const newPasswordResetRequest = await dbClient.passwordReset.create({
       data: {

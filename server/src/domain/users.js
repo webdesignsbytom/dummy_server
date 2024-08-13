@@ -10,13 +10,6 @@ export const findAllUsers = () =>
 export const findUserByEmail = (email) =>
   dbClient.user.findUnique({
     where: { email: email },
-    include: {
-      messages: true,
-      notifications: true,
-      favorites: true,
-      designs: true,
-      projects: true,
-    },
   });
 
 export const findUsersByRole = (role) =>
@@ -25,24 +18,12 @@ export const findUsersByRole = (role) =>
       role: role,
     },
   });
-export const createUser = (
-  email,
-  password,
-  role,
-  firstName,
-  lastName,
-  country,
-  agreedToTerms
-) =>
+
+export const createNewUser = (email, password) =>
   dbClient.user.create({
     data: {
       email: email,
       password: password,
-      role: role,
-      firstName: firstName,
-      lastName: lastName,
-      country: country,
-      agreedToTerms: agreedToTerms,
     },
   });
 
@@ -65,13 +46,6 @@ export const findUserById = (userId) =>
     where: {
       id: userId,
     },
-    include: {
-      messages: true,
-      notifications: true,
-      favorites: true,
-      designs: true,
-      projects: true,
-    },
   });
 
 export const resetUserPassword = (userId, password) =>
@@ -91,15 +65,12 @@ export const deleteUserById = (userId) =>
     },
   });
 
-export const updateUserById = (userId, email, firstName, lastName, country) =>
+export const updateUserById = (userId, email) =>
   dbClient.user.update({
     where: {
       id: userId,
     },
     data: {
       email,
-      firstName,
-      lastName,
-      country,
     },
   });

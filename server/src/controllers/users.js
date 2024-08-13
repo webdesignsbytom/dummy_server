@@ -2,14 +2,14 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import dbClient from '../utils/dbClient.js';
 // Components
-import { createVerificationInDB, createPasswordResetInDB } from './utils.js';
+import { createVerificationEmailHandler, createPasswordResetEmailHandler } from './utils.js';
 // Emitters
 import { myEmitterUsers } from '../event/userEvents.js';
 import { myEmitterErrors } from '../event/errorEvents.js';
 import {
   findAllUsers,
   findUserByEmail,
-  createUser,
+  createNewUser,
   findVerification,
   findResetRequest,
   findUserById,
@@ -18,7 +18,6 @@ import {
   updateUserById,
   findUsersByRole,
 } from '../domain/users.js';
-import { createAccessToken } from '../utils/tokens.js';
 // Response messages
 import {
   EVENT_MESSAGES,
@@ -33,14 +32,8 @@ import {
   ServerConflictError,
   BadRequestEvent,
 } from '../event/utils/errorUtils.js';
-// Time
-import { v4 as uuid } from 'uuid';
 
-// Password hash
-const hashRate = 8;
-
-export const getAllUsers = async (req, res) => {
-  console.log('getAllUsers');
+export const getAllUsersHandler = async (req, res) => {
   try {
     const foundUsers = await findAllUsers();
     if (!foundUsers) {
@@ -53,21 +46,30 @@ export const getAllUsers = async (req, res) => {
       return sendMessageResponse(res, notFound.code, notFound.message);
     }
 
-    // myEmitterUsers.emit('get-all-users', req.user);
+    myEmitterUsers.emit('get-all-users', req.user);
     return sendDataResponse(res, 200, { users: foundUsers });
+    //
   } catch (err) {
     // Error
-    const serverError = new ServerErrorEvent(req.user, `Get all users`);
+    const serverError = new ServerErrorEvent(
+      req.user,
+      `Get all users failed: ${err.message}`
+    );
     myEmitterErrors.emit('error', serverError);
     sendMessageResponse(res, serverError.code, serverError.message);
     throw err;
   }
 };
 
-export const getUserById = async (req, res) => {
-  console.log('getUserById');
-  const userId = req.params.id;
-  console.log('xxx');
+export const getUserByIdHandler = async (req, res) => {
+  const { userId } = req.params;
+
+  if (!userId) {
+    return sendDataResponse(res, 400, {
+      message: 'Missing userId',
+    });
+  }
+
   try {
     const foundUser = await findUserById(userId);
     if (!foundUser) {
@@ -79,88 +81,147 @@ export const getUserById = async (req, res) => {
       myEmitterErrors.emit('error', notFound);
       return sendMessageResponse(res, notFound.code, notFound.message);
     }
-    console.log('found', foundUser);
+
     delete foundUser.password;
-    delete foundUser.agreedToTerms;
 
     myEmitterUsers.emit('get-user-by-id', req.user);
     return sendDataResponse(res, 200, { user: foundUser });
+    //
   } catch (err) {
     // Error
-    const serverError = new ServerErrorEvent(req.user, `Get user by ID`);
+    const serverError = new ServerErrorEvent(req.user, `Get user by ID failed`);
     myEmitterErrors.emit('error', serverError);
     sendMessageResponse(res, serverError.code, serverError.message);
     throw err;
   }
 };
 
-export const registerNewUser = async (req, res) => {
-  console.log('create new user');
-}
+export const registerNewUserHandler = async (req, res) => {
+  const { email, password } = req.body;
 
-// export const verifyUser = async (req, res) => {
-//   console.log('Verifying user');
-//   const { userId, uniqueString } = req.params;
+  const lowerCaseEmail = email.toLowerCase();
 
-//   try {
-//     const foundVerification = await findVerification(userId);
+  if (!lowerCaseEmail || !password) {
+    const missingField = new MissingFieldEvent(
+      null,
+      'Registration: Missing Field/s event'
+    );
+    return sendMessageResponse(res, missingField.code, missingField.message);
+  }
 
-//     if (!foundVerification) {
-//       const missingVerification = new NotFoundEvent(
-//         userId,
-//         EVENT_MESSAGES.verificationNotFound
-//       );
-//       myEmitterErrors.emit('error', missingVerification);
-//       return sendMessageResponse(
-//         res,
-//         404,
-//         EVENT_MESSAGES.verificationNotFoundReturnMessage
-//       );
-//     }
+  try {
+    const foundUser = await findUserByEmail(lowerCaseEmail);
+    if (foundUser) {
+      return sendDataResponse(res, 400, { message: EVENT_MESSAGES.emailInUse });
+    }
 
-//     const { expiresAt } = foundVerification;
-//     if (expiresAt < Date.now()) {
-//       await dbClient.userVerification.delete({ where: { userId } });
-//       await dbClient.user.delete({ where: { userId } });
-//       return sendMessageResponse(res, 401, EVENT_MESSAGES.expiredLinkMessage);
-//     }
+    const hashedPassword = await bcrypt.hash(password, process.env.SALT_ROUNDS);
 
-//     const isValidString = await bcrypt.compare(
-//       uniqueString,
-//       foundVerification.uniqueString
-//     );
+    const createdUser = await createNewUser(
+      lowerCaseEmail,
+      hashedPassword,
+    );
 
-//     if (!isValidString) {
-//       return sendMessageResponse(
-//         res,
-//         401,
-//         EVENT_MESSAGES.invalidVerificationMessage
-//       );
-//     }
+    if (!createdUser) {
+      const notCreated = new BadRequestEvent(
+        EVENT_MESSAGES.badRequest,
+        EVENT_MESSAGES.createUserFail
+      );
+      myEmitterErrors.emit('error', notCreated);
+      return sendMessageResponse(res, notCreated.code, notCreated.message);
+    }
 
-//     const updatedUser = await dbClient.user.update({
-//       where: { id: userId },
-//       data: { isVerified: true },
-//     });
+    const userId = createdUser.id;
 
-//     delete updatedUser.password;
+    delete createdUser.password;
+    delete createdUser.updatedAt;
 
-//     const token = createAccessToken(updatedUser.id, updatedUser.email);
+    const uniqueString = uuid() + userId;
+    const hashedString = await bcrypt.hash(uniqueString, hashRate);
 
-//     await dbClient.userVerification.delete({ where: { userId } });
+    await createVerificationEmailHandler(userId, hashedString);
+    await sendVerificationEmail(
+      userId,
+      createdUser.email,
+      uniqueString
+    );
 
-//     sendDataResponse(res, 200, { token, user: updatedUser });
-//     myEmitterUsers.emit('verified', updatedUser);
-//   } catch (err) {
-//     // Create error instance
-//     const serverError = new RegistrationServerErrorEvent(
-//       `Verify New User Server error`
-//     );
-//     myEmitterErrors.emit('error', serverError);
-//     sendMessageResponse(res, serverError.code, serverError.message);
-//     throw err;
-//   }
-// };
+    myEmitterUsers.emit('register', createdUser);
+    return sendDataResponse(res, 201, { user: createdUser });
+  } catch (err) {
+    // Error
+    const serverError = new RegistrationServerErrorEvent(
+      `Register Server error`
+    );
+    myEmitterErrors.emit('error', serverError);
+    sendMessageResponse(res, serverError.code, serverError.message);
+    throw err;
+  }
+};
+
+export const verifyUser = async (req, res) => {
+  console.log('Verifying user');
+  const { userId, uniqueString } = req.params;
+
+  try {
+    const foundVerification = await findVerification(userId);
+
+    if (!foundVerification) {
+      const missingVerification = new NotFoundEvent(
+        userId,
+        EVENT_MESSAGES.verificationNotFound
+      );
+      myEmitterErrors.emit('error', missingVerification);
+      return sendMessageResponse(
+        res,
+        404,
+        EVENT_MESSAGES.verificationNotFoundReturnMessage
+      );
+    }
+
+    const { expiresAt } = foundVerification;
+    if (expiresAt < Date.now()) {
+      await dbClient.userVerification.delete({ where: { userId } });
+      await dbClient.user.delete({ where: { userId } });
+      return sendMessageResponse(res, 401, EVENT_MESSAGES.expiredLinkMessage);
+    }
+
+    const isValidString = await bcrypt.compare(
+      uniqueString,
+      foundVerification.uniqueString
+    );
+
+    if (!isValidString) {
+      return sendMessageResponse(
+        res,
+        401,
+        EVENT_MESSAGES.invalidVerificationMessage
+      );
+    }
+
+    const updatedUser = await dbClient.user.update({
+      where: { id: userId },
+      data: { isVerified: true },
+    });
+
+    delete updatedUser.password;
+
+    const token = createAccessToken(updatedUser.id, updatedUser.email);
+
+    await dbClient.userVerification.delete({ where: { userId } });
+
+    sendDataResponse(res, 200, { token, user: updatedUser });
+    myEmitterUsers.emit('verified', updatedUser);
+  } catch (err) {
+    // Create error instance
+    const serverError = new RegistrationServerErrorEvent(
+      `Verify New User Server error`
+    );
+    myEmitterErrors.emit('error', serverError);
+    sendMessageResponse(res, serverError.code, serverError.message);
+    throw err;
+  }
+};
 
 // export const resendVerificationEmail = async (req, res) => {
 //   console.log('resendVerificationEmail');
@@ -198,7 +259,7 @@ export const registerNewUser = async (req, res) => {
 
 //     const uniqueString = uuid() + foundUser.id;
 //     const hashedString = await bcrypt.hash(uniqueString, hashRate);
-//     await createVerificationInDB(foundUser.id, hashedString);
+//     await createVerificationEmailHandler(foundUser.id, hashedString);
 
 //     await sendVerificationEmail(foundUser.id, foundUser.email, uniqueString);
 //     myEmitterUsers.emit('resend-verification', foundUser);
@@ -240,7 +301,7 @@ export const registerNewUser = async (req, res) => {
 //     const uniqueString = uuid() + foundUser.id;
 //     const hashedString = await bcrypt.hash(uniqueString, hashRate);
 
-//     await createPasswordResetInDB(foundUser.id, hashedString);
+//     await createPasswordResetEmailHandler(foundUser.id, hashedString);
 //     await sendResetPasswordEmail(foundUser.id, foundUser.email, uniqueString);
 //   } catch (err) {
 //     // Create error instance
@@ -361,9 +422,14 @@ export const updateUser = async (req, res) => {
   }
 };
 
-export const deleteUser = async (req, res) => {
-  console.log('deleteUser');
-  const userId = req.params.userId;
+export const deleteUserAccountHandler = async (req, res) => {
+  const { userId } = req.params;
+
+  if (!userId) {
+    return sendDataResponse(res, 204, {
+      message: 'Missing userId',
+    });
+  }
 
   try {
     const foundUser = await findUserById(userId);
@@ -377,15 +443,79 @@ export const deleteUser = async (req, res) => {
       return sendMessageResponse(res, notFound.code, notFound.message);
     }
 
-    await deleteUserById(userId);
-    myEmitterUsers.emit('deleted-user', req.user);
+    if (userId !== foundUser.userId) {
+      return sendDataResponse(res, 400, {
+        message: 'User ID does not match.',
+      });
+    }
+
+    const deletedUser = await deleteUserById(userId);
+    if (!deletedUser) {
+      const badRequest = new BadRequestEvent(
+        req.user,
+        EVENT_MESSAGES.badRequest,
+        EVENT_MESSAGES.deleteUserError
+      );
+      myEmitterErrors.emit('error', badRequest);
+      return sendMessageResponse(res, badRequest.code, badRequest.message);
+    }
+
     return sendDataResponse(res, 200, {
-      user: foundUser,
-      message: `User ${foundUser.email} deleted`,
+      message: `User ${foundUser.email} deleted successfully.`,
     });
   } catch (err) {
     //
-    const serverError = new ServerErrorEvent(req.user, `Get user by ID`);
+    const serverError = new ServerErrorEvent(
+      req.user,
+      `Delete user account failed`
+    );
+    myEmitterErrors.emit('error', serverError);
+    sendMessageResponse(res, serverError.code, serverError.message);
+    throw err;
+  }
+};
+
+export const adminDeleteUserHandler = async (req, res) => {
+  const { userId } = req.params;
+
+  if (!userId) {
+    return sendDataResponse(res, 204, {
+      message: 'Missing userId',
+    });
+  }
+
+  try {
+    const foundUser = await findUserById(userId);
+    if (!foundUser) {
+      const notFound = new NotFoundEvent(
+        req.user,
+        EVENT_MESSAGES.notFound,
+        EVENT_MESSAGES.userNotFound
+      );
+      myEmitterErrors.emit('error', notFound);
+      return sendMessageResponse(res, notFound.code, notFound.message);
+    }
+
+    const deletedUser = await deleteUserById(userId);
+    if (!deletedUser) {
+      const badRequest = new BadRequestEvent(
+        req.user,
+        EVENT_MESSAGES.badRequest,
+        EVENT_MESSAGES.deleteUserError
+      );
+      myEmitterErrors.emit('error', badRequest);
+      return sendMessageResponse(res, badRequest.code, badRequest.message);
+    }
+
+    return sendDataResponse(res, 200, {
+      message: `User ${foundUser.email} deleted successfully.`,
+    });
+  } catch (err) {
+    //
+    const serverError = new ServerErrorEvent(
+      req.user,
+      `Delete user account failed`
+    );
     myEmitterErrors.emit('error', serverError);
     sendMessageResponse(res, serverError.code, serverError.message);
     throw err;

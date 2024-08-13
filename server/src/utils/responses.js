@@ -32,6 +32,7 @@ export const EVENT_MESSAGES = {
   createUserFail: `Failed to create new user.`,
   passwordMatchError: `Password match error for reset. New passwords do not match.`,
   passwordResetError: `Account record doesn't exist or has been reset already.`,
+  deleteUserError: `Failed to delete user.`,
   // Verification
   verificationTag: `Verification database.`,
   verificationNotFound: `Failed to find verification.`,

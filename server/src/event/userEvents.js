@@ -7,14 +7,14 @@ import {
   createPasswordResetEvent,
   createDeleteUserEvent,
   createUpdateUserEvent,
-  createDeactivateUserEvent,
-  createReactivateUserEvent
+  createGetByIdEvent
 } from './utils/userUtils.js';
 
 export const myEmitterUsers = myEmitter;
 
 // Event listeners for user events
 myEmitterUsers.on('get-all-users', async (user) => createGetAllEvent(user));
+myEmitterUsers.on('get-user-by-id', async (user) => createGetByIdEvent(user));
 myEmitterUsers.on('register', async (user) => createRegisterEvent(user));
 myEmitterUsers.on('verified', async (user) => createVerifyEvent(user));
 myEmitterUsers.on('resend-verification', async (user) => createNewVerifyEvent(user));

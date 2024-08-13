@@ -5,6 +5,11 @@ export const createGetAllEvent = async (user) => {
   await createEvent(user, 'ADMIN', 'Get all users', `Success getting all users for ${user.email}`, 200);
 };
 
+export const createGetByIdEvent = async (user) => {
+  const type = user.role || 'USER';
+  await createEvent(user, type, 'Get user by Id', `Success getting user with ID: ${user.id}`, 200);
+};
+
 export const createRegisterEvent = async (user) => {
   const type = user.role || 'USER';
   await createEvent(user, type, 'Register', `Register successful for ${user.email} as a ${user.role}`, 201);
@@ -33,16 +38,6 @@ export const createUpdateUserEvent = async (user) => {
 export const createChangeUserRoleEvent = async (user) => {
   const type = user.role || 'USER';
   await createEvent(user, type, 'Change User Role', `Changed user role for ${user.email}`, 200);
-};
-
-export const createDeactivateUserEvent = async (user) => {
-  const type = user.role || 'USER';
-  await createEvent(user, type, 'Deactivate User', `Deactivated user account for ${user.email}`, 200);
-};
-
-export const createReactivateUserEvent = async (user) => {
-  const type = user.role || 'USER';
-  await createEvent(user, type, 'Reactivate User', `Reactivated user account for ${user.email}`, 200);
 };
 
 export const createDeleteUserEvent = async (user) => {

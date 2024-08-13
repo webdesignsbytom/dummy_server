@@ -1,19 +1,21 @@
 import { Router } from 'express';
 import {
-  getAllUsers,
-  registerNewUser,
-  getUserById,
-  deleteUser,
-  updateUser
+  registerNewUserHandler,
+  getAllUsersHandler,
+  getUserByIdHandler,
+  deleteUserAccountHandler,
+  adminDeleteUserHandler
 } from '../controllers/users.js';
 import { validateAuthentication, validateAdminRole } from '../middleware/auth.js';
 
 const router = Router();
 
-router.get('/', validateAuthentication, validateAdminRole, getAllUsers);
-router.post('/register', registerNewUser);
-router.get('/:id', getUserById); 
-router.put('/account/update/:userId', updateUser);
-router.delete('/delete-user/:userId', validateAuthentication, validateAdminRole, deleteUser);
+// General
+router.post('/register', registerNewUserHandler);
+router.get('/user/get-user-by-id/:userId',  getUserByIdHandler); 
+router.delete('/user/delete-account', validateAuthentication, deleteUserAccountHandler);
+// Admin
+router.get('/admin/get-all-users', validateAuthentication, validateAdminRole, getAllUsersHandler);
+router.delete('/admin/delete-user-by-id/:userId', validateAuthentication, validateAdminRole, adminDeleteUserHandler);
 
 export default router;
