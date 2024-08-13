@@ -24,7 +24,6 @@ export async function validateAdminRole(req, res, next) {
   }
 
   if (role !== 'ADMIN' && role !== 'DEVELOPER') {
-    console.log('XXXXX', role);
     const noPermission = new NoPermissionEvent(req.user, 'perform-admin-action')
     myEmitterErrors.emit('error', noPermission)
     return sendDataResponse(res, noPermission.code, {
@@ -32,7 +31,6 @@ export async function validateAdminRole(req, res, next) {
     })
   }
 
-  console.log('WIN');
   next()
 }
 

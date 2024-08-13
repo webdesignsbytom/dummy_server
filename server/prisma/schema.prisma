@@ -9,6 +9,7 @@ datasource db {
 }
 
 enum Role {
+  VISITOR
   USER
   ADMIN
   DEVELOPER
@@ -32,8 +33,6 @@ enum EventType {
   ADMIN
   VISITOR
   DEVELOPER
-  PURCHASE
-  MINING
   TEST
 }
 

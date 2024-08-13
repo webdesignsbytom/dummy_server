@@ -9,6 +9,9 @@ import * as url from 'url';
 import authRouter from './routes/auth.js';
 import eventRouter from './routes/events.js';
 import userRouter from './routes/users.js';
+import testRouter from './routes/tests.js';
+// Response
+import { sendDataResponse } from './utils/responses.js'
 
 const app = express();
 app.disable('x-powered-by');
@@ -25,8 +28,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Set the port and URl
-const PORT = process.env.PORT
-const HTTP_URL = process.env.HTTP_URL
+const PORT = process.env.PORT || 4000;
+const HTTP_URL = process.env.HTTP_URL || 'http://localhost:';
 
 // Create path to HTML
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
@@ -35,6 +38,7 @@ const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 app.use('/', authRouter);
 app.use('/events', eventRouter);
 app.use('/users', userRouter);
+app.use('/tests', testRouter);
 
 // Server interface page
 app.get('/', (req, res) => {
@@ -60,7 +64,7 @@ app.use((error, req, res, next) => {
   if (error.code === 'P2025') {
     return sendDataResponse(res, 404, 'Record does not exist')
   }
-  return sendDataResponse(res, 500)
+  return sendDataResponse(res, 500, 'Server error event')
 })
 
 // Start our API server
