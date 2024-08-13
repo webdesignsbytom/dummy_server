@@ -2,8 +2,8 @@ import { myEmitter } from '../utils/eventEmitter.js';
 import {
   createGetAllEvent,
   createRegisterEvent,
-  createVerifyEvent,
-  createNewVerifyEvent,
+  createVerifyEmailEvent,
+  createNewEmailVerifyEvent,
   createPasswordResetEvent,
   createDeleteUserEvent,
   createUpdateUserEvent,
@@ -16,9 +16,10 @@ export const myEmitterUsers = myEmitter;
 myEmitterUsers.on('get-all-users', async (user) => createGetAllEvent(user));
 myEmitterUsers.on('get-user-by-id', async (user) => createGetByIdEvent(user));
 myEmitterUsers.on('register', async (user) => createRegisterEvent(user));
-myEmitterUsers.on('verified', async (user) => createVerifyEvent(user));
-myEmitterUsers.on('resend-verification', async (user) => createNewVerifyEvent(user));
-myEmitterUsers.on('password-reset', async (user) => createPasswordResetEvent(user));
-myEmitterUsers.on('update-user', async (user) => createUpdateUserEvent(user));
-myEmitterUsers.on('change-role', async (user) => createChangeUserRoleEvent(user));
+myEmitterUsers.on('verified-email', async (user) => createVerifyEmailEvent(user));
+myEmitterUsers.on('resend-verification', async (user) => createNewEmailVerifyEvent(user));
+myEmitterUsers.on('verification-email-created', async (user) => createNewEmailVerifyEvent(user));
+myEmitterUsers.on('password-reset-request', async (user) => createPasswordResetEvent(user));
+myEmitterUsers.on('update-user-data', async (user) => createUpdateUserEvent(user));
+myEmitterUsers.on('change-user-role', async (user) => createChangeUserRoleEvent(user));
 myEmitterUsers.on('deleted-user', async (user) => createDeleteUserEvent(user));

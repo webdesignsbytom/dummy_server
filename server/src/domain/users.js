@@ -9,36 +9,40 @@ export const findAllUsers = () =>
 
 export const findUserByEmail = (email) =>
   dbClient.user.findUnique({
-    where: { email: email },
+    where: { email },
   });
 
 export const findUsersByRole = (role) =>
   dbClient.user.findMany({
     where: {
-      role: role,
+      role,
     },
   });
 
 export const createNewUser = (email, password) =>
   dbClient.user.create({
     data: {
-      email: email,
-      password: password,
+      email,
+      password,
     },
   });
 
-export const findVerification = (userId) =>
-  dbClient.userVerification.findUnique({
-    where: {
-      userId: userId,
+// Find user email verification in db
+export const findEmailVerificationById = (userId) =>
+  dbClient.emailVerification.findUnique({ where: { userId } });
+
+// Update verifcation string
+export const updateEmailVerificationById = (userId, newHashedString) =>
+  dbClient.emailVerification.findUnique({
+    where: { userId },
+    data: {
+      uniqueString: newHashedString,
     },
   });
 
 export const findResetRequest = (userId) =>
   dbClient.passwordReset.findUnique({
-    where: {
-      userId: userId,
-    },
+    where: { userId },
   });
 
 export const findUserById = (userId) =>
@@ -54,7 +58,7 @@ export const resetUserPassword = (userId, password) =>
       id: userId,
     },
     data: {
-      password: password,
+      password,
     },
   });
 

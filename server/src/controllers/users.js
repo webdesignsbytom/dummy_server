@@ -2,7 +2,10 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import dbClient from '../utils/dbClient.js';
 // Components
-import { createVerificationEmailHandler, createPasswordResetEmailHandler } from './utils.js';
+import {
+  createVerificationEmailHandler,
+  createPasswordResetEmailHandler,
+} from './utils.js';
 // Emitters
 import { myEmitterUsers } from '../event/userEvents.js';
 import { myEmitterErrors } from '../event/errorEvents.js';
@@ -10,13 +13,14 @@ import {
   findAllUsers,
   findUserByEmail,
   createNewUser,
-  findVerification,
   findResetRequest,
   findUserById,
   resetUserPassword,
   deleteUserById,
   updateUserById,
   findUsersByRole,
+  findEmailVerificationById,
+  updateEmailVerificationById,
 } from '../domain/users.js';
 // Response messages
 import {
@@ -32,6 +36,10 @@ import {
   ServerConflictError,
   BadRequestEvent,
 } from '../event/utils/errorUtils.js';
+// Email handlers
+import { sendVerificationEmail } from '../utils/emailHandler.js';
+// Randon
+import { v4 as uuid } from 'uuid';
 
 export const getAllUsersHandler = async (req, res) => {
   try {
@@ -66,7 +74,7 @@ export const getUserByIdHandler = async (req, res) => {
 
   if (!userId) {
     return sendDataResponse(res, 400, {
-      message: 'Missing userId',
+      message: 'Missing userId.',
     });
   }
 
@@ -89,7 +97,10 @@ export const getUserByIdHandler = async (req, res) => {
     //
   } catch (err) {
     // Error
-    const serverError = new ServerErrorEvent(req.user, `Get user by ID failed`);
+    const serverError = new ServerErrorEvent(
+      req.user,
+      `Get user by ID failed ${err.message}`
+    );
     myEmitterErrors.emit('error', serverError);
     sendMessageResponse(res, serverError.code, serverError.message);
     throw err;
@@ -104,7 +115,7 @@ export const registerNewUserHandler = async (req, res) => {
   if (!lowerCaseEmail || !password) {
     const missingField = new MissingFieldEvent(
       null,
-      'Registration: Missing Field/s event'
+      'Registration: Missing Field/s event.'
     );
     return sendMessageResponse(res, missingField.code, missingField.message);
   }
@@ -117,10 +128,7 @@ export const registerNewUserHandler = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, process.env.SALT_ROUNDS);
 
-    const createdUser = await createNewUser(
-      lowerCaseEmail,
-      hashedPassword,
-    );
+    const createdUser = await createNewUser(lowerCaseEmail, hashedPassword);
 
     if (!createdUser) {
       const notCreated = new BadRequestEvent(
@@ -140,18 +148,14 @@ export const registerNewUserHandler = async (req, res) => {
     const hashedString = await bcrypt.hash(uniqueString, hashRate);
 
     await createVerificationEmailHandler(userId, hashedString);
-    await sendVerificationEmail(
-      userId,
-      createdUser.email,
-      uniqueString
-    );
+    await sendVerificationEmail(userId, createdUser.email, uniqueString);
 
     myEmitterUsers.emit('register', createdUser);
     return sendDataResponse(res, 201, { user: createdUser });
   } catch (err) {
     // Error
     const serverError = new RegistrationServerErrorEvent(
-      `Register Server error`
+      `Register Server error ${err.message}`
     );
     myEmitterErrors.emit('error', serverError);
     sendMessageResponse(res, serverError.code, serverError.message);
@@ -159,12 +163,23 @@ export const registerNewUserHandler = async (req, res) => {
   }
 };
 
-export const verifyUser = async (req, res) => {
-  console.log('Verifying user');
+export const verifyUserEmailHandler = async (req, res) => {
   const { userId, uniqueString } = req.params;
 
+  if (!userId) {
+    return sendDataResponse(res, 400, {
+      message: 'Missing userId.',
+    });
+  }
+
+  if (!uniqueString) {
+    return sendDataResponse(res, 400, {
+      message: 'Unique user id string not provided.',
+    });
+  }
+
   try {
-    const foundVerification = await findVerification(userId);
+    const foundVerification = await findEmailVerificationById(userId);
 
     if (!foundVerification) {
       const missingVerification = new NotFoundEvent(
@@ -175,14 +190,16 @@ export const verifyUser = async (req, res) => {
       return sendMessageResponse(
         res,
         404,
-        EVENT_MESSAGES.verificationNotFoundReturnMessage
+        EVENT_MESSAGES.verificationNotFoundReturn
       );
     }
 
     const { expiresAt } = foundVerification;
+
+    // TODO: whats this all about?
     if (expiresAt < Date.now()) {
       await dbClient.userVerification.delete({ where: { userId } });
-      await dbClient.user.delete({ where: { userId } });
+      // await dbClient.user.delete({ where: { userId } });
       return sendMessageResponse(res, 401, EVENT_MESSAGES.expiredLinkMessage);
     }
 
@@ -192,26 +209,27 @@ export const verifyUser = async (req, res) => {
     );
 
     if (!isValidString) {
-      return sendMessageResponse(
-        res,
-        401,
-        EVENT_MESSAGES.invalidVerificationMessage
-      );
+      return sendMessageResponse(res, 401, EVENT_MESSAGES.invalidVerification);
     }
 
+    // Set user to is verifed
     const updatedUser = await dbClient.user.update({
       where: { id: userId },
       data: { isVerified: true },
     });
 
     delete updatedUser.password;
+    delete updatedUser.updatedAt;
+    delete updatedUser.createdAt;
 
-    const token = createAccessToken(updatedUser.id, updatedUser.email);
+    const token = createAccessToken(updatedUser.id);
 
     await dbClient.userVerification.delete({ where: { userId } });
 
-    sendDataResponse(res, 200, { token, user: updatedUser });
-    myEmitterUsers.emit('verified', updatedUser);
+    myEmitterUsers.emit('verified-email', updatedUser);
+
+    // Returns token and user to verify page that redirects to logged in user or home page
+    sendDataResponse(res, 200, { token: token, user: updatedUser });
   } catch (err) {
     // Create error instance
     const serverError = new RegistrationServerErrorEvent(
@@ -223,98 +241,162 @@ export const verifyUser = async (req, res) => {
   }
 };
 
-// export const resendVerificationEmail = async (req, res) => {
-//   console.log('resendVerificationEmail');
-//   const { email } = req.params;
+export const resendVerificationEmailHandler = async (req, res) => {
+  const { email } = req.body;
+  const { userId } = req.params;
 
-//   if (!email) {
-//     const badRequest = new BadRequestEvent(
-//       EVENT_MESSAGES.missingUserIdentifier
-//     );
-//     return sendMessageResponse(res, badRequest.code, badRequest.message);
-//   }
+  if (!email || !userId) {
+    const badRequest = new BadRequestEvent(
+      'user',
+      EVENT_MESSAGES.missingUserIdentifier
+    );
+    return sendMessageResponse(res, badRequest.code, badRequest.message);
+  }
 
-//   try {
-//     const foundUser = await dbClient.user.findUnique({ where: { email } });
-//     if (!foundUser) {
-//       const notFound = new NotFoundEvent('user', 'email');
-//       return sendMessageResponse(res, notFound.code, notFound.message);
-//     }
+  try {
+    const foundVerification = await findEmailVerificationById(userId);
 
-//     const foundVerification = await dbClient.userVerification.findUnique({
-//       where: { userId: foundUser.id },
-//     });
+    if (!foundVerification) {
+      // No verification found, create a new one
+      const uniqueString = uuid() + userId;
+      const hashedString = await bcrypt.hash(
+        uniqueString,
+        process.env.SALT_ROUNDS
+      );
 
-//     if (!foundVerification) {
-//       const serverError = new ServerConflictError(
-//         email,
-//         EVENT_MESSAGES.verificationNotFoundReturnMessage
-//       );
+      await createVerificationEmailHandler(userId, hashedString);
 
-//       myEmitterErrors.emit('verification-not-found', serverError);
-//       return sendMessageResponse(res, serverError.code, serverError.message);
-//     }
+      try {
+        await sendVerificationEmail(userId, email, hashedString);
+        myEmitterUsers.emit('verification-email-created', user);
+        return sendMessageResponse(
+          res,
+          200,
+          'Verification email sent successfully.'
+        );
+      } catch (err) {
+        const serverError = new ServerConflictError(
+          email,
+          EVENT_MESSAGES.verificationEmailFailed
+        );
+        myEmitterErrors.emit('error', serverError);
+        return sendMessageResponse(res, serverError.code, serverError.message);
+      }
+      //
+    } else {
+      // Verification found, update the unique string and resend the email
+      const newUniqueString = uuid() + userId;
+      const newHashedString = await bcrypt.hash(newUniqueString, hashRate);
 
-//     await dbClient.userVerification.delete({ where: { userId: foundUser.id } });
+      // Update the existing verification entry
+      const updatedVerification = await updateEmailVerificationById(
+        userId,
+        newHashedString
+      );
 
-//     const uniqueString = uuid() + foundUser.id;
-//     const hashedString = await bcrypt.hash(uniqueString, hashRate);
-//     await createVerificationEmailHandler(foundUser.id, hashedString);
+      if (!updatedVerification) {
+        const badRequest = new BadRequestEvent(
+          req.user,
+          EVENT_MESSAGES.badRequest,
+          EVENT_MESSAGES.verificationUpdateFailed
+        );
+        myEmitterErrors.emit('error', badRequest);
+        return sendMessageResponse(res, badRequest.code, badRequest.message);
+      }
 
-//     await sendVerificationEmail(foundUser.id, foundUser.email, uniqueString);
-//     myEmitterUsers.emit('resend-verification', foundUser);
-//     return sendMessageResponse(res, 201, 'Verification email resent');
-//   } catch (err) {
-//     // Create error instance
-//     const serverError = new RegistrationServerErrorEvent(
-//       `Verify New User Server error`
-//     );
-//     myEmitterErrors.emit('error', serverError);
-//     sendMessageResponse(res, serverError.code, serverError.message);
-//     throw err;
-//   }
-// };
+      try {
+        await sendVerificationEmail(userId, email, newUniqueString);
+        myEmitterUsers.emit('resend-verification', req.user);
+        return sendMessageResponse(
+          res,
+          200,
+          'Verification email resent successfully.'
+        );
+      } catch (err) {
+        const serverError = new ServerConflictError(
+          email,
+          EVENT_MESSAGES.verificationEmailFailed
+        );
+        myEmitterErrors.emit('error', serverError);
+        return sendMessageResponse(res, serverError.code, serverError.message);
+      }
+    }
+    //
+  } catch (err) {
+    // Create error instance
+    const serverError = new RegistrationServerErrorEvent(
+      `Verify new user email server error ${err.message}`
+    );
+    myEmitterErrors.emit('error', serverError);
+    sendMessageResponse(res, serverError.code, serverError.message);
+    throw err;
+  }
+};
 
-// export const sendPasswordReset = async (req, res) => {
-//   const { resetEmail } = req.body;
+export const sendPasswordResetEmailHandler = async (req, res) => {
+  const { resetEmail } = req.body;
 
-//   if (!resetEmail) {
-//     const badRequest = new BadRequestEvent(
-//       null,
-//       'Reset Password - Missing email'
-//     );
-//     myEmitterErrors.emit('error', badRequest);
-//     return sendMessageResponse(res, badRequest.code, badRequest.message);
-//   }
+  if (!resetEmail) {
+    const badRequest = new BadRequestEvent(
+      null,
+      'Reset Password - Missing email'
+    );
+    myEmitterErrors.emit('error', badRequest);
+    return sendMessageResponse(res, badRequest.code, badRequest.message);
+  }
 
-//   const lowerCaseEmail = resetEmail.toLowerCase();
+  const lowerCaseEmail = resetEmail.toLowerCase();
 
-//   try {
-//     const foundUser = await findUserByEmail(lowerCaseEmail);
+  try {
+    const foundUser = await findUserByEmail(lowerCaseEmail);
+    if (!foundUser) {
+      const notFound = new NotFoundEvent(
+        req.user,
+        EVENT_MESSAGES.notFound,
+        EVENT_MESSAGES.userNotFound
+      );
+      myEmitterErrors.emit('error', notFound);
+      return sendMessageResponse(res, notFound.code, notFound.message);
+    }
 
-//     if (!foundUser) {
-//       return sendDataResponse(res, 404, {
-//         email: EVENT_MESSAGES.emailNotFound,
-//       });
-//     }
-//     // Create unique string for verify URL
-//     const uniqueString = uuid() + foundUser.id;
-//     const hashedString = await bcrypt.hash(uniqueString, hashRate);
+    // Create unique string for verify URL
+    const uniqueString = uuid() + foundUser.id;
+    const hashedString = await bcrypt.hash(uniqueString, hashRate);
 
-//     await createPasswordResetEmailHandler(foundUser.id, hashedString);
-//     await sendResetPasswordEmail(foundUser.id, foundUser.email, uniqueString);
-//   } catch (err) {
-//     // Create error instance
-//     const serverError = new ServerErrorEvent(
-//       `Request password reset Server error`
-//     );
-//     myEmitterErrors.emit('error', serverError);
-//     sendMessageResponse(res, serverError.code, serverError.message);
-//     throw err;
-//   }
-// };
+    await createPasswordResetEmailHandler(foundUser.id, hashedString); //password-reset-request
+    try {
+      await sendResetPasswordEmail(foundUser.id, foundUser.email, uniqueString);
 
-// export const resetPassword = async (req, res) => {
+      myEmitterUsers.emit('resend-verification', req.user);
+      return sendMessageResponse(
+        res,
+        201,
+        EVENT_MESSAGES.resetPasswordRequestSuccessful
+      );
+      //
+    } catch (err) {
+      //
+      const serverError = new ServerConflictError(
+        email,
+        EVENT_MESSAGES.passwordResetEmailError
+      );
+
+      myEmitterErrors.emit('error', serverError);
+      return sendMessageResponse(res, serverError.code, serverError.message);
+    }
+    //
+  } catch (err) {
+    // Create error instance
+    const serverError = new ServerErrorEvent(
+      `Request password reset Server error`
+    );
+    myEmitterErrors.emit('error', serverError);
+    sendMessageResponse(res, serverError.code, serverError.message);
+    throw err;
+  }
+};
+
+// export const resetLostUserPasswordHandler = async (req, res) => {
 //   const { userId, uniqueString } = req.params;
 //   const { password, confirmPassword } = req.body;
 
@@ -355,7 +437,7 @@ export const verifyUser = async (req, res) => {
 //       return sendMessageResponse(
 //         res,
 //         401,
-//         EVENT_MESSAGES.invalidVerificationMessage
+//         EVENT_MESSAGES.invalidVerification
 //       );
 //     }
 
@@ -380,16 +462,18 @@ export const verifyUser = async (req, res) => {
 //   }
 // };
 
-export const updateUser = async (req, res) => {
-  console.log('update user');
-  const userId = req.params.userId;
-  console.log('userId: ', userId);
-  const { email, firstName, lastName, country } = req.body;
-  console.log('reqbody: ', req.body);
+export const updateUserDataHandler = async (req, res) => {
+  const { userId } = req.params;
+  const { email } = req.body;
+
+  if (!userId || !email) {
+    return sendDataResponse(res, 400, {
+      message: 'Missing user data in request.',
+    });
+  }
 
   try {
     const foundUser = await findUserById(userId);
-
     if (!foundUser) {
       const notFound = new NotFoundEvent(
         req.user,
@@ -400,22 +484,29 @@ export const updateUser = async (req, res) => {
       return sendMessageResponse(res, notFound.code, notFound.message);
     }
 
-    // const updatedUser = await updateUserById(
-    //   userId,
-    //   email,
-    //   firstName,
-    //   lastName,
-    //   country
-    // );
+    const updatedUser = await updateUserById(userId, email);
+    if (!updatedUser) {
+      const badRequest = new BadRequestEvent(
+        req.user,
+        EVENT_MESSAGES.badRequest,
+        EVENT_MESSAGES.updateUserError
+      );
+      myEmitterErrors.emit('error', badRequest);
+      return sendMessageResponse(res, badRequest.code, badRequest.message);
+    }
 
-    // delete updatedUser.password;
-    // delete updatedUser.agreedToTerms;
+    delete updatedUser.password;
+    delete updatedUser.createdAt;
+    delete updatedUser.updatedAt;
 
-    // // myEmitterUsers.emit('update-user', req.user);
-    // return sendDataResponse(res, 200, { user: updatedUser });
+    myEmitterUsers.emit('update-user-data', req.user);
+    return sendDataResponse(res, 201, { user: updatedUser });
+    //
   } catch (err) {
     // Error
-    const serverError = new ServerErrorEvent(`Verify New User Server error`);
+    const serverError = new ServerErrorEvent(
+      `Update user data failed ${err.meesage}`
+    );
     myEmitterErrors.emit('error', serverError);
     sendMessageResponse(res, serverError.code, serverError.message);
     throw err;

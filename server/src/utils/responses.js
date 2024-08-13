@@ -31,14 +31,19 @@ export const EVENT_MESSAGES = {
   idNotFound: `User ID not found in database.`,
   createUserFail: `Failed to create new user.`,
   passwordMatchError: `Password match error for reset. New passwords do not match.`,
+  resetPasswordRequestSuccessful: `Password reset email has been sent successfully.`,
   passwordResetError: `Account record doesn't exist or has been reset already.`,
+  passwordResetEmailError: `Failed to send password reset email.`,
+  updateUserError: `Failed to update user.`,
   deleteUserError: `Failed to delete user.`,
   // Verification
   verificationTag: `Verification database.`,
   verificationNotFound: `Failed to find verification.`,
-  verificationNotFoundReturnMessage: `Account record doesn't exist or has been verified already. Please sign up or log in.`,
+  verificationUpdateFailed: `Failed to update verification.`,
+  verificationEmailFailed: `Failed to send verification email.`,
+  verificationNotFoundReturn: `Account record doesn't exist or has been verified already. Please sign up or log in.`,
   expiredLinkMessage: `Link has expired. Please sign up or log in and check your account.`,
-  invalidVerificationMessage: `Invalid verification details passed. Check your inbox, or contact support.`,
+  invalidVerification: `Invalid verification details passed. Check your inbox, or contact support.`,
 };
 
 // Error responses for eventEmitter/errors

@@ -15,12 +15,12 @@ export const createRegisterEvent = async (user) => {
   await createEvent(user, type, 'Register', `Register successful for ${user.email} as a ${user.role}`, 201);
 };
 
-export const createVerifyEvent = async (user) => {
+export const createVerifyEmailEvent = async (user) => {
   const type = user.role || 'USER';
-  await createEvent(user, type, 'Verify User', `Verification successful for ${user.email} as a ${user.role}`, 201);
+  await createEvent(user, type, 'Verify User email', `Verification successful for ${user.email} as a ${user.role}`, 201);
 };
 
-export const createNewVerifyEvent = async (user) => {
+export const createNewEmailVerifyEvent = async (user) => {
   const type = user.role || 'USER';
   await createEvent(user, type, 'Verification email resend creation', `Resend verification successful for ${user.email}`, 201);
 };

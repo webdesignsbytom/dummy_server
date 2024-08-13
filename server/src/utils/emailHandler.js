@@ -4,7 +4,7 @@ import nodemailer from 'nodemailer';
 import hbs from 'nodemailer-express-handlebars';
 import path from 'path';
 // Constants
-import { BusinessName, BusinessUrl } from './constants';
+import { BusinessName, BusinessUrl } from './constants.js';
 
 // Validate required environment variables
 const requiredEnvVars = ['EMAIL_HOST', 'AUTH_EMAIL', 'VERIFY_PASS', 'RESET_EMAIL', 'RESET_PASS', 'VERIFICATION_URL'];
@@ -76,7 +76,7 @@ export const sendVerificationEmail = async (id, userEmail, uniqueString) => {
       title: `Verification your email.`,
       businessName: BusinessName,
       expiryTime: `24 hours`,
-      confirmationUrl: `${clientUrl}/users/verify/${id}/${uniqueString}`,
+      confirmationUrl: `${clientUrl}/users/verify-email/${id}/${uniqueString}`,
       businessUrl: BusinessUrl,
     },
   };
