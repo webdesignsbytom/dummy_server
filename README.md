@@ -16,3 +16,11 @@ Keep up to date for use in projects.
 ## Testing
 
 **API** API testing is created through Insomnia
+
+## Todo
+
+1. Helmet
+2. Swagger
+3. Insomnia tests
+4. Testing
+5. Pipeline
