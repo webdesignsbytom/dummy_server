@@ -10,7 +10,7 @@ import authRouter from './routes/auth.js';
 import eventRouter from './routes/events.js';
 import userRouter from './routes/users.js';
 import testRouter from './routes/tests.js';
-// Response
+// Responses
 import { sendDataResponse } from './utils/responses.js'
 
 const app = express();

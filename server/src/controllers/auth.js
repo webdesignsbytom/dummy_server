@@ -12,13 +12,14 @@ import { createAccessToken } from '../utils/tokens.js';
 
 export const login = async (req, res) => {
   const { email, password } = req.body;
-  const lowerCaseEmail = email.toLowerCase();
 
   if (!lowerCaseEmail || !password) {
     return sendDataResponse(res, 400, {
       email: 'Missing email and/or password provided',
     });
   }
+
+  const lowerCaseEmail = email.toLowerCase();
 
   try {
     const existingUser = await findUserByEmail(lowerCaseEmail);
