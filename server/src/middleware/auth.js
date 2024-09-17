@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken'
 import { JWT_SECRET } from '../utils/config.js'
 // Components
-import { findUserByEmail } from '../domain/users.js';
+import { findUserByEmail, findUserById } from '../domain/users.js';
 // Emitters
 import { myEmitterErrors } from '../event/errorEvents.js';
 // Errors
@@ -103,7 +103,7 @@ export const validateAuthentication = async (req, res, next) => {
     //
     const decodedToken = jwt.verify(token, JWT_SECRET);
 
-    const foundUser = await findUserByEmail(decodedToken.email);
+    const foundUser = await findUserById(decodedToken.id);
     delete foundUser.password
 
     req.user = foundUser;
