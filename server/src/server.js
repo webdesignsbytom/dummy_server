@@ -2,32 +2,44 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
+import session from 'express-session'; // Import express-session
+import passport from 'passport'; // Import passport
 // Path
 import { join } from 'path';
 import * as url from 'url';
+import '../passport-setup.js'; // Import passport setup
 // Import routers
 import authRouter from './routes/auth.js';
 import eventRouter from './routes/events.js';
 import userRouter from './routes/users.js';
 import testRouter from './routes/tests.js';
 // Responses
-import { sendDataResponse } from './utils/responses.js'
+import { sendDataResponse } from './utils/responses.js';
 
 const app = express();
 app.disable('x-powered-by');
 
 // Add middleware
-app.use(
-  cors({ 
-    origin: "*"
-  })
-);
+app.use(cors({ 
+  origin: "*"
+}));
 
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Set the port and URl
+// Session middleware
+app.use(session({
+  secret: 'your-session-secret', // Use a secure secret in production
+  resave: false,
+  saveUninitialized: true,
+}));
+
+// Initialize Passport
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Set the port and URL
 const PORT = process.env.PORT || 4000;
 const HTTP_URL = process.env.HTTP_URL || 'http://localhost:';
 
@@ -60,12 +72,12 @@ app.all('*', (req, res) => {
 });
 
 app.use((error, req, res, next) => {
-  console.error(error)
+  console.error(error);
   if (error.code === 'P2025') {
-    return sendDataResponse(res, 404, 'Record does not exist')
+    return sendDataResponse(res, 404, 'Record does not exist');
   }
-  return sendDataResponse(res, 500, 'Server error event')
-})
+  return sendDataResponse(res, 500, 'Server error event');
+});
 
 // Start our API server
 app.listen(PORT, () => {
