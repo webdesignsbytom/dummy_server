@@ -17,9 +17,16 @@ router.get(
   passport.authenticate('google', { failureRedirect: '/login' }),
   (req, res) => {
     // Successful authentication
-    res.redirect('/');
+    // You might return a small script to close the popup
+    res.send(`
+      <script>
+        window.opener.location.reload(); // Refresh parent window
+        window.close(); // Close the popup
+      </script>
+    `);
   }
 );
+
 
 // Facebook auth routes
 router.get('/facebook', passport.authenticate('facebook'));

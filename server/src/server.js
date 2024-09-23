@@ -47,7 +47,7 @@ const HTTP_URL = process.env.HTTP_URL || 'http://localhost:';
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
 // Start of actions
-app.use('/', authRouter);
+app.use('/auth', authRouter);
 app.use('/events', eventRouter);
 app.use('/users', userRouter);
 app.use('/tests', testRouter);
