@@ -6,6 +6,7 @@ const router = Router();
 
 router.post('/login', loginHelper);
 router.post('/oauth-login', googleLoginHelper);
+
 // Google auth routes
 router.get(
   '/google',
@@ -14,14 +15,13 @@ router.get(
 
 router.get(
   '/google/callback',
-  passport.authenticate('google', { failureRedirect: '/login' }),
+  passport.authenticate('google', { failureRedirect: '/google' }),
   (req, res) => {
     // Successful authentication
     // You might return a small script to close the popup
     res.send(`
       <script>
-        window.opener.location.reload(); // Refresh parent window
-        window.close(); // Close the popup
+        window.close();
       </script>
     `);
   }
