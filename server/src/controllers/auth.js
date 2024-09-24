@@ -14,7 +14,7 @@ import { OAuth2Client } from 'google-auth-library';
 export const loginHelper = async (req, res) => {
   const { email, password } = req.body;
 
-  if (!lowerCaseEmail || !password) {
+  if (!email || !password) {
     return sendDataResponse(res, 400, {
       email: 'Missing email and/or password provided',
     });
