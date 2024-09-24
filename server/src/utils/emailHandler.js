@@ -8,6 +8,7 @@ import { BusinessName, BusinessUrl } from './constants.js';
 
 // Validate required environment variables
 const requiredEnvVars = ['EMAIL_HOST', 'AUTH_EMAIL', 'VERIFY_PASS', 'RESET_EMAIL', 'RESET_PASS', 'VERIFICATION_URL'];
+
 requiredEnvVars.forEach((key) => {
   if (!process.env[key]) {
     throw new Error(`Environment variable ${key} is missing`);
