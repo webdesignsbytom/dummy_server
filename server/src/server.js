@@ -12,6 +12,8 @@ import userRouter from './routes/users.js';
 import testRouter from './routes/tests.js';
 // Responses
 import { sendDataResponse } from './utils/responses.js'
+// Middleware
+import { generalRateLimiter } from './middleware/rateLimiters.js';
 
 const app = express();
 app.disable('x-powered-by');
