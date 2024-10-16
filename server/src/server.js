@@ -24,8 +24,8 @@ app.use(
 );
 
 app.use(morgan('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '200kb' }));
+app.use(express.urlencoded({ extended: true, limit: '200kb' }));
 
 // Set the port and URl
 const PORT = process.env.PORT || 4000;
@@ -59,13 +59,19 @@ app.all('*', (req, res) => {
   }
 });
 
+// Global error handler
 app.use((error, req, res, next) => {
-  console.error(error)
+  console.error(error);
   if (error.code === 'P2025') {
-    return sendDataResponse(res, 404, 'Record does not exist')
+    return sendDataResponse(res, 404, 'Record does not exist');
   }
-  return sendDataResponse(res, 500, 'Server error event')
-})
+  // Handle MinIO configuration errors
+  if (error.message && (error.message.includes('MINIO_SECRET_KEY') || error.message.includes('MINIO_ACCESS_KEY'))) {
+    return res.status(400).json({ message: 'MinIO configuration error: Invalid or missing access/secret key' });
+  }
+
+  return sendDataResponse(res, 500, 'Server error event');
+});
 
 // Start our API server
 app.listen(PORT, () => {
