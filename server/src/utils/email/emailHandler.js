@@ -4,7 +4,7 @@ import nodemailer from 'nodemailer';
 import hbs from 'nodemailer-express-handlebars';
 import path from 'path';
 // Constants
-import { BusinessName, BusinessUrl } from './constants.js';
+import { BusinessName, BusinessUrl } from '../constants.js';
 
 // Validate required environment variables
 const requiredEnvVars = ['EMAIL_HOST', 'AUTH_EMAIL', 'VERIFY_PASS', 'RESET_EMAIL', 'RESET_PASS', 'VERIFICATION_URL'];
