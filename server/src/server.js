@@ -64,6 +64,9 @@ app.all('*', (req, res) => {
 // Global error handler
 app.use((error, req, res, next) => {
   console.error(error);
+  if (error.code === 'P1003') {
+    return sendDataResponse(res, 404, 'Database does not exist');
+  }
   if (error.code === 'P2025') {
     return sendDataResponse(res, 404, 'Record does not exist');
   }
