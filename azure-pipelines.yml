@@ -9,11 +9,9 @@ steps:
 - task: UseNode@1
   inputs:
     versionSpec: '22.8.0'
-
-# Install dependencies
-- script: npm install
-  displayName: 'Install dependencies'
-
-# Run the app using npm start
-- script: npm start
-  displayName: 'Start the application'
+  
+- script: |
+    cd server
+    npm install
+    ls
+  displayName: 'Install dependencies in /server'
