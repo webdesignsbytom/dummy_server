@@ -5,19 +5,13 @@ pool:
   vmImage: ubuntu-latest
 
 steps:
-# Install Node.js v22.8.0
-- task: UseNode@1
-  inputs:
-    versionSpec: '22.8.0'  # Ensure Node.js 22.8.0 is being used
-  displayName: 'Use Node.js v22.8.0'
-
-# Check Node.js version to confirm
-- script: node --version
-  displayName: 'Check Node.js version'
-
-# Navigate to the /server folder and install dependencies
+# Install Node.js and npm, then install dependencies in /server
 - script: |
+    sudo apt update
+    sudo apt install -y nodejs
+    sudo apt install -y npm
     cd server
     npm install
     ls
+    node --version
   displayName: 'Install dependencies in /server'
