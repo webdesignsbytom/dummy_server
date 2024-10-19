@@ -1,17 +1,8 @@
-trigger:
-- main
-
-pool:
-  vmImage: ubuntu-latest
-
 steps:
-# Install Node.js and npm, then install dependencies in /server
+- task: NodeTaskRunnerInstaller@0
+  inputs:
+    nodeVersion: '22'
+
 - script: |
-    sudo apt update
-    sudo apt install -y nodejs
-    sudo apt install -y npm
-    cd server
-    npm install
-    ls
     node --version
-  displayName: 'Install dependencies in /server'
+  displayName: 'Check Node.js version'
