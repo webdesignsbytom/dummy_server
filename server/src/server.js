@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
+import helmet from 'helmet';
 // Path
 import { join } from 'path';
 import * as url from 'url';
@@ -15,19 +16,32 @@ import { sendDataResponse } from './utils/responses.js'
 // Middleware
 import { generalRateLimiter } from './middleware/rateLimiters.js';
 
+// Create Express Server //
 const app = express();
-app.disable('x-powered-by');
 
-// Add middleware
+// Add middleware //
+app.disable('x-powered-by');
 app.use(
-  cors({ 
-    origin: "*"
+  cors({
+    origin: 'http://localhost:3000', // Allow requests from frontend
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
   })
 );
 
 app.use(morgan('dev'));
 app.use(express.json({ limit: '200kb' }));
 app.use(express.urlencoded({ extended: true, limit: '200kb' }));
+
+// Use Helmet to apply security-related headers to all routes
+app.use(helmet());
+
+// Optional: Customize Helmet
+app.use(
+  helmet({
+    contentSecurityPolicy: false, // Disable CSP for example (you can fine-tune it as per your app's need)
+  })
+);
 
 // Set the port and URl
 const PORT = process.env.PORT || 4000;
