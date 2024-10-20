@@ -80,6 +80,7 @@ app.use((error, req, res, next) => {
 
 // Start our API server
 app.listen(PORT, () => {
+  console.log('Running Node.js version: ' + process.version);
   console.log(
     `\nServer is running on ${HTTP_URL}${PORT} \n This no longer consumes souls\n`
   );

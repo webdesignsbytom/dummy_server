@@ -42,8 +42,11 @@ import { sendVerificationEmail } from '../utils/email/emailHandler.js';
 import { v4 as uuid } from 'uuid';
 
 export const getAllUsersHandler = async (req, res) => {
+  console.log('getAllUsersHandler', getAllUsersHandler);
   try {
+    console.log('pppppppppppppp');
     const foundUsers = await findAllUsers();
+    console.log('foundUsers', foundUsers);
     if (!foundUsers) {
       const notFound = new NotFoundEvent(
         req.user,
@@ -70,6 +73,7 @@ export const getAllUsersHandler = async (req, res) => {
 };
 
 export const getUserByIdHandler = async (req, res) => {
+  console.log('getUserByIdHandler');
   const { userId } = req.params;
 
   if (!userId) {
@@ -77,9 +81,10 @@ export const getUserByIdHandler = async (req, res) => {
       message: 'Missing userId.',
     });
   }
-
+console.log('asaaaaaaaaaaaaa');
   try {
     const foundUser = await findUserById(userId);
+    console.log('FOUND USER',foundUser);
     if (!foundUser) {
       const notFound = new NotFoundEvent(
         req.user,
@@ -92,7 +97,7 @@ export const getUserByIdHandler = async (req, res) => {
 
     delete foundUser.password;
 
-    myEmitterUsers.emit('get-user-by-id', req.user);
+    //myEmitterUsers.emit('get-user-by-id', req.user);
     return sendDataResponse(res, 200, { user: foundUser });
     //
   } catch (err) {

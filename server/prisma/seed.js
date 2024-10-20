@@ -6,6 +6,7 @@ const users = [
   { email: 'tom@gmail.com', id: 'test', role: 'USER' },
   { email: 'admin@admin.com', role: 'ADMIN', id: 'admin' },
   { email: 'dev@dev.com', role: 'DEVELOPER', id: 'dev' },
+  { email: 'git@dev.com', role: 'DEVELOPER', id: 'dfdev' },
 ];
 
 const events = [
