@@ -640,3 +640,35 @@ export const adminDeleteUserHandler = async (req, res) => {
     throw err;
   }
 };
+
+export const deactivateUserHandler = async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const updatedUser = await updateUserById(userId, { isActive: false });
+
+    myEmitterUsers.emit('deactivate-user', req.user);
+    return sendDataResponse(res, 200, { user: updatedUser });
+  } catch (err) {
+    const serverError = new ServerErrorEvent(req.user, 'Deactivate user');
+    myEmitterErrors.emit('error', serverError);
+    sendMessageResponse(res, serverError.code, serverError.message);
+    throw err;
+  }
+};
+
+export const reactivateUserHandler = async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const updatedUser = await updateUserById(userId, { isActive: true });
+
+    myEmitterUsers.emit('reactivate-user', req.user);
+    return sendDataResponse(res, 200, { user: updatedUser });
+  } catch (err) {
+    const serverError = new ServerErrorEvent(req.user, 'Reactivate user');
+    myEmitterErrors.emit('error', serverError);
+    sendMessageResponse(res, serverError.code, serverError.message);
+    throw err;
+  }
+};

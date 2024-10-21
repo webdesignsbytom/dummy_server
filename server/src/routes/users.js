@@ -8,7 +8,7 @@ import {
   verifyUserEmailHandler,
   resendVerificationEmailHandler,
   updateUserDataHandler,
-  changeUserRoleHandler
+  changeUserRoleHandler, deactivateUserHandler, reactivateUserHandler
 } from '../controllers/users.js';
 import { validateAuthentication, validateAdminRole } from '../middleware/auth.js';
 
@@ -18,6 +18,18 @@ const router = Router();
 router.post('/register', registerNewUserHandler);
 router.get('/user/get-user-by-id/:userId',  getUserByIdHandler); 
 router.post('/user/update-user-data',  updateUserDataHandler); 
+router.patch(
+  '/account/deactivate/:userId',
+  validateAuthentication,
+  validateAdminRole,
+  deactivateUserHandler
+);
+router.patch(
+  '/account/reactivate/:userId',
+  validateAuthentication,
+  validateAdminRole,
+  reactivateUserHandler
+);
 // Verification
 router.patch('/verify-email/:userId/:uniqueString',  verifyUserEmailHandler); 
 router.post('/verify-email/resend-email/:email', resendVerificationEmailHandler);
