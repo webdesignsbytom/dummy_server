@@ -7,7 +7,8 @@ import {
   adminDeleteUserHandler,
   verifyUserEmailHandler,
   resendVerificationEmailHandler,
-  updateUserDataHandler
+  updateUserDataHandler,
+  changeUserRoleHandler
 } from '../controllers/users.js';
 import { validateAuthentication, validateAdminRole } from '../middleware/auth.js';
 
@@ -23,6 +24,7 @@ router.post('/verify-email/resend-email/:email', resendVerificationEmailHandler)
 router.delete('/user/delete-account', validateAuthentication, deleteUserAccountHandler);
 // Admin
 router.get('/admin/get-all-users', validateAuthentication, validateAdminRole, getAllUsersHandler);
+router.patch('/admin/change-user-role', validateAuthentication, validateAdminRole, changeUserRoleHandler);
 router.delete('/admin/delete-user-by-id', validateAuthentication, validateAdminRole, adminDeleteUserHandler);
 
 export default router;

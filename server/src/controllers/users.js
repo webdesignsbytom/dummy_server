@@ -462,6 +462,34 @@ export const sendPasswordResetEmailHandler = async (req, res) => {
 //   }
 // };
 
+export const changeUserRoleHandler = async (req, res) => {
+  const { newRole, userId } = req.body;
+
+  if (!newRole) {
+    const missingFields = new MissingFieldEvent(
+      req.user,
+      EVENT_MESSAGES.missingFields
+    );
+    myEmitterErrors.emit('error', missingFields);
+    return sendMessageResponse(res, missingFields.code, missingFields.message);
+  }
+
+  try {
+    const updatedUser = await updateUserById(userId, { role: newRole });
+
+    myEmitterUsers.emit('change-role', req.user);
+    return sendDataResponse(res, 200, { user: updatedUser });
+  } catch (err) {
+    const serverError = new ServerErrorEvent(
+      req.user,
+      'Change user role failed'
+    );
+    myEmitterErrors.emit('error', serverError);
+    sendMessageResponse(res, serverError.code, serverError.message);
+    throw err;
+  }
+};
+
 export const updateUserDataHandler = async (req, res) => {
   const userId = req.user.id;
   const { email } = req.body;
