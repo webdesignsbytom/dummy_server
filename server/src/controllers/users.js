@@ -126,7 +126,7 @@ export const registerNewUserHandler = async (req, res) => {
       return sendDataResponse(res, 400, { message: EVENT_MESSAGES.emailInUse });
     }
 
-    const hashedPassword = await bcrypt.hash(password, process.env.SALT_ROUNDS);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     const createdUser = await createNewUser(lowerCaseEmail, hashedPassword);
 
