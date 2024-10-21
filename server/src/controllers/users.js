@@ -145,7 +145,7 @@ export const registerNewUserHandler = async (req, res) => {
     delete createdUser.updatedAt;
 
     const uniqueString = uuid() + userId;
-    const hashedString = await bcrypt.hash(uniqueString, hashRate);
+    const hashedString = await bcrypt.hash(uniqueString, 10);
 
     await createVerificationEmailHandler(userId, hashedString);
     await sendVerificationEmail(userId, createdUser.email, uniqueString);
