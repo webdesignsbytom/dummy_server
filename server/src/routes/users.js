@@ -17,6 +17,7 @@ const router = Router();
 // General
 router.post('/register', registerNewUserHandler);
 router.get('/user/get-user-by-id/:userId',  getUserByIdHandler); 
+router.get('/user/get-logged-in-user/:userId', validateAuthentication, getUserByIdHandler); 
 router.post('/user/update-user-data',  updateUserDataHandler); 
 router.patch(
   '/account/deactivate/:userId',
