@@ -24,3 +24,9 @@ Keep up to date for use in projects.
 3. Insomnia tests
 4. Testing
 5. Pipeline
+
+## Install
+
+`npm i helmet`
+`npm i express-rate-limit`
+`npm i google-auth-library`
