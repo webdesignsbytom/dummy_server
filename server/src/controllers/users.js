@@ -74,7 +74,7 @@ export const getUserByIdHandler = async (req, res) => {
 
   if (!userId) {
     return sendDataResponse(res, 400, {
-      message: 'Missing userId.',
+      message: 'Missing user ID.',
     });
   }
 
