@@ -37,6 +37,28 @@ model EmailVerification {
   updatedAt    DateTime? @updatedAt
 }
 
+model ContactForm {
+  id           String    @id @default(uuid())
+  firstName    String
+  lastName     String
+  email        String
+  message      String
+  phoneNumber  String
+  location     String
+  businessName String
+  projectType  String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime? @updatedAt
+}
+
+model CallbackForm {
+  id          String    @id @default(uuid())
+  fullName    String
+  phoneNumber String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime? @updatedAt
+}
+
 // EVENTS
 enum EventType {
   ERROR
