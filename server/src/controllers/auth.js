@@ -38,7 +38,12 @@ export const loginHelper = async (req, res) => {
 
     delete existingUser.password;
 
-    const token = createAccessToken(existingUser.id, existingUser.email);
+    let userStatus = false;
+    if (existingUser.role === 'ADMIN' || existingUser.role === 'DEVELOPER') {
+      userStatus = true;
+    }
+
+    const token = createAccessToken(existingUser.id, userStatus);
     return sendDataResponse(res, 200, { token, existingUser });
   } catch (err) {
     //
