@@ -1,108 +1,94 @@
 import 'dotenv/config';
-// Email
 import nodemailer from 'nodemailer';
 import hbs from 'nodemailer-express-handlebars';
 import path from 'path';
-// Constants
-import { BusinessName, BusinessUrl } from '../constants.js';
+import { BusinessName } from '../constants.js';
 
 // Validate required environment variables
-const requiredEnvVars = ['EMAIL_HOST', 'AUTH_EMAIL', 'VERIFY_PASS', 'RESET_EMAIL', 'RESET_PASS', 'VERIFICATION_URL'];
-
+const requiredEnvVars = ['EMAIL_HOST', 'EMAIL_PORT', 'AUTH_EMAIL', 'AUTH_PASS'];
 requiredEnvVars.forEach((key) => {
   if (!process.env[key]) {
     throw new Error(`Environment variable ${key} is missing`);
   }
 });
 
-// Env
+// Email configuration
 const EMAIL_HOST = process.env.EMAIL_HOST;
+const EMAIL_PORT = parseInt(process.env.EMAIL_PORT, 10) || 465;
+const AUTH_EMAIL = process.env.AUTH_EMAIL;
+const AUTH_PASS = process.env.AUTH_PASS;
 
 // Set up handlebars for HTML email templates
 const handlebarOptions = {
   viewEngine: {
+    extname: '.hbs',
     partialsDir: path.resolve('./src/utils/email/'),
     defaultLayout: false,
   },
   viewPath: path.resolve('./src/utils/email/'),
 };
 
+// Create transporter using cPanel SMTP settings
+const transporter = nodemailer.createTransport({
+  host: EMAIL_HOST,
+  port: EMAIL_PORT,
+  secure: EMAIL_PORT === 465, // SSL for 465, TLS for 587
+  auth: {
+    user: AUTH_EMAIL,
+    pass: AUTH_PASS,
+  },
+});
 
-// Configure a single transporter with a function to set different auth credentials
-const createTransporter = (user, pass) => {
-  return nodemailer.createTransport({
-    pool: true,
-    host: EMAIL_HOST,
-    port: 465, // mail port
-    secure: true, // use TLS
-    auth: {
-      type: 'login',
-      user,
-      pass,
-    },
-  });
-};
-
-const transporter = createTransporter(
-  process.env.AUTH_EMAIL,
-  process.env.VERIFY_PASS
-);
-const resetTransporter = createTransporter(
-  process.env.RESET_EMAIL,
-  process.env.RESET_PASS
-);
-
+// Apply handlebars templating engine
 transporter.use('compile', hbs(handlebarOptions));
-resetTransporter.use('compile', hbs(handlebarOptions));
 
-const sendEmailHandler = async (transporter, mailOptions) => {
+/**
+ * Sends an email
+ * @param {string} to - Recipient email
+ * @param {string} subject - Email subject
+ * @param {string} template - Handlebars template name (without .hbs)
+ * @param {object} context - Data for the template
+ * @returns {Promise<boolean>} - Returns true if sent, false otherwise
+ */
+export const sendEmail = async (to, subject, template, context = {}) => {
+  const mailOptions = {
+    from: `"${BusinessName}" <${AUTH_EMAIL}>`,
+    to,
+    subject,
+    template, // Matches the .hbs template
+    context, // Data for template rendering
+  };
+
   try {
-    await transporter.sendMail(mailOptions);
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`✅ Email sent: ${info.messageId}`);
+    return true;
   } catch (err) {
-    console.error('Error sending email:', err);
-    throw err;
+    console.error('❌ Error sending email:', err);
+    return false;
   }
 };
 
-export const sendVerificationEmail = async (id, userEmail, uniqueString) => {
-  const clientUrl = process.env.VERIFICATION_URL;
-  console.log('client url:', clientUrl);
-
+/**
+ * Sends a test email to verify SMTP configuration
+ * @param {string} testEmail - The recipient email for testing
+ */
+export const sendTestEmail = async (testEmail) => {
   const mailOptions = {
-    from: process.env.AUTH_EMAIL,
-    to: userEmail,
-    subject: `Welcome to ${BusinessName}`,
-    template: `emailVerification`,
-    context: {
-      title: `Verification your email.`,
-      businessName: BusinessName,
-      expiryTime: `24 hours`,
-      confirmationUrl: `${clientUrl}/users/verify-email/${id}/${uniqueString}`,
-      businessUrl: BusinessUrl,
-    },
+    from: `"${BusinessName}" <${AUTH_EMAIL}>`,
+    to: testEmail,
+    subject: 'Test Email from NodeMailer',
+    text: 'Hello! This is a test email sent via cPanel SMTP and NodeMailer.',
+    html: '<h1>Hello!</h1><p>This is a test email sent via <b>cPanel SMTP</b> and <b>NodeMailer</b>.</p>',
   };
 
-  console.log('url:', clientUrl + '/verify/' + id + '/' + uniqueString);
-  await sendEmailHandler(transporter, mailOptions);
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`✅ Test email sent: ${info.messageId}`);
+  } catch (err) {
+    console.error('❌ Error sending test email:', err);
+  }
 };
 
-export const sendResetPasswordEmail = async (id, userEmail, uniqueString) => {
-  const clientUrl = process.env.VERIFICATION_URL;
-  console.log('client url:', clientUrl);
-
-  const mailOptions = {
-    from: process.env.RESET_EMAIL,
-    to: userEmail,
-    subject: `Password Reset`,
-    template: `resetPassword`,
-    context: {
-      title: `Reset your password.`,
-      businessName: BusinessName,
-      businessUrl: BusinessUrl,
-      resetUrl: `${clientUrl}/users/reset-password/${id}/${uniqueString}`,
-    },
-  };
-
-  console.log('url:', clientUrl + '/reset-password/' + id + '/' + uniqueString);
-  await sendEmailHandler(resetTransporter, mailOptions);
-};
+// If you want to run a test email directly from this script, uncomment the line below:
+// sendTestEmail('yourtestemail@example.com');
