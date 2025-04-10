@@ -7,6 +7,7 @@ import {
   confirmBooking,
   createNewBooking,
   deleteBookingById,
+  denyBooking,
   findAllBookings,
 } from '../domain/booking.js';
 // Response messages
@@ -132,7 +133,7 @@ export const createNewBookingHandler = async (req, res) => {
 };
 
 export const confirmNewBookingHandler = async (req, res) => {
-  const { bookingId } = req.params
+  const { bookingId } = req.params;
 
   if (!bookingId) {
     return sendDataResponse(res, 409, {
@@ -141,7 +142,7 @@ export const confirmNewBookingHandler = async (req, res) => {
   }
 
   try {
-    const confirmedBooking = await confirmBooking(bookingId)
+    const confirmedBooking = await confirmBooking(bookingId);
 
     if (!confirmedBooking) {
       const notCreated = new BadRequestEvent(
@@ -152,23 +153,21 @@ export const confirmNewBookingHandler = async (req, res) => {
       return sendMessageResponse(res, notCreated.code, notCreated.message);
     }
 
+    // IF FAIL SEND EMAIL TO OWNER
     return sendDataResponse(res, 200, {
       message: 'Success: Booking confirmed',
     });
   } catch (err) {
     //
-    const serverError = new ServerErrorEvent(
-      req.user,
-      `Delete booking failed`
-    );
+    const serverError = new ServerErrorEvent(req.user, `Delete booking failed`);
     myEmitterErrors.emit('error', serverError);
     sendMessageResponse(res, serverError.code, serverError.message);
     throw err;
   }
 };
 
-export const deleteBookingHandler = async (req, res) => {
-  const { bookingId } = req.body
+export const denyNewBookingHandler = async (req, res) => {
+  const { bookingId } = req.params;
 
   if (!bookingId) {
     return sendDataResponse(res, 409, {
@@ -177,7 +176,41 @@ export const deleteBookingHandler = async (req, res) => {
   }
 
   try {
-    const deletedBooking = await deleteBookingById(bookingId)
+    const confirmedBooking = await denyBooking(bookingId);
+
+    if (!confirmedBooking) {
+      const notCreated = new BadRequestEvent(
+        EVENT_MESSAGES.badRequest,
+        EVENT_MESSAGES.denyBookingFail
+      );
+      myEmitterErrors.emit('error', notCreated);
+      return sendMessageResponse(res, notCreated.code, notCreated.message);
+    }
+
+    // IF FAIL SEND EMAIL TO OWNER
+    return sendDataResponse(res, 200, {
+      message: 'Success: Booking denied',
+    });
+  } catch (err) {
+    //
+    const serverError = new ServerErrorEvent(req.user, `Delete booking failed`);
+    myEmitterErrors.emit('error', serverError);
+    sendMessageResponse(res, serverError.code, serverError.message);
+    throw err;
+  }
+};
+
+export const deleteBookingHandler = async (req, res) => {
+  const { bookingId } = req.body;
+
+  if (!bookingId) {
+    return sendDataResponse(res, 409, {
+      message: `Booking ID is missing.`,
+    });
+  }
+
+  try {
+    const deletedBooking = await deleteBookingById(bookingId);
 
     if (!deletedBooking) {
       const notCreated = new BadRequestEvent(
@@ -193,16 +226,12 @@ export const deleteBookingHandler = async (req, res) => {
     });
   } catch (err) {
     //
-    const serverError = new ServerErrorEvent(
-      req.user,
-      `Delete booking failed`
-    );
+    const serverError = new ServerErrorEvent(req.user, `Delete booking failed`);
     myEmitterErrors.emit('error', serverError);
     sendMessageResponse(res, serverError.code, serverError.message);
     throw err;
   }
 };
-
 
 // export const deleteEventByIdHandler = async (req, res) => {
 //   const { eventId } = req.params;
