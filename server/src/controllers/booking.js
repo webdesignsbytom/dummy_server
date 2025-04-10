@@ -2,7 +2,11 @@
 import { myEmitterErrors } from '../event/errorEvents.js';
 import { myEmitterEvents } from '../event/eventEvents.js';
 // Domain
-import { checkBookingSlot, findAllBookings } from '../domain/booking.js';
+import {
+  checkBookingSlot,
+  createNewBooking,
+  findAllBookings,
+} from '../domain/booking.js';
 // Response messages
 import {
   EVENT_MESSAGES,
@@ -79,7 +83,7 @@ export const createNewBookingHandler = async (req, res) => {
       'bookingDate.setUTCHours(0, 0, 0, 0);',
       bookingDate.setUTCHours(0, 0, 0, 0)
     );
-    
+
     // Check if time slot on that day is already booked
     const existingBooking = await checkBookingSlot(time, bookingDate);
 
@@ -89,16 +93,22 @@ export const createNewBookingHandler = async (req, res) => {
       });
     }
 
-    // const createdUser = await createNewUser(lowerCaseEmail, hashedPassword);
+    const createdBooking = await createNewBooking(
+      time,
+      date,
+      fullName,
+      phoneNumber,
+      email
+    );
 
-    // if (!createdUser) {
-    //   const notCreated = new BadRequestEvent(
-    //     EVENT_MESSAGES.badRequest,
-    //     EVENT_MESSAGES.createUserFail
-    //   );
-    //   myEmitterErrors.emit('error', notCreated);
-    //   return sendMessageResponse(res, notCreated.code, notCreated.message);
-    // }
+    if (!createdBooking) {
+      const notCreated = new BadRequestEvent(
+        EVENT_MESSAGES.badRequest,
+        EVENT_MESSAGES.createBookingFail
+      );
+      myEmitterErrors.emit('error', notCreated);
+      return sendMessageResponse(res, notCreated.code, notCreated.message);
+    }
 
     // const uniqueString = uuid() + userId;
     // const hashedString = await bcrypt.hash(uniqueString, 10);
@@ -107,7 +117,7 @@ export const createNewBookingHandler = async (req, res) => {
     // await sendVerificationEmail(userId, createdUser.email, uniqueString);
 
     // myEmitterUsers.emit('register', createdUser);
-    return sendDataResponse(res, 201, {});
+    return sendDataResponse(res, 201, { booking: createdBooking });
   } catch (err) {
     // Error
     const serverError = new ServerErrorEvent(

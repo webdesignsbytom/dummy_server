@@ -16,6 +16,18 @@ export const checkBookingSlot = async (time, bookingDate) => {
   });
 };
 
+export const createNewBooking = async (time, date, fullName, phoneNumber, email) => {
+  return dbClient.bookingItem.create({
+    data: {
+      time: time,
+      date: date,
+      fullName: fullName,
+      phoneNumber: phoneNumber,
+      email: email
+    },
+  });
+};
+
 export const deleteEventId = async (id) => {
   return dbClient.event.delete({
     where: {
