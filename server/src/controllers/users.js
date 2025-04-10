@@ -37,7 +37,7 @@ import {
   BadRequestEvent,
 } from '../event/utils/errorUtils.js';
 // Email handlers
-import { sendVerificationEmail } from '../utils/email/emailHandler.js';
+// import { sendVerificationEmail } from '../utils/email/emailHandler.js';
 // Randon
 import { v4 as uuid } from 'uuid';
 
