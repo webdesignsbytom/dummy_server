@@ -5,6 +5,7 @@ import { myEmitterEvents } from '../event/eventEvents.js';
 import {
   checkBookingSlot,
   createNewBooking,
+  deleteBookingById,
   findAllBookings,
 } from '../domain/booking.js';
 // Response messages
@@ -128,6 +129,43 @@ export const createNewBookingHandler = async (req, res) => {
     throw err;
   }
 };
+
+export const deleteBookingHandler = async (req, res) => {
+  const { bookingId } = req.body
+
+  if (!bookingId) {
+    return sendDataResponse(res, 409, {
+      message: `Booking ID is missing.`,
+    });
+  }
+
+  try {
+    const deletedBooking = await deleteBookingById(bookingId)
+
+    if (!deletedBooking) {
+      const notCreated = new BadRequestEvent(
+        EVENT_MESSAGES.badRequest,
+        EVENT_MESSAGES.deleteBookingFail
+      );
+      myEmitterErrors.emit('error', notCreated);
+      return sendMessageResponse(res, notCreated.code, notCreated.message);
+    }
+
+    return sendDataResponse(res, 200, {
+      events: 'Success: Booking deleted',
+    });
+  } catch (err) {
+    //
+    const serverError = new ServerErrorEvent(
+      req.user,
+      `Delete booking failed`
+    );
+    myEmitterErrors.emit('error', serverError);
+    sendMessageResponse(res, serverError.code, serverError.message);
+    throw err;
+  }
+};
+
 
 // export const deleteEventByIdHandler = async (req, res) => {
 //   const { eventId } = req.params;

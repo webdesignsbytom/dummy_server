@@ -28,8 +28,8 @@ export const createNewBooking = async (time, date, fullName, phoneNumber, email)
   });
 };
 
-export const deleteEventId = async (id) => {
-  return dbClient.event.delete({
+export const deleteBookingById = async (id) => {
+  return dbClient.bookingItem.delete({
     where: {
       id: id,
     },
