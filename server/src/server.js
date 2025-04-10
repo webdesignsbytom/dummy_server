@@ -10,6 +10,7 @@ import * as url from 'url';
 import authRouter from './routes/auth.js';
 import eventRouter from './routes/events.js';
 import userRouter from './routes/users.js';
+import bookingRouter from './routes/booking.js';
 import testRouter from './routes/tests.js';
 // Responses
 import { sendDataResponse } from './utils/responses.js'
@@ -54,6 +55,7 @@ const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 app.use('/', authRouter);
 app.use('/events', eventRouter);
 app.use('/users', userRouter);
+app.use('/bookings', bookingRouter);
 app.use('/tests', testRouter);
 
 // Server interface page

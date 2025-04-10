@@ -1,25 +1,19 @@
 import { Router } from 'express';
-import {
-  deleteAllEventsHandler,
-  deleteEventByIdHandler,
-  getAllEvents,
-} from '../controllers/events.js';
 import { validateAuthentication, validateDeveloperRole } from '../middleware/auth.js';
+import { createNewBookingHandler, getAllBookingsHandler } from '../controllers/booking.js';
 
 const router = Router();
 
-router.get('/', validateAuthentication, validateDeveloperRole, getAllEvents);
-router.delete(
-  '/delete-event/:eventId',
-  validateAuthentication,
-  validateDeveloperRole,
-  deleteEventByIdHandler
-);
-router.delete(
-  '/delete-all-events',
-  validateAuthentication,
-  validateDeveloperRole,
-  deleteAllEventsHandler
-);
+router.get('/get-all-bookings', getAllBookingsHandler);
+router.post('/create-new-booking', createNewBookingHandler);
+
+// router.delete(
+//   '/delete-event/:eventId',
+//   deleteEventByIdHandler
+// );
+// router.delete(
+//   '/delete-all-events',
+//   deleteAllEventsHandler
+// );
 
 export default router;

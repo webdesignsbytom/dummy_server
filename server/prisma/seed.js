@@ -36,6 +36,16 @@ const events = [
   },
 ];
 
+// Add a sample booking
+const booking = {
+  time: 14, // 2pm
+  date: '2025-04-15T00:00:00.000Z', // today (you can adjust this if needed)
+  fullName: 'Jane Doe',
+  phoneNumber: '123-456-7890',
+  email: 'jane.doe@example.com',
+  bookingApproved: true
+};
+
 async function seed() {
   try {
     // Validate environment variables
@@ -67,6 +77,13 @@ async function seed() {
         data: event,
       });
     }
+
+    // Create a booking
+    await dbClient.bookingItem.create({
+      data: booking,
+    });
+
+    console.log('Seed completed.');
   } catch (error) {
     console.error('Seeding failed:', error.message);
   } finally {

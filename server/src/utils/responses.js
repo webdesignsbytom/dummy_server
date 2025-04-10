@@ -23,6 +23,10 @@ export const EVENT_MESSAGES = {
   eventTag: `Event database.`,
   eventNotFound: `Failed to find event.`,
   createEventFail: `Failed to create event.`,
+  // Bookings
+  bookingTag: `Booking database.`,
+  bookingNotFound: `Failed to find booking/s.`,
+  createBookingFail: `Failed to create booking.`,
   // Users
   userTag: `User database.`,
   userNotFound: `Failed to find user(s).`,
