@@ -28,14 +28,32 @@ export const createNewBooking = async (time, date, fullName, phoneNumber, email)
   });
 };
 
+export const confirmBooking = async (id) => {
+  return dbClient.bookingItem.update({
+    where: {
+      id: id,
+    },
+    data: {
+      bookingApproved: true
+    }
+  });
+};
+
+export const denyBooking = async (id) => {
+  return dbClient.bookingItem.update({
+    where: {
+      id: id,
+    },
+    data: {
+      denied: true
+    }
+  });
+};
+
 export const deleteBookingById = async (id) => {
   return dbClient.bookingItem.delete({
     where: {
       id: id,
     },
   });
-};
-
-export const deleteAllEventsFromDB = async () => {
-  return dbClient.event.deleteMany({});
 };

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{title}}</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            font-family: 'Poppins', sans-serif;
+            color: #333;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #4CAF50;
+        }
+
+        p {
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        a {
+            color: #4CAF50;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        footer {
+            margin-top: 30px;
+            font-size: 14px;
+            color: #999;
+        }
+
+        footer h2 {
+            margin: 0;
+            font-size: 16px;
+            color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Thank you for signing up with {{businessName}}</h1>
+
+        <p>Please verify your email address to complete the signup process and log in to your account.</p>
+        <p><b>This link expires in {{expiryTime}}.</b></p>
+
+        <p>
+            Click <a href="{{confirmationUrl}}">here</a> to verify your email.
+        </p>
+
+        <p>Or copy and paste this URL into your browser: {{confirmationUrl}}</p>
+        <p><a target="_blank" rel="noreferrer" href="{{confirmationUrl}}">{{confirmationUrl}}</a></p>
+    </div>
+
+    <footer>
+        <h2>{{businessUrl}}</h2>
+        <a target="_blank" rel="noreferrer" href="{{businessUrl}}">{{businessUrl}}</a>
+        <p>&copy; <span id="year"></span> {{businessName}}. All rights reserved.</p>
+    </footer>
+
+    <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

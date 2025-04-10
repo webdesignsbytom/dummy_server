@@ -69,6 +69,25 @@ export const sendEmail = async (to, subject, template, context = {}) => {
   }
 };
 
+export const sendBookingNotificationEmail = async (recipient, subject, template, context = {}) => {
+  const mailOptions = {
+    from: `"${BusinessName}" <${AUTH_EMAIL}>`,
+    to: recipient,
+    subject,
+    template, // Matches the .hbs template
+    context, // Data for template rendering
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`✅ Email sent: ${info.messageId}`);
+    return true;
+  } catch (err) {
+    console.error('❌ Error sending email:', err);
+    return false;
+  }
+};
+
 /**
  * Sends a test email to verify SMTP configuration
  * @param {string} testEmail - The recipient email for testing

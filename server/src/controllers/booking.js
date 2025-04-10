@@ -4,6 +4,7 @@ import { myEmitterEvents } from '../event/eventEvents.js';
 // Domain
 import {
   checkBookingSlot,
+  confirmBooking,
   createNewBooking,
   deleteBookingById,
   findAllBookings,
@@ -111,11 +112,11 @@ export const createNewBookingHandler = async (req, res) => {
       return sendMessageResponse(res, notCreated.code, notCreated.message);
     }
 
-    // const uniqueString = uuid() + userId;
-    // const hashedString = await bcrypt.hash(uniqueString, 10);
+    const uniqueString = uuid() + createdBooking.id;
+    const hashedString = await bcrypt.hash(uniqueString, 10);
 
     // await createVerificationEmailHandler(userId, hashedString);
-    // await sendVerificationEmail(userId, createdUser.email, uniqueString);
+    await sendBookingNotificationEmail(userId, createdUser.email, uniqueString);
 
     // myEmitterUsers.emit('register', createdUser);
     return sendDataResponse(res, 201, { booking: createdBooking });
@@ -123,6 +124,42 @@ export const createNewBookingHandler = async (req, res) => {
     // Error
     const serverError = new ServerErrorEvent(
       `Booking creation request Server error ${err.message}`
+    );
+    myEmitterErrors.emit('error', serverError);
+    sendMessageResponse(res, serverError.code, serverError.message);
+    throw err;
+  }
+};
+
+export const confirmNewBookingHandler = async (req, res) => {
+  const { bookingId } = req.params
+
+  if (!bookingId) {
+    return sendDataResponse(res, 409, {
+      message: `Booking ID is missing.`,
+    });
+  }
+
+  try {
+    const confirmedBooking = await confirmBooking(bookingId)
+
+    if (!confirmedBooking) {
+      const notCreated = new BadRequestEvent(
+        EVENT_MESSAGES.badRequest,
+        EVENT_MESSAGES.confirmBookingFail
+      );
+      myEmitterErrors.emit('error', notCreated);
+      return sendMessageResponse(res, notCreated.code, notCreated.message);
+    }
+
+    return sendDataResponse(res, 200, {
+      message: 'Success: Booking confirmed',
+    });
+  } catch (err) {
+    //
+    const serverError = new ServerErrorEvent(
+      req.user,
+      `Delete booking failed`
     );
     myEmitterErrors.emit('error', serverError);
     sendMessageResponse(res, serverError.code, serverError.message);
@@ -152,7 +189,7 @@ export const deleteBookingHandler = async (req, res) => {
     }
 
     return sendDataResponse(res, 200, {
-      events: 'Success: Booking deleted',
+      message: 'Success: Booking deleted',
     });
   } catch (err) {
     //
