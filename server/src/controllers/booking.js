@@ -118,13 +118,17 @@ export const createNewBookingHandler = async (req, res) => {
     const uniqueString = uuid() + createdBooking.id;
     console.log('uniqueString', uniqueString);
 
-    const formattedDate = (() => {
-      const d = new Date(date);
-      const dd = String(d.getDate()).padStart(2, '0');
-      const mm = String(d.getMonth() + 1).padStart(2, '0');
-      const yy = String(d.getFullYear()).slice(-2);
-      return `${dd}/${mm}/${yy}`;
-    })();
+    const formatDate = (dateString) => {
+      const date = new Date(dateString);
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+      const year = String(date.getFullYear()).slice(-2); // Get last two digits of the year
+      return `${day}/${month}/${year}`;
+    };
+    
+    // Example usage:
+    const formattedDate = formatDate(date);
+    console.log(formattedDate); // Output: 15/04/25
 
     // await createVerificationEmailHandler(userId, hashedString);
     await sendBookingNotificationEmail(
