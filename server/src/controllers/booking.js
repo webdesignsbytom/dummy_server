@@ -125,10 +125,13 @@ export const createNewBookingHandler = async (req, res) => {
       const year = String(date.getFullYear()).slice(-2); // Get last two digits of the year
       return `${day}/${month}/${year}`;
     };
-    
+
     // Example usage:
     const formattedDate = formatDate(date);
     console.log(formattedDate); // Output: 15/04/25
+
+    const approveUrl = `${process.env.BOOKING_API_ROUTE}/confirm-booking/${createdBooking.id}`;
+    const rejectUrl = `${process.env.BOOKING_API_ROUTE}/deny-booking/${createdBooking.id}`;
 
     // await createVerificationEmailHandler(userId, hashedString);
     await sendBookingNotificationEmail(
@@ -142,6 +145,8 @@ export const createNewBookingHandler = async (req, res) => {
         phoneNumber,
         email,
         uniqueString,
+        approveUrl,
+        rejectUrl,
       }
     );
 
