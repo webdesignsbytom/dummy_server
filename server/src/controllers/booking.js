@@ -22,6 +22,8 @@ import {
   NotFoundEvent,
   ServerErrorEvent,
 } from '../event/utils/errorUtils.js';
+import { sendBookingNotificationEmail } from '../utils/email/emailHandler.js';
+import { v4 as uuid } from 'uuid';
 
 export const getAllBookingsHandler = async (req, res) => {
   console.log('get all bookings');
@@ -114,10 +116,21 @@ export const createNewBookingHandler = async (req, res) => {
     }
 
     const uniqueString = uuid() + createdBooking.id;
-    const hashedString = await bcrypt.hash(uniqueString, 10);
+    console.log('uniqueString', uniqueString);
 
     // await createVerificationEmailHandler(userId, hashedString);
-    await sendBookingNotificationEmail(userId, createdUser.email, uniqueString);
+    await sendBookingNotificationEmail(
+      email,
+      'New Booking Notification',
+      'bookingNotification',
+      {
+        time,
+        date,
+        fullName,
+        phoneNumber,
+        uniqueString,
+      }
+    );
 
     // myEmitterUsers.emit('register', createdUser);
     return sendDataResponse(res, 201, { booking: createdBooking });
@@ -232,4 +245,3 @@ export const deleteBookingHandler = async (req, res) => {
     throw err;
   }
 };
-

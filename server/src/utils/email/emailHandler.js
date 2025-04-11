@@ -18,6 +18,10 @@ const EMAIL_PORT = parseInt(process.env.EMAIL_PORT, 10) || 465;
 const AUTH_EMAIL = process.env.AUTH_EMAIL;
 const AUTH_PASS = process.env.AUTH_PASS;
 
+// Booking
+const BOOKING_ADMIN_EMAIL = process.env.BOOKING_ADMIN_EMAIL
+const BOOKING_ADMIN_PASS = process.env.BOOKING_ADMIN_PASS
+
 // Set up handlebars for HTML email templates
 const handlebarOptions = {
   viewEngine: {
@@ -36,6 +40,16 @@ const transporter = nodemailer.createTransport({
   auth: {
     user: AUTH_EMAIL,
     pass: AUTH_PASS,
+  },
+});
+
+const bookingTransporter = nodemailer.createTransport({
+  host: EMAIL_HOST,
+  port: EMAIL_PORT,
+  secure: EMAIL_PORT === 465, // SSL for 465, TLS for 587
+  auth: {
+    user: BOOKING_ADMIN_EMAIL,
+    pass: BOOKING_ADMIN_PASS,
   },
 });
 
@@ -70,8 +84,9 @@ export const sendEmail = async (to, subject, template, context = {}) => {
 };
 
 export const sendBookingNotificationEmail = async (recipient, subject, template, context = {}) => {
+  console.log('EMAIL!!!');
   const mailOptions = {
-    from: `"${BusinessName}" <${AUTH_EMAIL}>`,
+    from: `"${BusinessName}" <${BOOKING_ADMIN_EMAIL}>`,
     to: recipient,
     subject,
     template, // Matches the .hbs template
@@ -79,7 +94,7 @@ export const sendBookingNotificationEmail = async (recipient, subject, template,
   };
 
   try {
-    const info = await transporter.sendMail(mailOptions);
+    const info = await bookingTransporter.sendMail(mailOptions);
     console.log(`✅ Email sent: ${info.messageId}`);
     return true;
   } catch (err) {
