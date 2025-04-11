@@ -55,6 +55,7 @@ const bookingTransporter = nodemailer.createTransport({
 
 // Apply handlebars templating engine
 transporter.use('compile', hbs(handlebarOptions));
+bookingTransporter.use('compile', hbs(handlebarOptions));
 
 /**
  * Sends an email

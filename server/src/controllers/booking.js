@@ -128,6 +128,7 @@ export const createNewBookingHandler = async (req, res) => {
         date,
         fullName,
         phoneNumber,
+        email,
         uniqueString,
       }
     );
