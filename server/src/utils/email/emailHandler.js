@@ -84,7 +84,7 @@ export const sendEmail = async (to, subject, template, context = {}) => {
 };
 
 export const sendBookingNotificationEmail = async (recipient, subject, template, context = {}) => {
-  console.log('EMAIL!!!');
+  console.log('EMAIL!!!', recipient, subject, template, context);
   const mailOptions = {
     from: `"${BusinessName}" <${BOOKING_ADMIN_EMAIL}>`,
     to: recipient,
@@ -95,7 +95,7 @@ export const sendBookingNotificationEmail = async (recipient, subject, template,
 
   try {
     const info = await bookingTransporter.sendMail(mailOptions);
-    console.log(`✅ Email sent: ${info.messageId}`);
+    console.log(`✅ Booking Confirmation Email Sent: ${info.recipient}`);
     return true;
   } catch (err) {
     console.error('❌ Error sending email:', err);
