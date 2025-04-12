@@ -24,14 +24,20 @@ export const findBookingsForDay = async (date) => {
   });
 };
 
-export const createNewBooking = async (time, date, fullName, phoneNumber, email) => {
+export const createNewBooking = async (
+  time,
+  date,
+  fullName,
+  phoneNumber,
+  email
+) => {
   return dbClient.bookingItem.create({
     data: {
       time: time,
       date: date,
       fullName: fullName,
       phoneNumber: phoneNumber,
-      email: email
+      email: email,
     },
   });
 };
@@ -42,8 +48,8 @@ export const confirmBooking = async (id) => {
       id: id,
     },
     data: {
-      bookingApproved: true
-    }
+      bookingApproved: true,
+    },
   });
 };
 
@@ -53,8 +59,8 @@ export const denyBooking = async (id) => {
       id: id,
     },
     data: {
-      denied: true
-    }
+      denied: true,
+    },
   });
 };
 
@@ -64,4 +70,8 @@ export const deleteBookingById = async (id) => {
       id: id,
     },
   });
+};
+
+export const deleteAllBookings = async () => {
+  return dbClient.bookingItem.deleteMany({});
 };

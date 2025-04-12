@@ -6,6 +6,7 @@ import {
 import {
   confirmNewBookingHandler,
   createNewBookingHandler,
+  deleteAllBookingHandler,
   deleteBookingHandler,
   denyNewBookingHandler,
   getAllBookingsHandler,
@@ -20,5 +21,6 @@ router.post('/create-new-booking', createNewBookingHandler);
 router.patch('/confirm-booking/:bookingId', confirmNewBookingHandler);
 router.patch('/deny-booking/:bookingId', denyNewBookingHandler);
 router.delete('/delete-booking', deleteBookingHandler);
+router.delete('/delete-all-bookings', deleteAllBookingHandler);
 
 export default router;
