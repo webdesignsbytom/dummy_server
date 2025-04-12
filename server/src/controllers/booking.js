@@ -24,6 +24,9 @@ import {
 } from '../event/utils/errorUtils.js';
 import {
   sendBookingConfirmationFailed,
+  sendBookingConfirmedEmailToCustomer,
+  sendBookingConfirmedEmailToOwner,
+  sendBookingEmail,
   sendBookingNotificationEmail,
   sendBookingRequestRecievedEmail,
 } from '../utils/email/emailHandler.js';
@@ -226,37 +229,90 @@ export const confirmNewBookingHandler = async (req, res) => {
 
     const ownerConfirmationEmailSent = await sendBookingConfirmedEmailToOwner(
       process.env.BOOKING_RECIEVER_EMAIL, // Owner's email here
-      'New Booking Notification',
+      'New Booking Approved',
       'bookingApprovedOwner',
       {
         time: confirmedBooking.time,
-        date: confirmedBooking.date, 
+        date: confirmedBooking.date,
         fullName: confirmedBooking.fullName,
         phoneNumber: confirmedBooking.phoneNumber,
         email: confirmedBooking.email,
-        uniqueString: confirmedBooking.id, 
+        uniqueString: confirmedBooking.id,
       }
     );
 
+    // Failed to send confirmation to owner
     if (!ownerConfirmationEmailSent) {
       const notCreated = new BadRequestEvent(
         EVENT_MESSAGES.badRequest,
         EVENT_MESSAGES.recievedBookingSendingFail
       );
 
-      const ownerConfirmationEmailFailedToSend = await sendBookingConfirmationFailed(
-        process.env.BOOKING_RECIEVER_EMAIL, // Owner's email here
-        'New Booking Notification',
-        'sendBookingConfirmationFailed',
+      const ownerConfirmationEmailFailedToSend =
+        await sendBookingConfirmationFailed(
+          process.env.BOOKING_RECIEVER_EMAIL, // Owner's email here
+          'New Booking Approval Failed',
+          'sendBookingConfirmationFailed',
+          {
+            time: confirmedBooking.time,
+            date: confirmedBooking.date,
+            fullName: confirmedBooking.fullName,
+            phoneNumber: confirmedBooking.phoneNumber,
+            email: confirmedBooking.email,
+            uniqueString: confirmedBooking.id,
+          }
+        );
+
+      if (!ownerConfirmationEmailFailedToSend) {
+        const notCreated = new BadRequestEvent(
+          EVENT_MESSAGES.badRequest,
+          EVENT_MESSAGES.confirmBookingFail
+        );
+        myEmitterErrors.emit('error', notCreated);
+        return sendMessageResponse(res, notCreated.code, notCreated.message);
+      }
+
+      myEmitterErrors.emit('error', notCreated);
+      return sendMessageResponse(res, notCreated.code, notCreated.message);
+    }
+
+    // Send confirmation to customer
+    const customerConfirmationEmailSent =
+      await sendBookingConfirmedEmailToCustomer(
+        confirmedBooking.email, // Customers's email here
+        'Booking Confirmed',
+        'bookingApprovedCustomer',
         {
           time: confirmedBooking.time,
-          date: confirmedBooking.date, 
+          date: confirmedBooking.date,
           fullName: confirmedBooking.fullName,
           phoneNumber: confirmedBooking.phoneNumber,
           email: confirmedBooking.email,
-          uniqueString: confirmedBooking.id, 
+          uniqueString: confirmedBooking.id,
         }
       );
+
+    // Failed to send confirmation to owner
+    if (!customerConfirmationEmailSent) {
+      const notCreated = new BadRequestEvent(
+        EVENT_MESSAGES.badRequest,
+        EVENT_MESSAGES.recievedBookingSendingFail
+      );
+
+      const ownerConfirmationEmailFailedToSend =
+        await sendBookingConfirmationFailed(
+          process.env.BOOKING_RECIEVER_EMAIL, // Owner's email here
+          'New Booking Approval Confirmation Email Failed',
+          'bookingApprovedCustomerFailed',
+          {
+            time: confirmedBooking.time,
+            date: confirmedBooking.date,
+            fullName: confirmedBooking.fullName,
+            phoneNumber: confirmedBooking.phoneNumber,
+            email: confirmedBooking.email,
+            uniqueString: confirmedBooking.id,
+          }
+        );
 
       if (!ownerConfirmationEmailFailedToSend) {
         const notCreated = new BadRequestEvent(
@@ -285,6 +341,7 @@ export const confirmNewBookingHandler = async (req, res) => {
 
 export const denyNewBookingHandler = async (req, res) => {
   const { bookingId } = req.params;
+  console.log('bookingId', bookingId);
 
   if (!bookingId) {
     return sendDataResponse(res, 409, {
@@ -293,9 +350,10 @@ export const denyNewBookingHandler = async (req, res) => {
   }
 
   try {
-    const confirmedBooking = await denyBooking(bookingId);
+    const deniedBooking = await denyBooking(bookingId);
+    console.log('deniedBooking', deniedBooking);
 
-    if (!confirmedBooking) {
+    if (!deniedBooking) {
       const notCreated = new BadRequestEvent(
         EVENT_MESSAGES.badRequest,
         EVENT_MESSAGES.denyBookingFail
@@ -304,13 +362,107 @@ export const denyNewBookingHandler = async (req, res) => {
       return sendMessageResponse(res, notCreated.code, notCreated.message);
     }
 
-    // IF FAIL SEND EMAIL TO OWNER
+    // Notify Owner: Booking Denied
+    const ownerRejectionEmailSent = await sendBookingEmail(
+      process.env.BOOKING_RECIEVER_EMAIL,
+      'Booking Denied',
+      'bookingDeniedOwner',
+      {
+        time: deniedBooking.time,
+        date: deniedBooking.date,
+        fullName: deniedBooking.fullName,
+        phoneNumber: deniedBooking.phoneNumber,
+        email: deniedBooking.email,
+        uniqueString: deniedBooking.id,
+      }
+    );
+
+    if (!ownerRejectionEmailSent) {
+      const notCreated = new BadRequestEvent(
+        EVENT_MESSAGES.badRequest,
+        EVENT_MESSAGES.recievedBookingSendingFail
+      );
+
+      const ownerRejectionFailedToSend = await sendBookingEmail(
+        process.env.BOOKING_RECIEVER_EMAIL,
+        'Booking Denial Notification Failed',
+        'sendBookingDenialFailed',
+        {
+          time: deniedBooking.time,
+          date: deniedBooking.date,
+          fullName: deniedBooking.fullName,
+          phoneNumber: deniedBooking.phoneNumber,
+          email: deniedBooking.email,
+          uniqueString: deniedBooking.id,
+        }
+      );
+
+      if (!ownerRejectionFailedToSend) {
+        const notCreated = new BadRequestEvent(
+          EVENT_MESSAGES.badRequest,
+          EVENT_MESSAGES.denyBookingFail
+        );
+        myEmitterErrors.emit('error', notCreated);
+        return sendMessageResponse(res, notCreated.code, notCreated.message);
+      }
+
+      myEmitterErrors.emit('error', notCreated);
+      return sendMessageResponse(res, notCreated.code, notCreated.message);
+    }
+
+    // Notify Customer: Booking Denied
+    const customerRejectionEmailSent = await sendBookingEmail(
+      deniedBooking.email,
+      'Booking Denied',
+      'bookingDeniedCustomer',
+      {
+        time: deniedBooking.time,
+        date: deniedBooking.date,
+        fullName: deniedBooking.fullName,
+        phoneNumber: deniedBooking.phoneNumber,
+        email: deniedBooking.email,
+        uniqueString: deniedBooking.id,
+      }
+    );
+
+    if (!customerRejectionEmailSent) {
+      const notCreated = new BadRequestEvent(
+        EVENT_MESSAGES.badRequest,
+        EVENT_MESSAGES.recievedBookingSendingFail
+      );
+
+      const rejectionFailedToNotifyOwner = await sendBookingEmail(
+        process.env.BOOKING_RECIEVER_EMAIL,
+        'Booking Denial Customer Notification Failed',
+        'bookingDeniedCustomerFailed',
+        {
+          time: deniedBooking.time,
+          date: deniedBooking.date,
+          fullName: deniedBooking.fullName,
+          phoneNumber: deniedBooking.phoneNumber,
+          email: deniedBooking.email,
+          uniqueString: deniedBooking.id,
+        }
+      );
+
+      if (!rejectionFailedToNotifyOwner) {
+        const notCreated = new BadRequestEvent(
+          EVENT_MESSAGES.badRequest,
+          EVENT_MESSAGES.denyBookingFail
+        );
+        myEmitterErrors.emit('error', notCreated);
+        return sendMessageResponse(res, notCreated.code, notCreated.message);
+      }
+
+      myEmitterErrors.emit('error', notCreated);
+      return sendMessageResponse(res, notCreated.code, notCreated.message);
+    }
+
     return sendDataResponse(res, 200, {
       message: 'Success: Booking denied',
     });
   } catch (err) {
-    //
-    const serverError = new ServerErrorEvent(req.user, `Delete booking failed`);
+    const serverError = new ServerErrorEvent(req.user, `Deny booking failed`);
     myEmitterErrors.emit('error', serverError);
     sendMessageResponse(res, serverError.code, serverError.message);
     throw err;
