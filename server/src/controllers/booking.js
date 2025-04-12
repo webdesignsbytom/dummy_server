@@ -51,6 +51,42 @@ export const getAllBookingsHandler = async (req, res) => {
       return sendMessageResponse(res, notFound.code, notFound.message);
     }
 
+    // Only keep time and date for each booking
+    const shortBookings = foundBookings.map((booking) => ({
+      time: booking.time,
+      date: booking.date,
+    }));
+
+    return sendDataResponse(res, 200, { bookings: shortBookings });
+  } catch (err) {
+    //
+    const serverError = new ServerErrorEvent(
+      req.user,
+      `Get all bookings failed`
+    );
+    myEmitterErrors.emit('error', serverError);
+    sendMessageResponse(res, serverError.code, serverError.message);
+    throw err;
+  }
+};
+
+export const getAllBookingsAdminHandler = async (req, res) => {
+  console.log('get all bookings');
+
+  try {
+    const foundBookings = await findAllBookings();
+    console.log('found bookings:', foundBookings);
+
+    if (!foundBookings) {
+      const notFound = new NotFoundEvent(
+        req.user,
+        EVENT_MESSAGES.notFound,
+        EVENT_MESSAGES.bookingNotFound
+      );
+      myEmitterErrors.emit('error', notFound);
+      return sendMessageResponse(res, notFound.code, notFound.message);
+    }
+
     return sendDataResponse(res, 200, { bookings: foundBookings });
   } catch (err) {
     //
@@ -64,13 +100,12 @@ export const getAllBookingsHandler = async (req, res) => {
   }
 };
 
-
 export const getTodaysBookingsHandler = async (req, res) => {
   console.log('get all bookings');
 
   try {
     const today = new Date();
-  
+
     // Set the time to midnight UTC (00:00:00)
     today.setUTCHours(0, 0, 0, 0);
 
@@ -115,7 +150,6 @@ export const createNewBookingHandler = async (req, res) => {
   }
 
   try {
-
     const bookingDate = new Date(date);
 
     bookingDate.setUTCHours(0, 0, 0, 0); // ensures just the calendar day is matched
@@ -675,7 +709,11 @@ export const editBookingHandler = async (req, res) => {
         EVENT_MESSAGES.sendOwnerUpdateFail
       );
       myEmitterErrors.emit('error', ownerEmailFail);
-      return sendMessageResponse(res, ownerEmailFail.code, ownerEmailFail.message);
+      return sendMessageResponse(
+        res,
+        ownerEmailFail.code,
+        ownerEmailFail.message
+      );
     }
 
     // Notify Customer: Booking Updated
@@ -699,7 +737,11 @@ export const editBookingHandler = async (req, res) => {
         EVENT_MESSAGES.sendCustomerUpdateFail
       );
       myEmitterErrors.emit('error', customerEmailFail);
-      return sendMessageResponse(res, customerEmailFail.code, customerEmailFail.message);
+      return sendMessageResponse(
+        res,
+        customerEmailFail.code,
+        customerEmailFail.message
+      );
     }
 
     // Done ✅
@@ -707,7 +749,6 @@ export const editBookingHandler = async (req, res) => {
       message: 'Success: Booking updated',
       booking: updatedBooking,
     });
-
   } catch (err) {
     const serverError = new ServerErrorEvent(req.user, `Edit booking failed`);
     myEmitterErrors.emit('error', serverError);
@@ -715,7 +756,6 @@ export const editBookingHandler = async (req, res) => {
     throw err;
   }
 };
-
 
 export const deleteBookingHandler = async (req, res) => {
   const { bookingId } = req.body;

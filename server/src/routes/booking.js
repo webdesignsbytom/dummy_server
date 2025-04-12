@@ -11,6 +11,7 @@ import {
   deleteBookingHandler,
   denyNewBookingHandler,
   editBookingHandler,
+  getAllBookingsAdminHandler,
   getAllBookingsHandler,
   getTodaysBookingsHandler,
 } from '../controllers/booking.js';
@@ -18,6 +19,7 @@ import {
 const router = Router();
 
 router.get('/get-all-bookings', getAllBookingsHandler);
+router.get('/get-all-bookings-admin', getAllBookingsAdminHandler);
 router.get('/get-todays-date-bookings', getTodaysBookingsHandler);
 router.post('/create-new-booking', createNewBookingHandler);
 router.patch('/confirm-booking/:bookingId', confirmNewBookingHandler);
