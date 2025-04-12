@@ -130,10 +130,11 @@ export const createNewBookingHandler = async (req, res) => {
     const formattedDate = formatDate(date);
     console.log(formattedDate); // Output: 15/04/25
 
-    const approveUrl = `${process.env.BOOKING_API_ROUTE}/confirm-booking/${createdBooking.id}`;
-    const rejectUrl = `${process.env.BOOKING_API_ROUTE}/deny-booking/${createdBooking.id}`;
+    const approveUrl = `${process.env.BOOKING_API_APPROVE}/${createdBooking.id}`;
+    const rejectUrl = `${process.env.BOOKING_API_REJECT}/${createdBooking.id}`;
+    console.log('approveUrl', approveUrl);
+    console.log('rejectUrl', rejectUrl);
 
-    // await createVerificationEmailHandler(userId, hashedString);
     await sendBookingNotificationEmail(
       email,
       'New Booking Notification',
@@ -150,7 +151,6 @@ export const createNewBookingHandler = async (req, res) => {
       }
     );
 
-    // myEmitterUsers.emit('register', createdUser);
     return sendDataResponse(res, 201, { booking: createdBooking });
   } catch (err) {
     // Error
@@ -165,6 +165,7 @@ export const createNewBookingHandler = async (req, res) => {
 
 export const confirmNewBookingHandler = async (req, res) => {
   const { bookingId } = req.params;
+  console.log('bookingId', bookingId);
 
   if (!bookingId) {
     return sendDataResponse(res, 409, {
