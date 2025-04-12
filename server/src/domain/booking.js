@@ -16,6 +16,14 @@ export const checkBookingSlot = async (time, bookingDate) => {
   });
 };
 
+export const findBookingsForDay = async (date) => {
+  return dbClient.bookingItem.findMany({
+    where: {
+      date: date,
+    },
+  });
+};
+
 export const createNewBooking = async (time, date, fullName, phoneNumber, email) => {
   return dbClient.bookingItem.create({
     data: {
