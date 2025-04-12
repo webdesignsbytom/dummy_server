@@ -22,7 +22,11 @@ import {
   NotFoundEvent,
   ServerErrorEvent,
 } from '../event/utils/errorUtils.js';
-import { sendBookingNotificationEmail } from '../utils/email/emailHandler.js';
+import {
+  sendBookingConfirmationFailed,
+  sendBookingNotificationEmail,
+  sendBookingRequestRecievedEmail,
+} from '../utils/email/emailHandler.js';
 import { v4 as uuid } from 'uuid';
 
 export const getAllBookingsHandler = async (req, res) => {
@@ -135,8 +139,8 @@ export const createNewBookingHandler = async (req, res) => {
     console.log('approveUrl', approveUrl);
     console.log('rejectUrl', rejectUrl);
 
-    await sendBookingNotificationEmail(
-      email,
+    const notificationSent = await sendBookingNotificationEmail(
+      process.env.BOOKING_RECIEVER_EMAIL,
       'New Booking Notification',
       'bookingNotification',
       {
@@ -150,6 +154,40 @@ export const createNewBookingHandler = async (req, res) => {
         rejectUrl,
       }
     );
+
+    if (!notificationSent) {
+      const notCreated = new BadRequestEvent(
+        EVENT_MESSAGES.badRequest,
+        EVENT_MESSAGES.notificationSendingFail
+      );
+      myEmitterErrors.emit('error', notCreated);
+      return sendMessageResponse(res, notCreated.code, notCreated.message);
+    }
+
+    const bookingRecivedSent = await sendBookingRequestRecievedEmail(
+      email,
+      'New Booking Notification',
+      'bookingRecieved',
+      {
+        time,
+        date: formattedDate,
+        fullName,
+        phoneNumber,
+        email,
+        uniqueString,
+        approveUrl,
+        rejectUrl,
+      }
+    );
+
+    if (!bookingRecivedSent) {
+      const notCreated = new BadRequestEvent(
+        EVENT_MESSAGES.badRequest,
+        EVENT_MESSAGES.recievedBookingSendingFail
+      );
+      myEmitterErrors.emit('error', notCreated);
+      return sendMessageResponse(res, notCreated.code, notCreated.message);
+    }
 
     return sendDataResponse(res, 201, { booking: createdBooking });
   } catch (err) {
@@ -175,6 +213,7 @@ export const confirmNewBookingHandler = async (req, res) => {
 
   try {
     const confirmedBooking = await confirmBooking(bookingId);
+    console.log('confirmedBooking', confirmedBooking);
 
     if (!confirmedBooking) {
       const notCreated = new BadRequestEvent(
@@ -185,7 +224,53 @@ export const confirmNewBookingHandler = async (req, res) => {
       return sendMessageResponse(res, notCreated.code, notCreated.message);
     }
 
-    // IF FAIL SEND EMAIL TO OWNER
+    const ownerConfirmationEmailSent = await sendBookingConfirmedEmailToOwner(
+      process.env.BOOKING_RECIEVER_EMAIL, // Owner's email here
+      'New Booking Notification',
+      'bookingApprovedOwner',
+      {
+        time: confirmedBooking.time,
+        date: confirmedBooking.date, 
+        fullName: confirmedBooking.fullName,
+        phoneNumber: confirmedBooking.phoneNumber,
+        email: confirmedBooking.email,
+        uniqueString: confirmedBooking.id, 
+      }
+    );
+
+    if (!ownerConfirmationEmailSent) {
+      const notCreated = new BadRequestEvent(
+        EVENT_MESSAGES.badRequest,
+        EVENT_MESSAGES.recievedBookingSendingFail
+      );
+
+      const ownerConfirmationEmailFailedToSend = await sendBookingConfirmationFailed(
+        process.env.BOOKING_RECIEVER_EMAIL, // Owner's email here
+        'New Booking Notification',
+        'sendBookingConfirmationFailed',
+        {
+          time: confirmedBooking.time,
+          date: confirmedBooking.date, 
+          fullName: confirmedBooking.fullName,
+          phoneNumber: confirmedBooking.phoneNumber,
+          email: confirmedBooking.email,
+          uniqueString: confirmedBooking.id, 
+        }
+      );
+
+      if (!ownerConfirmationEmailFailedToSend) {
+        const notCreated = new BadRequestEvent(
+          EVENT_MESSAGES.badRequest,
+          EVENT_MESSAGES.confirmBookingFail
+        );
+        myEmitterErrors.emit('error', notCreated);
+        return sendMessageResponse(res, notCreated.code, notCreated.message);
+      }
+
+      myEmitterErrors.emit('error', notCreated);
+      return sendMessageResponse(res, notCreated.code, notCreated.message);
+    }
+
     return sendDataResponse(res, 200, {
       message: 'Success: Booking confirmed',
     });

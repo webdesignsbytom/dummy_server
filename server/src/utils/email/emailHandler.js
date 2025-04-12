@@ -19,8 +19,8 @@ const AUTH_EMAIL = process.env.AUTH_EMAIL;
 const AUTH_PASS = process.env.AUTH_PASS;
 
 // Booking
-const BOOKING_ADMIN_EMAIL = process.env.BOOKING_ADMIN_EMAIL
-const BOOKING_ADMIN_PASS = process.env.BOOKING_ADMIN_PASS
+const BOOKING_ADMIN_EMAIL = process.env.BOOKING_ADMIN_EMAIL;
+const BOOKING_ADMIN_PASS = process.env.BOOKING_ADMIN_PASS;
 
 // Set up handlebars for HTML email templates
 const handlebarOptions = {
@@ -84,7 +84,112 @@ export const sendEmail = async (to, subject, template, context = {}) => {
   }
 };
 
-export const sendBookingNotificationEmail = async (recipient, subject, template, context = {}) => {
+export const sendBookingNotificationEmail = async (
+  recipient,
+  subject,
+  template,
+  context = {}
+) => {
+  console.log('EMAIL!!!', recipient, subject, template, context);
+  const mailOptions = {
+    from: `"${BusinessName}" <${BOOKING_ADMIN_EMAIL}>`,
+    to: recipient,
+    subject,
+    template, // Matches the .hbs template
+    context, // Data for template rendering
+  };
+
+  try {
+    const info = await bookingTransporter.sendMail(mailOptions);
+    console.log(`✅ Booking Confirmation Email Sent: ${info.recipient}`);
+    return true;
+  } catch (err) {
+    console.error('❌ Error sending email:', err);
+    return false;
+  }
+};
+
+export const sendBookingRequestRecievedEmail = async (
+  recipient,
+  subject,
+  template,
+  context = {}
+) => {
+  console.log('EMAIL!!!', recipient, subject, template, context);
+  const mailOptions = {
+    from: `"${BusinessName}" <${BOOKING_ADMIN_EMAIL}>`,
+    to: recipient,
+    subject,
+    template, // Matches the .hbs template
+    context, // Data for template rendering
+  };
+
+  try {
+    const info = await bookingTransporter.sendMail(mailOptions);
+    console.log(`✅ Booking Confirmation Email Sent: ${info.recipient}`);
+    return true;
+  } catch (err) {
+    console.error('❌ Error sending email:', err);
+    return false;
+  }
+};
+
+export const sendBookingConfirmedEmailToOwner = async (
+  recipient,
+  subject,
+  template,
+  context = {}
+) => {
+  console.log('EMAIL!!!', recipient, subject, template, context);
+  const mailOptions = {
+    from: `"${BusinessName}" <${BOOKING_ADMIN_EMAIL}>`,
+    to: recipient,
+    subject,
+    template, // Matches the .hbs template
+    context, // Data for template rendering
+  };
+
+  try {
+    const info = await bookingTransporter.sendMail(mailOptions);
+    console.log(`✅ Booking Confirmation Email Sent: ${info.recipient}`);
+    return true;
+  } catch (err) {
+    console.error('❌ Error sending email:', err);
+    return false;
+  }
+};
+
+export const sendBookingConfirmedEmailToCustomer = async (
+  recipient,
+  subject,
+  template,
+  context = {}
+) => {
+  console.log('EMAIL!!!', recipient, subject, template, context);
+  const mailOptions = {
+    from: `"${BusinessName}" <${BOOKING_ADMIN_EMAIL}>`,
+    to: recipient,
+    subject,
+    template, // Matches the .hbs template
+    context, // Data for template rendering
+  };
+
+  try {
+    const info = await bookingTransporter.sendMail(mailOptions);
+    console.log(`✅ Booking Confirmation Email Sent: ${info.recipient}`);
+    return true;
+  } catch (err) {
+    console.error('❌ Error sending email:', err);
+    return false;
+  }
+};
+
+export const sendBookingConfirmationFailed = async (
+  recipient,
+  subject,
+  template,
+  context = {}
+) => {
   console.log('EMAIL!!!', recipient, subject, template, context);
   const mailOptions = {
     from: `"${BusinessName}" <${BOOKING_ADMIN_EMAIL}>`,

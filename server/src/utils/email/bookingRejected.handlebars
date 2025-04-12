@@ -1,0 +1,89 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Booking Rejected</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #f4f4f4;
+        font-family: 'Poppins', sans-serif;
+        color: #333;
+        text-align: center;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        font-size: 26px;
+        color: #e53935;
+      }
+      p {
+        font-size: 16px;
+        line-height: 1.6;
+      }
+      .info {
+        background-color: #f9f9f9;
+        padding: 15px;
+        margin: 20px 0;
+        border-left: 4px solid #e53935;
+        text-align: left;
+      }
+      a {
+        color: #4CAF50;
+        text-decoration: none;
+        font-weight: 600;
+      }
+      footer {
+        margin-top: 30px;
+        font-size: 14px;
+        color: #999;
+      }
+      footer h2 {
+        margin: 0;
+        font-size: 16px;
+        color: #4CAF50;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>We're Sorry — Booking Rejected</h1>
+
+      <p>Hi {{fullName}},</p>
+
+      <p>
+        Unfortunately, we’re unable to accept your booking at this time.  
+        Below are the details of your request:
+      </p>
+
+      <div class="info">
+        <p><strong>Date:</strong> {{date}}</p>
+        <p><strong>Time:</strong> {{time}}</p>
+        <p><strong>Name:</strong> {{fullName}}</p>
+        <p><strong>Email:</strong> {{email}}</p>
+        <p><strong>Phone Number:</strong> {{phoneNumber}}</p>
+        <p><strong>Booking ID:</strong> {{uniqueString}}</p>
+      </div>
+
+      <p>
+        We sincerely apologize for any inconvenience this may cause.  
+        If you'd like to make a new booking or have any questions, please don’t hesitate to contact us.
+      </p>
+
+      <footer>
+        <h2>{{businessName}}</h2>
+        <a target="_blank" rel="noreferrer" href="{{businessUrl}}">{{businessUrl}}</a>
+        <p>&copy; {{year}} {{businessName}}. All rights reserved.</p>
+      </footer>
+    </div>
+  </body>
+</html>
