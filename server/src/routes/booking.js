@@ -4,11 +4,13 @@ import {
   validateDeveloperRole,
 } from '../middleware/auth.js';
 import {
+  cancelBookingHandler,
   confirmNewBookingHandler,
   createNewBookingHandler,
   deleteAllBookingHandler,
   deleteBookingHandler,
   denyNewBookingHandler,
+  editBookingHandler,
   getAllBookingsHandler,
   getTodaysBookingsHandler,
 } from '../controllers/booking.js';
@@ -20,6 +22,8 @@ router.get('/get-todays-date-bookings', getTodaysBookingsHandler);
 router.post('/create-new-booking', createNewBookingHandler);
 router.patch('/confirm-booking/:bookingId', confirmNewBookingHandler);
 router.patch('/deny-booking/:bookingId', denyNewBookingHandler);
+router.patch('/cancel-booking/:bookingId', cancelBookingHandler);
+router.patch('/edit-booking/:bookingId', editBookingHandler);
 router.delete('/delete-booking', deleteBookingHandler);
 router.delete('/delete-all-bookings', deleteAllBookingHandler);
 
