@@ -10,6 +10,8 @@ import {
   deleteBookingById,
   denyBooking,
   findAllBookings,
+  findBookingsByDate,
+  findBookingsByEmail,
   findBookingsForDay,
 } from '../domain/booking.js';
 // Response messages
@@ -93,6 +95,97 @@ export const getAllBookingsAdminHandler = async (req, res) => {
     const serverError = new ServerErrorEvent(
       req.user,
       `Get all bookings failed`
+    );
+    myEmitterErrors.emit('error', serverError);
+    sendMessageResponse(res, serverError.code, serverError.message);
+    throw err;
+  }
+};
+
+export const getBookingByIdHandler = async (req, res) => {
+  const { bookingId } = req.params;
+  console.log(`Fetching booking with ID: ${bookingId}`);
+
+  try {
+    const booking = await findBookingById(bookingId);
+
+    if (!booking) {
+      const notFound = new NotFoundEvent(
+        req.user,
+        `Booking with ID ${bookingId} not found.`,
+        `No booking found for the given ID.`
+      );
+      myEmitterErrors.emit('error', notFound);
+      return sendMessageResponse(res, notFound.code, notFound.message);
+    }
+
+    return sendDataResponse(res, 200, { booking });
+  } catch (err) {
+    console.error('Error fetching booking by ID:', err);
+    const serverError = new ServerErrorEvent(
+      req.user,
+      `Failed to fetch booking by ID`
+    );
+    myEmitterErrors.emit('error', serverError);
+    sendMessageResponse(res, serverError.code, serverError.message);
+    throw err;
+  }
+};
+
+
+export const getBookingsByDateHandler = async (req, res) => {
+  const { date } = req.params;
+  console.log(`Fetching bookings for date: ${date}`);
+
+  try {
+    const bookings = await findBookingsByDate(date);
+
+    if (!bookings || bookings.length === 0) {
+      const notFound = new NotFoundEvent(
+        req.user,
+        `No bookings found for date: ${date}`,
+        `No bookings exist for the selected date.`
+      );
+      myEmitterErrors.emit('error', notFound);
+      return sendMessageResponse(res, notFound.code, notFound.message);
+    }
+
+    return sendDataResponse(res, 200, { bookings });
+  } catch (err) {
+    console.error('Error fetching bookings by date:', err);
+    const serverError = new ServerErrorEvent(
+      req.user,
+      `Failed to fetch bookings by date`
+    );
+    myEmitterErrors.emit('error', serverError);
+    sendMessageResponse(res, serverError.code, serverError.message);
+    throw err;
+  }
+};
+
+export const getBookingsByEmailHandler = async (req, res) => {
+  const { email } = req.params;
+  console.log(`Fetching bookings for email: ${email}`);
+
+  try {
+    const bookings = await findBookingsByEmail(email);
+
+    if (!bookings || bookings.length === 0) {
+      const notFound = new NotFoundEvent(
+        req.user,
+        `No bookings found for email: ${email}`,
+        `No bookings exist for the provided email address.`
+      );
+      myEmitterErrors.emit('error', notFound);
+      return sendMessageResponse(res, notFound.code, notFound.message);
+    }
+
+    return sendDataResponse(res, 200, { bookings });
+  } catch (err) {
+    console.error('Error fetching bookings by email:', err);
+    const serverError = new ServerErrorEvent(
+      req.user,
+      `Failed to fetch bookings by email`
     );
     myEmitterErrors.emit('error', serverError);
     sendMessageResponse(res, serverError.code, serverError.message);

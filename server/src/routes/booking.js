@@ -13,6 +13,9 @@ import {
   editBookingHandler,
   getAllBookingsAdminHandler,
   getAllBookingsHandler,
+  getBookingByIdHandler,
+  getBookingsByDateHandler,
+  getBookingsByEmailHandler,
   getTodaysBookingsHandler,
 } from '../controllers/booking.js';
 
@@ -20,6 +23,9 @@ const router = Router();
 
 router.get('/get-all-bookings', getAllBookingsHandler);
 router.get('/get-all-bookings-admin', getAllBookingsAdminHandler);
+router.get('/get-booking/:bookingId', getBookingByIdHandler);
+router.get('/get-bookings-by-email/:email', getBookingsByEmailHandler);
+router.get('/get-bookings-by-date/:date', getBookingsByDateHandler);
 router.get('/get-todays-date-bookings', getTodaysBookingsHandler);
 router.post('/create-new-booking', createNewBookingHandler);
 router.patch('/confirm-booking/:bookingId', confirmNewBookingHandler);

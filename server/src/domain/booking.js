@@ -64,6 +64,30 @@ export const denyBooking = async (id) => {
   });
 };
 
+export const findBookingsByEmail = async (email) => {
+  return dbClient.bookingItem.findFirst({
+    where: { email: email },
+    orderBy: { date: 'asc' },
+  });
+};
+
+export const findBookingById = async (bookingId) => {
+  return dbClient.bookingItem.findUnique({
+    where: { id: bookingId },
+  });
+};
+
+export const findBookingsByDate = async (date) => {
+  return dbClient.bookingItem.findMany({
+    where: {
+      date: {
+        equals: new Date(date),
+      },
+    },
+    orderBy: { time: 'asc' },
+  });
+};
+
 export const deleteBookingById = async (id) => {
   return dbClient.bookingItem.delete({
     where: {
