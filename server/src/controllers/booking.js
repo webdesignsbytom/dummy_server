@@ -851,7 +851,7 @@ export const editBookingHandler = async (req, res) => {
 };
 
 export const deleteBookingHandler = async (req, res) => {
-  const { bookingId } = req.body;
+  const { bookingId } = req.params;
 
   if (!bookingId) {
     return sendDataResponse(res, 409, {

@@ -32,7 +32,7 @@ router.patch('/confirm-booking/:bookingId', confirmNewBookingHandler);
 router.patch('/deny-booking/:bookingId', denyNewBookingHandler);
 router.patch('/cancel-booking/:bookingId', cancelBookingHandler);
 router.patch('/edit-booking/:bookingId', editBookingHandler);
-router.delete('/delete-booking', deleteBookingHandler);
+router.delete('/delete-booking/:bookingId', deleteBookingHandler);
 router.delete('/delete-all-bookings', deleteAllBookingHandler);
 
 export default router;
