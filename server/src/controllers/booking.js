@@ -132,7 +132,6 @@ export const getBookingByIdHandler = async (req, res) => {
   }
 };
 
-
 export const getBookingsByDateHandler = async (req, res) => {
   const { date } = req.params;
   console.log(`Fetching bookings for date: ${date}`);
@@ -231,16 +230,17 @@ export const getTodaysBookingsHandler = async (req, res) => {
 
 export const createNewBookingHandler = async (req, res) => {
   const { time, date, fullName, phoneNumber, email } = req.body;
+  console.log('XXXXXXXXXXXXXX');
 
-  const lowerCaseEmail = email.toLowerCase();
-
-  if (time == null || !date || !fullName || !phoneNumber || !lowerCaseEmail) {
+  if (time == null || !date || !fullName || !phoneNumber || !email) {
     const missingField = new MissingFieldEvent(
       null,
       'Booking: Missing field(s) in request.'
     );
     return sendMessageResponse(res, missingField.code, missingField.message);
   }
+
+  const lowerCaseEmail = email.toLowerCase();
 
   try {
     const bookingDate = new Date(date);
