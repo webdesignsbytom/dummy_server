@@ -231,7 +231,7 @@ export const getTodaysBookingsHandler = async (req, res) => {
 export const createNewBookingHandler = async (req, res) => {
   const { time, date, fullName, phoneNumber, email } = req.body;
   console.log('XXXXXXXXXXXXXX');
-
+  console.log('time', time);
   if (time == null || !date || !fullName || !phoneNumber || !email) {
     const missingField = new MissingFieldEvent(
       null,
