@@ -7,6 +7,17 @@ export const findAllBookings = () =>
     },
   });
 
+export const findActiveBookings = () =>
+  dbClient.bookingItem.findMany({
+    where: {
+      cancelled: false,
+      denied: false,
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+
 export const checkBookingSlot = async (time, bookingDate) => {
   return dbClient.bookingItem.findFirst({
     where: {
@@ -61,6 +72,27 @@ export const denyBooking = async (id) => {
     data: {
       denied: true,
     },
+  });
+};
+
+export const cancelBooking = async (id) => {
+  return dbClient.bookingItem.update({
+    where: {
+      id: id,
+    },
+    data: {
+      cancelled: true,
+      bookingApproved: false,
+    },
+  });
+};
+
+export const updateBooking = async (id, data) => {
+  return dbClient.bookingItem.update({
+    where: {
+      id: id,
+    },
+    data: data,
   });
 };
 

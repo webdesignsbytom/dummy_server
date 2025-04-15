@@ -3,13 +3,16 @@ import { myEmitterErrors } from '../event/errorEvents.js';
 import { myEmitterEvents } from '../event/eventEvents.js';
 // Domain
 import {
+  cancelBooking,
   checkBookingSlot,
   confirmBooking,
   createNewBooking,
   deleteAllBookings,
   deleteBookingById,
   denyBooking,
+  findActiveBookings,
   findAllBookings,
+  findBookingById,
   findBookingsByDate,
   findBookingsByEmail,
   findBookingsForDay,
@@ -40,7 +43,7 @@ export const getAllBookingsHandler = async (req, res) => {
   console.log('get all bookings');
 
   try {
-    const foundBookings = await findAllBookings();
+    const foundBookings = await findActiveBookings();
     console.log('found bookings:', foundBookings);
 
     if (!foundBookings) {
@@ -621,7 +624,6 @@ export const denyNewBookingHandler = async (req, res) => {
 
 export const cancelBookingHandler = async (req, res) => {
   const { bookingId } = req.params;
-  console.log('bookingId', bookingId);
 
   if (!bookingId) {
     return sendDataResponse(res, 409, {
@@ -630,8 +632,18 @@ export const cancelBookingHandler = async (req, res) => {
   }
 
   try {
-    const cancelledBooking = await denyBooking(bookingId);
-    console.log('cancelledBooking', cancelledBooking);
+    const foundBooking = await findBookingById(bookingId)
+
+    if (!foundBooking) {
+      const notFound = new BadRequestEvent(
+        EVENT_MESSAGES.notFound,
+        EVENT_MESSAGES.bookingNotFound
+      );
+      myEmitterErrors.emit('error', notFound);
+      return sendMessageResponse(res, notFound.code, notFound.message);
+    }
+
+    const cancelledBooking = await cancelBooking(bookingId);
 
     if (!cancelledBooking) {
       const notCreated = new BadRequestEvent(
@@ -643,10 +655,10 @@ export const cancelBookingHandler = async (req, res) => {
     }
 
     // Notify Owner: Booking Denied
-    const ownerRejectionEmailSent = await sendBookingEmail(
+    const ownerCancellationEmailSent = await sendBookingEmail(
       process.env.BOOKING_RECIEVER_EMAIL,
-      'Booking Denied',
-      'bookingDeniedOwner',
+      'Booking Cancelled',
+      'bookingCancelledOwner',
       {
         time: cancelledBooking.time,
         date: cancelledBooking.date,
@@ -657,16 +669,16 @@ export const cancelBookingHandler = async (req, res) => {
       }
     );
 
-    if (!ownerRejectionEmailSent) {
+    if (!ownerCancellationEmailSent) {
       const notCreated = new BadRequestEvent(
         EVENT_MESSAGES.badRequest,
         EVENT_MESSAGES.recievedBookingSendingFail
       );
 
-      const ownerRejectionFailedToSend = await sendBookingEmail(
+      const ownerCancellationFailedToSend = await sendBookingEmail(
         process.env.BOOKING_RECIEVER_EMAIL,
         'Booking Denial Notification Failed',
-        'sendBookingDenialFailed',
+        'bookingCancelledFailed',
         {
           time: cancelledBooking.time,
           date: cancelledBooking.date,
@@ -693,8 +705,8 @@ export const cancelBookingHandler = async (req, res) => {
     // Notify Customer: Booking Denied
     const customerRejectionEmailSent = await sendBookingEmail(
       cancelledBooking.email,
-      'Booking Denied',
-      'bookingDeniedCustomer',
+      'Booking Cancelled',
+      'bookingCancelledCustomer',
       {
         time: cancelledBooking.time,
         date: cancelledBooking.date,
@@ -713,8 +725,8 @@ export const cancelBookingHandler = async (req, res) => {
 
       const rejectionFailedToNotifyOwner = await sendBookingEmail(
         process.env.BOOKING_RECIEVER_EMAIL,
-        'Booking Denial Customer Notification Failed',
-        'bookingDeniedCustomerFailed',
+        'Booking Cancelled Customer Notification Failed',
+        'bookingCancelledCustomerFailed',
         {
           time: cancelledBooking.time,
           date: cancelledBooking.date,
@@ -739,10 +751,10 @@ export const cancelBookingHandler = async (req, res) => {
     }
 
     return sendDataResponse(res, 200, {
-      message: 'Success: Booking denied',
+      message: 'Success: Booking Cancelled',
     });
   } catch (err) {
-    const serverError = new ServerErrorEvent(req.user, `Deny booking failed`);
+    const serverError = new ServerErrorEvent(req.user, `Cancel booking failed`);
     myEmitterErrors.emit('error', serverError);
     sendMessageResponse(res, serverError.code, serverError.message);
     throw err;
