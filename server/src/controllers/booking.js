@@ -40,11 +40,8 @@ import {
 import { v4 as uuid } from 'uuid';
 
 export const getAllBookingsHandler = async (req, res) => {
-  console.log('get all bookings');
-
   try {
     const foundBookings = await findActiveBookings();
-    console.log('found bookings:', foundBookings);
 
     if (!foundBookings) {
       const notFound = new NotFoundEvent(
@@ -76,11 +73,8 @@ export const getAllBookingsHandler = async (req, res) => {
 };
 
 export const getAllBookingsAdminHandler = async (req, res) => {
-  console.log('get all bookings');
-
   try {
     const foundBookings = await findAllBookings();
-    console.log('found bookings:', foundBookings);
 
     if (!foundBookings) {
       const notFound = new NotFoundEvent(
@@ -107,7 +101,6 @@ export const getAllBookingsAdminHandler = async (req, res) => {
 
 export const getBookingByIdHandler = async (req, res) => {
   const { bookingId } = req.params;
-  console.log(`Fetching booking with ID: ${bookingId}`);
 
   try {
     const booking = await findBookingById(bookingId);
@@ -137,7 +130,6 @@ export const getBookingByIdHandler = async (req, res) => {
 
 export const getBookingsByDateHandler = async (req, res) => {
   const { date } = req.params;
-  console.log(`Fetching bookings for date: ${date}`);
 
   try {
     const bookings = await findBookingsByDate(date);
@@ -167,7 +159,6 @@ export const getBookingsByDateHandler = async (req, res) => {
 
 export const getBookingsByEmailHandler = async (req, res) => {
   const { email } = req.params;
-  console.log(`Fetching bookings for email: ${email}`);
 
   try {
     const bookings = await findBookingsByEmail(email);
@@ -196,8 +187,6 @@ export const getBookingsByEmailHandler = async (req, res) => {
 };
 
 export const getTodaysBookingsHandler = async (req, res) => {
-  console.log('get all bookings');
-
   try {
     const today = new Date();
 
@@ -205,8 +194,6 @@ export const getTodaysBookingsHandler = async (req, res) => {
     today.setUTCHours(0, 0, 0, 0);
 
     const foundBookings = await findBookingsForDay(today);
-
-    console.log('found bookings:', foundBookings);
 
     if (!foundBookings) {
       const notFound = new NotFoundEvent(
@@ -276,7 +263,6 @@ export const createNewBookingHandler = async (req, res) => {
     }
 
     const uniqueString = uuid() + createdBooking.id;
-    console.log('uniqueString', uniqueString);
 
     const formatDate = (dateString) => {
       const date = new Date(dateString);
@@ -292,8 +278,6 @@ export const createNewBookingHandler = async (req, res) => {
 
     const approveUrl = `${process.env.BOOKING_API_APPROVE}/${createdBooking.id}`;
     const rejectUrl = `${process.env.BOOKING_API_REJECT}/${createdBooking.id}`;
-    console.log('approveUrl', approveUrl);
-    console.log('rejectUrl', rejectUrl);
 
     const notificationSent = await sendBookingNotificationEmail(
       process.env.BOOKING_RECIEVER_EMAIL,
@@ -359,7 +343,6 @@ export const createNewBookingHandler = async (req, res) => {
 
 export const confirmNewBookingHandler = async (req, res) => {
   const { bookingId } = req.params;
-  console.log('bookingId', bookingId);
 
   if (!bookingId) {
     return sendDataResponse(res, 409, {
@@ -368,8 +351,18 @@ export const confirmNewBookingHandler = async (req, res) => {
   }
 
   try {
+    const foundBooking = await findBookingById(bookingId);
+
+    if (!foundBooking) {
+      const notFound = new BadRequestEvent(
+        EVENT_MESSAGES.notFound,
+        EVENT_MESSAGES.bookingNotFound
+      );
+      myEmitterErrors.emit('error', notFound);
+      return sendMessageResponse(res, notFound.code, notFound.message);
+    }
+
     const confirmedBooking = await confirmBooking(bookingId);
-    console.log('confirmedBooking', confirmedBooking);
 
     if (!confirmedBooking) {
       const notCreated = new BadRequestEvent(
@@ -494,7 +487,6 @@ export const confirmNewBookingHandler = async (req, res) => {
 
 export const denyNewBookingHandler = async (req, res) => {
   const { bookingId } = req.params;
-  console.log('bookingId', bookingId);
 
   if (!bookingId) {
     return sendDataResponse(res, 409, {
@@ -503,8 +495,18 @@ export const denyNewBookingHandler = async (req, res) => {
   }
 
   try {
+    const foundBooking = await findBookingById(bookingId);
+
+    if (!foundBooking) {
+      const notFound = new BadRequestEvent(
+        EVENT_MESSAGES.notFound,
+        EVENT_MESSAGES.bookingNotFound
+      );
+      myEmitterErrors.emit('error', notFound);
+      return sendMessageResponse(res, notFound.code, notFound.message);
+    }
+
     const deniedBooking = await denyBooking(bookingId);
-    console.log('deniedBooking', deniedBooking);
 
     if (!deniedBooking) {
       const notCreated = new BadRequestEvent(
@@ -632,7 +634,7 @@ export const cancelBookingHandler = async (req, res) => {
   }
 
   try {
-    const foundBooking = await findBookingById(bookingId)
+    const foundBooking = await findBookingById(bookingId);
 
     if (!foundBooking) {
       const notFound = new BadRequestEvent(
@@ -689,7 +691,7 @@ export const cancelBookingHandler = async (req, res) => {
         }
       );
 
-      if (!ownerRejectionFailedToSend) {
+      if (!ownerCancellationFailedToSend) {
         const notCreated = new BadRequestEvent(
           EVENT_MESSAGES.badRequest,
           EVENT_MESSAGES.denyBookingFail
@@ -848,9 +850,7 @@ export const editBookingHandler = async (req, res) => {
       );
     }
 
-    // Done ✅
     return sendDataResponse(res, 200, {
-      message: 'Success: Booking updated',
       booking: updatedBooking,
     });
   } catch (err) {
@@ -871,6 +871,17 @@ export const deleteBookingHandler = async (req, res) => {
   }
 
   try {
+    const foundBooking = await findBookingById(bookingId);
+
+    if (!foundBooking) {
+      const notFound = new BadRequestEvent(
+        EVENT_MESSAGES.notFound,
+        EVENT_MESSAGES.bookingNotFound
+      );
+      myEmitterErrors.emit('error', notFound);
+      return sendMessageResponse(res, notFound.code, notFound.message);
+    }
+
     const deletedBooking = await deleteBookingById(bookingId);
 
     if (!deletedBooking) {
