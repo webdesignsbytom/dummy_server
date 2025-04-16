@@ -363,7 +363,7 @@ export const confirmNewBookingHandler = async (req, res) => {
     }
 
     const confirmedBooking = await confirmBooking(bookingId);
-
+console.log('confirmedBooking', confirmedBooking);
     if (!confirmedBooking) {
       const notCreated = new BadRequestEvent(
         EVENT_MESSAGES.badRequest,
