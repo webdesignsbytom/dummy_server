@@ -33,6 +33,11 @@ export const EVENT_MESSAGES = {
   confirmBookingFail: `Failed to confirm booking.`,
   updateBookingFail: `Failed to update booking.`,
   denyBookingFail: `Failed to deny booking.`,
+  // Bookings
+  reviewTag: `Review database.`,
+  reviewNotFound: `Failed to find review/s.`,
+  createReviewFail: `Failed to create review.`,
+  deleteReviewFail: `Failed to delete review.`,
   // Users
   userTag: `User database.`,
   userNotFound: `Failed to find user(s).`,

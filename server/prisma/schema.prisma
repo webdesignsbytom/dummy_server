@@ -73,6 +73,18 @@ model BookingItem {
   updatedAt       DateTime? @updatedAt
 }
 
+model Review {
+  id          String    @id @default(uuid())
+  firstName   String    @default("")
+  lastName    String    @default("")
+  phoneNumber String    @default("")
+  email       String    @default("")
+  rating      Int       @default(5)
+  message     String    @default("")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime? @updatedAt
+}
+
 // EVENTS
 enum EventType {
   ERROR
