@@ -31,7 +31,7 @@ export const getAllReviewsHandler = async (req, res) => {
       return sendMessageResponse(res, notFound.code, notFound.message);
     }
 
-    return sendDataResponse(res, 200, { reviews: shortReviews });
+    return sendDataResponse(res, 200, { reviews: foundReviews });
   } catch (err) {
     //
     const serverError = new ServerErrorEvent(
