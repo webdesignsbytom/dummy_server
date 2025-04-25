@@ -40,6 +40,7 @@ import {
 import { sendUserVerificationEmail } from '../utils/email/emailHandler.js';
 // Randon
 import { v4 as uuid } from 'uuid';
+import { BusinessName, BusinessUrl } from '../utils/constants.js';
 
 export const getAllUsersHandler = async (req, res) => {
   try {
@@ -148,9 +149,35 @@ export const registerNewUserHandler = async (req, res) => {
     const hashedString = await bcrypt.hash(uniqueString, 10);
 
     // Create database verification item
-    await createVerificationEmailHandler(userId, hashedString);
+    const newVerification = await createVerificationEmailHandler(
+      userId,
+      hashedString
+    );
+    console.log('newVerification', newVerification);
+
     // Send email
-    await sendUserVerificationEmail(userId, createdUser.email, 'userVerifcationEmail', uniqueString);
+    const verificationEmailSent = await sendUserVerificationEmail(
+      createdUser.email,
+      'Verify email address',
+      'userVerifcationEmail',
+      {
+        email: createdUser.email,
+        uniqueString: newVerification.uniqueString,
+        expiryTime: newVerification.expiresAt,
+        confirmationUrl: `${process.env.USER_VERIFICATION_URL}/verify-user/${userId}`,
+        businessUrl: BusinessUrl,
+        businessName: BusinessName,
+      }
+    );
+
+    if (!verificationEmailSent) {
+      const notCreated = new BadRequestEvent(
+        EVENT_MESSAGES.badRequest,
+        EVENT_MESSAGES.verificationEmailFailed
+      );
+      myEmitterErrors.emit('error', notCreated);
+      return sendMessageResponse(res, notCreated.code, notCreated.message);
+    }
 
     myEmitterUsers.emit('register', createdUser);
     return sendDataResponse(res, 201, { user: createdUser });

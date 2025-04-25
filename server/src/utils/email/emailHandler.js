@@ -4,6 +4,11 @@ import hbs from 'nodemailer-express-handlebars';
 import path from 'path';
 // Constants
 import { BusinessName } from '../constants.js';
+// File system
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Validate required environment variables
 const requiredEnvVars = ['EMAIL_HOST', 'EMAIL_PORT'];
@@ -32,26 +37,25 @@ const BOOKING_ADMIN_EMAIL = process.env.BOOKING_ADMIN_EMAIL;
 const BOOKING_ADMIN_PASS = process.env.BOOKING_ADMIN_PASS;
 
 // Set up handlebars for HTML email templates
-const handlebarOptions = {
+const handlebarOptionsUserEmails = {
   viewEngine: {
     extname: '.hbs',
-    partialsDir: path.resolve('./src/utils/email/'),
+    partialsDir: path.join(__dirname, 'users'),  // Corrected path
     defaultLayout: false,
   },
-  viewPath: path.resolve('./src/utils/email/'),
+  viewPath: path.join(__dirname, 'users'),  // Corrected path
 };
 
-// Create transporter using cPanel SMTP settings
-const transporter = nodemailer.createTransport({
-  host: EMAIL_HOST,
-  port: EMAIL_PORT,
-  secure: EMAIL_PORT === 465, // SSL for 465, TLS for 587
-  auth: {
-    user: AUTH_EMAIL,
-    pass: AUTH_PASS,
+const handlebarOptionsBookingEmails = {
+  viewEngine: {
+    extname: '.hbs',
+    partialsDir: path.join(__dirname, 'booking'),  // Corrected path
+    defaultLayout: false,
   },
-});
+  viewPath: path.join(__dirname, 'booking'),  // Corrected path
+};
 
+// Transporters
 // Users
 const userAdminTransporter = nodemailer.createTransport({
   host: EMAIL_HOST,
@@ -92,44 +96,16 @@ const bookingTransporter = nodemailer.createTransport({
   },
 });
 
-// Apply handlebars templating engine
-transporter.use('compile', hbs(handlebarOptions));
+
 // Users
-userAdminTransporter.use('compile', hbs(handlebarOptions));
-userVerificationTransporter.use('compile', hbs(handlebarOptions));
-userPasswordResetTransporter.use('compile', hbs(handlebarOptions));
+userAdminTransporter.use('compile', hbs(handlebarOptionsUserEmails));
+userVerificationTransporter.use('compile', hbs(handlebarOptionsUserEmails));
+userPasswordResetTransporter.use('compile', hbs(handlebarOptionsUserEmails));
 // Booking
-bookingTransporter.use('compile', hbs(handlebarOptions));
+bookingTransporter.use('compile', hbs(handlebarOptionsBookingEmails));
 
 
 // Email templates
-/**
- * Sends an email
- * @param {string} to - Recipient email
- * @param {string} subject - Email subject
- * @param {string} template - Handlebars template name (without .hbs)
- * @param {object} context - Data for the template
- * @returns {Promise<boolean>} - Returns true if sent, false otherwise
- */
-export const sendEmail = async (to, subject, template, context = {}) => {
-  const mailOptions = {
-    from: `"${BusinessName}" <${AUTH_EMAIL}>`,
-    to,
-    subject,
-    template, // Matches the .hbs template
-    context, // Data for template rendering
-  };
-
-  try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log(`✅ Email sent C: ${info.messageId}`);
-    return true;
-  } catch (err) {
-    console.error('❌ Error sending email:', err);
-    return false;
-  }
-};
-
 // User admin
 export const sendUserEmail = async (
   recipient,
@@ -139,7 +115,7 @@ export const sendUserEmail = async (
 ) => {
   console.log('EMAIL!!!', recipient, subject, template, context);
   const mailOptions = {
-    from: `${BusinessName}`,
+    from: `"${BusinessName}" <${USER_ADMIN_EMAIL}>`,
     to: recipient,
     subject,
     template, // Matches the .hbs template
@@ -162,9 +138,9 @@ export const sendUserVerificationEmail = async (
   template,
   context = {}
 ) => {
-  console.log('EMAIL!!!', recipient, subject, template, context);
+  console.log('EMAIL VERIFY', recipient, subject, template, context);
   const mailOptions = {
-    from: `${BusinessName}`,
+    from: `"${BusinessName}" <${USER_VERIFY_EMAIL}>`,
     to: recipient,
     subject,
     template, // Matches the .hbs template
@@ -189,7 +165,7 @@ export const sendUserPasswordResetEmail = async (
 ) => {
   console.log('EMAIL!!!', recipient, subject, template, context);
   const mailOptions = {
-    from: `${BusinessName}`,
+    from: `"${BusinessName}" <${USER_RESET_EMAIL}>`,
     to: recipient,
     subject,
     template, // Matches the .hbs template
@@ -362,7 +338,7 @@ export const sendBookingEmail = async (
  */
 export const sendTestEmail = async (testEmail) => {
   const mailOptions = {
-    from: `"${BusinessName}" <${AUTH_EMAIL}>`,
+    from: `"${BusinessName}"`,
     to: testEmail,
     subject: 'Test Email from NodeMailer',
     text: 'Hello! This is a test email sent via cPanel SMTP and NodeMailer.',
