@@ -1,3 +1,3 @@
 // General
-export const BusinessName = "Company Name"
-export const BusinessUrl = "www.company.com"
+export const BusinessName = "Byte Toast Studio"
+export const BusinessUrl = "www.bytetoast-studio.co.uk"
