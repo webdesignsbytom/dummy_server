@@ -2,10 +2,11 @@ import 'dotenv/config';
 import nodemailer from 'nodemailer';
 import hbs from 'nodemailer-express-handlebars';
 import path from 'path';
+// Constants
 import { BusinessName } from '../constants.js';
 
 // Validate required environment variables
-const requiredEnvVars = ['EMAIL_HOST', 'EMAIL_PORT', 'AUTH_EMAIL', 'AUTH_PASS'];
+const requiredEnvVars = ['EMAIL_HOST', 'EMAIL_PORT'];
 requiredEnvVars.forEach((key) => {
   if (!process.env[key]) {
     throw new Error(`Environment variable ${key} is missing`);
@@ -15,8 +16,16 @@ requiredEnvVars.forEach((key) => {
 // Email configuration
 const EMAIL_HOST = process.env.EMAIL_HOST;
 const EMAIL_PORT = parseInt(process.env.EMAIL_PORT, 10) || 465;
-const AUTH_EMAIL = process.env.AUTH_EMAIL;
-const AUTH_PASS = process.env.AUTH_PASS;
+
+// User emails
+const USER_ADMIN_EMAIL = process.env.USER_ADMIN_EMAIL;
+const USER_ADMIN_PASS = process.env.USER_ADMIN_PASS;
+// Verify new user email
+const USER_VERIFY_EMAIL = process.env.USER_VERIFY_EMAIL;
+const USER_VERIFY_PASS = process.env.USER_VERIFY_PASS;
+// Reset user password
+const USER_RESET_EMAIL = process.env.USER_RESET_EMAIL;
+const USER_RESET_PASS = process.env.USER_RESET_PASS;
 
 // Booking
 const BOOKING_ADMIN_EMAIL = process.env.BOOKING_ADMIN_EMAIL;
@@ -43,6 +52,36 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+// Users
+const userAdminTransporter = nodemailer.createTransport({
+  host: EMAIL_HOST,
+  port: EMAIL_PORT,
+  secure: EMAIL_PORT === 465, // SSL for 465, TLS for 587
+  auth: {
+    user: USER_ADMIN_EMAIL,
+    pass: USER_ADMIN_PASS,
+  },
+});
+const userVerificationTransporter = nodemailer.createTransport({
+  host: EMAIL_HOST,
+  port: EMAIL_PORT,
+  secure: EMAIL_PORT === 465, // SSL for 465, TLS for 587
+  auth: {
+    user: USER_VERIFY_EMAIL,
+    pass: USER_VERIFY_PASS,
+  },
+});
+const userPasswordResetTransporter = nodemailer.createTransport({
+  host: EMAIL_HOST,
+  port: EMAIL_PORT,
+  secure: EMAIL_PORT === 465, // SSL for 465, TLS for 587
+  auth: {
+    user: USER_RESET_EMAIL,
+    pass: USER_RESET_PASS,
+  },
+});
+
+// Booking
 const bookingTransporter = nodemailer.createTransport({
   host: EMAIL_HOST,
   port: EMAIL_PORT,
@@ -55,8 +94,15 @@ const bookingTransporter = nodemailer.createTransport({
 
 // Apply handlebars templating engine
 transporter.use('compile', hbs(handlebarOptions));
+// Users
+userAdminTransporter.use('compile', hbs(handlebarOptions));
+userVerificationTransporter.use('compile', hbs(handlebarOptions));
+userPasswordResetTransporter.use('compile', hbs(handlebarOptions));
+// Booking
 bookingTransporter.use('compile', hbs(handlebarOptions));
 
+
+// Email templates
 /**
  * Sends an email
  * @param {string} to - Recipient email
@@ -76,7 +122,83 @@ export const sendEmail = async (to, subject, template, context = {}) => {
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    console.log(`✅ Email sent: ${info.messageId}`);
+    console.log(`✅ Email sent C: ${info.messageId}`);
+    return true;
+  } catch (err) {
+    console.error('❌ Error sending email:', err);
+    return false;
+  }
+};
+
+// User admin
+export const sendUserEmail = async (
+  recipient,
+  subject,
+  template,
+  context = {}
+) => {
+  console.log('EMAIL!!!', recipient, subject, template, context);
+  const mailOptions = {
+    from: `${BusinessName}`,
+    to: recipient,
+    subject,
+    template, // Matches the .hbs template
+    context, // Data for template rendering
+  };
+
+  try {
+    const info = await userAdminTransporter.sendMail(mailOptions);
+    console.log(`✅ User admin Email Sent: ${info.recipient}`);
+    return true;
+  } catch (err) {
+    console.error('❌ Error sending email:', err);
+    return false;
+  }
+};
+// User verification
+export const sendUserVerificationEmail = async (
+  recipient,
+  subject,
+  template,
+  context = {}
+) => {
+  console.log('EMAIL!!!', recipient, subject, template, context);
+  const mailOptions = {
+    from: `${BusinessName}`,
+    to: recipient,
+    subject,
+    template, // Matches the .hbs template
+    context, // Data for template rendering
+  };
+
+  try {
+    const info = await userVerificationTransporter.sendMail(mailOptions);
+    console.log(`✅ User admin Email Sent: ${info.recipient}`);
+    return true;
+  } catch (err) {
+    console.error('❌ Error sending email:', err);
+    return false;
+  }
+};
+// User password reset
+export const sendUserPasswordResetEmail = async (
+  recipient,
+  subject,
+  template,
+  context = {}
+) => {
+  console.log('EMAIL!!!', recipient, subject, template, context);
+  const mailOptions = {
+    from: `${BusinessName}`,
+    to: recipient,
+    subject,
+    template, // Matches the .hbs template
+    context, // Data for template rendering
+  };
+
+  try {
+    const info = await userPasswordResetTransporter.sendMail(mailOptions);
+    console.log(`✅ User admin Email Sent: ${info.recipient}`);
     return true;
   } catch (err) {
     console.error('❌ Error sending email:', err);
@@ -208,6 +330,7 @@ export const sendBookingConfirmationFailed = async (
     return false;
   }
 };
+
 export const sendBookingEmail = async (
   recipient,
   subject,

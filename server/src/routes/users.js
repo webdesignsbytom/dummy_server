@@ -15,7 +15,7 @@ import { validateAuthentication, validateAdminRole } from '../middleware/auth.js
 const router = Router();
 
 // General
-router.post('/register', registerNewUserHandler);
+router.post('/register-new-user', registerNewUserHandler);
 router.get('/user/get-user-by-id/:userId',  getUserByIdHandler); 
 router.get('/user/get-logged-in-user/:userId', validateAuthentication, getUserByIdHandler); 
 router.post('/user/update-user-data',  updateUserDataHandler); 

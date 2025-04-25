@@ -37,7 +37,7 @@ import {
   BadRequestEvent,
 } from '../event/utils/errorUtils.js';
 // Email handlers
-// import { sendVerificationEmail } from '../utils/email/emailHandler.js';
+import { sendUserVerificationEmail } from '../utils/email/emailHandler.js';
 // Randon
 import { v4 as uuid } from 'uuid';
 
@@ -110,15 +110,15 @@ export const getUserByIdHandler = async (req, res) => {
 export const registerNewUserHandler = async (req, res) => {
   const { email, password } = req.body;
 
-  const lowerCaseEmail = email.toLowerCase();
-
-  if (!lowerCaseEmail || !password) {
+  if (!email || !password) {
     const missingField = new MissingFieldEvent(
       null,
       'Registration: Missing Field/s event.'
     );
     return sendMessageResponse(res, missingField.code, missingField.message);
   }
+
+  const lowerCaseEmail = email.toLowerCase();
 
   try {
     const foundUser = await findUserByEmail(lowerCaseEmail);
@@ -147,8 +147,10 @@ export const registerNewUserHandler = async (req, res) => {
     const uniqueString = uuid() + userId;
     const hashedString = await bcrypt.hash(uniqueString, 10);
 
+    // Create database verification item
     await createVerificationEmailHandler(userId, hashedString);
-    await sendVerificationEmail(userId, createdUser.email, uniqueString);
+    // Send email
+    await sendUserVerificationEmail(userId, createdUser.email, 'userVerifcationEmail', uniqueString);
 
     myEmitterUsers.emit('register', createdUser);
     return sendDataResponse(res, 201, { user: createdUser });
@@ -198,7 +200,7 @@ export const verifyUserEmailHandler = async (req, res) => {
 
     // TODO: whats this all about?
     if (expiresAt < Date.now()) {
-      await dbClient.userVerification.delete({ where: { userId } });
+      await dbClient.userVerificationEmail.delete({ where: { userId } });
       // await dbClient.user.delete({ where: { userId } });
       return sendMessageResponse(res, 401, EVENT_MESSAGES.expiredLinkMessage);
     }
@@ -224,7 +226,7 @@ export const verifyUserEmailHandler = async (req, res) => {
 
     const token = createAccessToken(updatedUser.id);
 
-    await dbClient.userVerification.delete({ where: { userId } });
+    await dbClient.userVerificationEmail.delete({ where: { userId } });
 
     myEmitterUsers.emit('verified-email', updatedUser);
 
@@ -267,7 +269,7 @@ export const resendVerificationEmailHandler = async (req, res) => {
       await createVerificationEmailHandler(userId, hashedString);
 
       try {
-        await sendVerificationEmail(userId, email, hashedString);
+        await sendUserVerificationEmail(userId, email, hashedString);
         myEmitterUsers.emit('verification-email-created', user);
         return sendMessageResponse(
           res,

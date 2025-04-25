@@ -5,7 +5,7 @@ import { myEmitterErrors } from '../event/errorEvents.js';
 
 export async function createVerificationEmailHandler(userId, uniqueString) {
   try {
-    const newVerification = await dbClient.userVerification.create({
+    const newVerification = await dbClient.userVerificationEmail.create({
       data: {
         userId,
         uniqueString,

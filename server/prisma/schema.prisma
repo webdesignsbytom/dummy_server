@@ -20,14 +20,14 @@ model User {
   email             String             @unique
   password          String
   role              Role               @default(USER)
-  emailVerification EmailVerification?
+  emailVerification UserVerificationEmail?
   createdEvents     Event[]            @relation("createdEvents")
   receivedEvents    Event[]            @relation("receivedEvents")
   createdAt         DateTime           @default(now())
   updatedAt         DateTime?          @updatedAt
 }
 
-model EmailVerification {
+model UserVerificationEmail {
   id           String    @id @default(uuid())
   uniqueString String    @unique
   userId       String    @unique
