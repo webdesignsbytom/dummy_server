@@ -1,6 +1,8 @@
 import {
   createNewCallbackForm,
   createNewContactForm,
+  deleteAllCallbackForms,
+  deleteAllContactForms,
   deleteCallbackForm,
   deleteContactForm,
   findAllCallbackForms,
@@ -268,6 +270,62 @@ export const deleteCallbackFormHandler = async (req, res) => {
     const serverError = new ServerErrorEvent(
       req.user,
       `Delete callback form failed.`
+    );
+    myEmitterErrors.emit('error', serverError);
+    sendMessageResponse(res, serverError.code, serverError.message);
+    throw err;
+  }
+};
+export const deleteAllContactFormsHandler = async (req, res) => {
+ 
+  try {
+    const deletedForm = await deleteAllContactForms(formId);
+    if (!deletedForm) {
+      const badRequest = new BadRequestEvent(
+        req.user,
+        EVENT_MESSAGES.badRequest,
+        EVENT_MESSAGES.deleteContactFormFail
+      );
+      myEmitterErrors.emit('error', badRequest);
+      return sendMessageResponse(res, badRequest.code, badRequest.message);
+    }
+
+    return sendDataResponse(res, 200, {
+      message: `Successfully deleted all contact forms`,
+    });
+  } catch (err) {
+    //
+    const serverError = new ServerErrorEvent(
+      req.user,
+      `Delete all contact forms failed.`
+    );
+    myEmitterErrors.emit('error', serverError);
+    sendMessageResponse(res, serverError.code, serverError.message);
+    throw err;
+  }
+};
+
+export const deleteAllCallbackFormsHandler = async (req, res) => {
+  try {
+    const deletedForm = await deleteAllCallbackForms(formId);
+    if (!deletedForm) {
+      const badRequest = new BadRequestEvent(
+        req.user,
+        EVENT_MESSAGES.badRequest,
+        EVENT_MESSAGES.deleteCallbackFormFail
+      );
+      myEmitterErrors.emit('error', badRequest);
+      return sendMessageResponse(res, badRequest.code, badRequest.message);
+    }
+
+    return sendDataResponse(res, 200, {
+      message: `Successfully deleted all callback forms`,
+    });
+  } catch (err) {
+    //
+    const serverError = new ServerErrorEvent(
+      req.user,
+      `Delete all callback forms failed.`
     );
     myEmitterErrors.emit('error', serverError);
     sendMessageResponse(res, serverError.code, serverError.message);

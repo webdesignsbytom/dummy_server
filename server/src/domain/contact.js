@@ -64,3 +64,8 @@ export const deleteCallbackForm = (formId) =>
   dbClient.callbackForm.delete({
     where: { id: formId },
   });
+
+export const deleteAllContactForms = () => dbClient.contactForm.deleteMany({});
+
+export const deleteAllCallbackForms = () =>
+  dbClient.callbackForm.deleteMany({});
