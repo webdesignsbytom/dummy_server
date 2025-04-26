@@ -21,7 +21,7 @@ import {
 
 const router = Router();
 
-router.get('/get-all-bookings', getAllBookingsHandler);
+router.get('/get-booking-data', getAllBookingsHandler);
 router.get('/get-all-bookings-admin', getAllBookingsAdminHandler);
 router.get('/get-booking/:bookingId', getBookingByIdHandler);
 router.get('/get-bookings-by-email/:email', getBookingsByEmailHandler);
