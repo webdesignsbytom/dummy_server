@@ -15,7 +15,7 @@ import {
   ServerErrorEvent,
 } from '../event/utils/errorUtils.js';
 import { v4 as uuid } from 'uuid';
-import { createNewReview, findAllReviews, findReviewById, findReviewsByDate, findReviewsByEmail } from '../domain/reviews.js';
+import { createNewReview, deleteReviewById, findAllReviews, findReviewById, findReviewsByDate, findReviewsByEmail } from '../domain/reviews.js';
 
 export const getAllReviewsHandler = async (req, res) => {
   try {
