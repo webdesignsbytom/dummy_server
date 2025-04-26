@@ -12,6 +12,7 @@ import eventRouter from './routes/events.js';
 import userRouter from './routes/users.js';
 import bookingRouter from './routes/booking.js';
 import reviewRouter from './routes/reviews.js';
+import contactRouter from './routes/contact.js';
 import testRouter from './routes/tests.js';
 // Responses
 import { sendDataResponse } from './utils/responses.js'
@@ -57,6 +58,7 @@ app.use('/', authRouter);
 app.use('/events', eventRouter);
 app.use('/users', userRouter);
 app.use('/reviews', reviewRouter);
+app.use('/contact', contactRouter);
 app.use('/bookings', bookingRouter);
 app.use('/tests', testRouter);
 

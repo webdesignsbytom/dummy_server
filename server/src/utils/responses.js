@@ -17,7 +17,7 @@ export const EVENT_MESSAGES = {
   malformedData: `Data incorrectly formatted or malformed request`,
   // Contacts
   contactTag: `Contact database.`,
-  contactNotFound: `Failed to find contact(s).`,
+  contactFormsNotFound: `Failed to find contact form(s).`,
   createContactFail: `Failed to create contact.`,
   // Events
   eventTag: `Event database.`,

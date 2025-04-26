@@ -46,7 +46,6 @@ model ContactForm {
   phoneNumber  String
   location     String
   businessName String
-  projectType  String
   createdAt    DateTime  @default(now())
   updatedAt    DateTime? @updatedAt
 }
