@@ -16,7 +16,7 @@ import {
 const router = Router();
 
 router.get('/get-all-reviews', getAllReviewsHandler);
-router.get('/get-review/:reviewId', getReviewByIdHandler);
+router.get('/get-review-by-id/:reviewId', getReviewByIdHandler);
 router.get('/get-reviews-by-email/:email', getReviewsByEmailHandler);
 router.get('/get-reviews-by-date/:date', getReviewsByDateHandler);
 router.post('/create-new-review', createNewReviewHandler);
