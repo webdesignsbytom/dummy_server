@@ -38,7 +38,6 @@ export const createNewReview = async (
 export const findReviewsByEmail = async (email) => {
   return dbClient.review.findFirst({
     where: { email: email },
-    orderBy: { date: 'asc' },
   });
 };
 
