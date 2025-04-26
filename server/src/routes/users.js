@@ -5,7 +5,7 @@ import {
   getUserByIdHandler,
   deleteUserAccountHandler,
   adminDeleteUserHandler,
-  verifyUserEmailHandler,
+  verifyUserEmailAddressHandler,
   resendVerificationEmailHandler,
   updateUserDataHandler,
   changeUserRoleHandler, deactivateUserHandler, reactivateUserHandler
@@ -32,7 +32,7 @@ router.patch(
   reactivateUserHandler
 );
 // Verification
-router.patch('/verify-email/:userId/:uniqueString',  verifyUserEmailHandler); 
+router.patch('/verify-email/:userId/:uniqueString',  verifyUserEmailAddressHandler); 
 router.post('/verify-email/resend-email/:email', resendVerificationEmailHandler);
 router.delete('/user/delete-account', validateAuthentication, deleteUserAccountHandler);
 // Admin

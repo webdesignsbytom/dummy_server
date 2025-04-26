@@ -192,7 +192,7 @@ export const registerNewUserHandler = async (req, res) => {
   }
 };
 
-export const verifyUserEmailHandler = async (req, res) => {
+export const verifyUserEmailAddressHandler = async (req, res) => {
   const { userId, uniqueString } = req.params;
 
   if (!userId) {
