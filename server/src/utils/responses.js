@@ -29,6 +29,8 @@ export const EVENT_MESSAGES = {
   openingTimesNotFound: `Failed to find opening Time/s.`,
   closedDaysNotFound: `Failed to find closed day/s.`,
   createBookingFail: `Failed to create booking.`,
+  closedDayFail: `Failed to create closed day in calender.`,
+  closedDayNotdeleted: `Failed do delete closed day.`,
   notificationSendingFail: `Failed to create booking.`,
   recievedBookingSendingFail: `Failed to create booking.`,
   deleteBookingFail: `Failed to delete booking.`,

@@ -17,6 +17,9 @@ import {
   getBookingsByDateHandler,
   getBookingsByEmailHandler,
   getTodaysBookingsHandler,
+  setDayOffHandler,
+  undoDayOffHandler,
+  editOpeningTimesHandler,
 } from '../controllers/booking.js';
 
 const router = Router();
@@ -28,6 +31,9 @@ router.get('/get-bookings-by-email/:email', getBookingsByEmailHandler);
 router.get('/get-bookings-by-date/:date', getBookingsByDateHandler);
 router.get('/get-todays-date-bookings', getTodaysBookingsHandler);
 router.post('/create-new-booking', createNewBookingHandler);
+router.post('/set-day-off', setDayOffHandler);
+router.patch('/edit-opeing-times', editOpeningTimesHandler);
+router.delete('/remove-day-off', undoDayOffHandler);
 router.patch('/confirm-booking/:bookingId', confirmNewBookingHandler);
 router.patch('/deny-booking/:bookingId', denyNewBookingHandler);
 router.patch('/cancel-booking/:bookingId', cancelBookingHandler);

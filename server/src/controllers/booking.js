@@ -6,9 +6,11 @@ import {
   cancelBooking,
   checkBookingSlot,
   confirmBooking,
+  createClosedDay,
   createNewBooking,
   deleteAllBookings,
   deleteBookingById,
+  deleteClosedDayByDate,
   denyBooking,
   findActiveBookings,
   findAllBookings,
@@ -18,6 +20,7 @@ import {
   findBookingsForDay,
   findDaysClosed,
   findOpeningTimesAsObject,
+  updateOpeningTimes,
 } from '../domain/booking.js';
 // Response messages
 import {
@@ -954,6 +957,101 @@ export const deleteAllBookingHandler = async (req, res) => {
   } catch (err) {
     //
     const serverError = new ServerErrorEvent(req.user, `Delete booking failed`);
+    myEmitterErrors.emit('error', serverError);
+    sendMessageResponse(res, serverError.code, serverError.message);
+    throw err;
+  }
+};
+
+export const setDayOffHandler = async (req, res) => {
+  try {
+    const { date, reason } = req.body;
+
+    if (!date || !reason) {
+      return sendMessageResponse(res, 400, 'Date and reason are required.');
+    }
+
+    // Save the closed day
+    const newClosedDay = await createClosedDay(date, reason);
+
+    if (!newClosedDay) {
+      const notCreated = new NotFoundEvent(
+        req.user,
+        EVENT_MESSAGES.notFound,
+        EVENT_MESSAGES.closedDayFail
+      );
+      myEmitterErrors.emit('error', notCreated);
+      return sendMessageResponse(res, notCreated.code, notCreated.message);
+    }
+
+    return sendDataResponse(res, 201, {
+      message: 'Closed day successfully added.',
+    });
+  } catch (err) {
+    const serverError = new ServerErrorEvent(req.user, 'Set day off failed.');
+    myEmitterErrors.emit('error', serverError);
+    sendMessageResponse(res, serverError.code, serverError.message);
+    throw err;
+  }
+};
+
+export const undoDayOffHandler = async (req, res) => {
+  const { date } = req.body;
+
+  if (!date) {
+    return sendMessageResponse(res, 400, 'Date is required.');
+  }
+  try {
+    // Try delete the closed day by date
+    const deletedClosedDay = await deleteClosedDayByDate(date);
+
+    if (!deletedClosedDay) {
+      const notDeleted = new NotFoundEvent(
+        req.user,
+        EVENT_MESSAGES.notFound,
+        EVENT_MESSAGES.closedDayNotdeleted
+      );
+      myEmitterErrors.emit('error', notDeleted);
+      return sendMessageResponse(res, notDeleted.code, notDeleted.message);
+    }
+
+    return sendDataResponse(res, 200, {
+      message: 'Closed day successfully removed.',
+    });
+  } catch (err) {
+    const serverError = new ServerErrorEvent(req.user, 'Undo day off failed.');
+    myEmitterErrors.emit('error', serverError);
+    sendMessageResponse(res, serverError.code, serverError.message);
+    throw err;
+  }
+};
+
+export const editOpeningTimesHandler = async (req, res) => {
+  try {
+    const { day, open, start, end } = req.body;
+
+    if (typeof open !== 'boolean' || !start || !end || !day) {
+      return sendMessageResponse(res, 400, 'Day, open status, start time, and end time are required.');
+    }
+
+    // Update the opening times for the given day
+    const updatedOpeningTime = await updateOpeningTimes(day, open, start, end);
+
+    if (!updatedOpeningTime) {
+      const notUpdated = new NotFoundEvent(
+        req.user,
+        EVENT_MESSAGES.notFound,
+        EVENT_MESSAGES.openingTimeFail
+      );
+      myEmitterErrors.emit('error', notUpdated);
+      return sendMessageResponse(res, notUpdated.code, notUpdated.message);
+    }
+
+    return sendDataResponse(res, 200, {
+      message: 'Opening times successfully updated.',
+    });
+  } catch (err) {
+    const serverError = new ServerErrorEvent(req.user, 'Edit opening times failed.');
     myEmitterErrors.emit('error', serverError);
     sendMessageResponse(res, serverError.code, serverError.message);
     throw err;

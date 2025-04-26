@@ -18,6 +18,40 @@ export const findActiveBookings = () =>
     },
   });
 
+export const createClosedDay = (date, reason) =>
+  dbClient.dayClosed.create({
+    data: {
+      date,
+      reason,
+    },
+  });
+
+export const deleteClosedDayByDate = (date) =>
+  dbClient.dayClosed.delete({
+    where: {
+      date,
+    },
+  });
+
+export const updateOpeningTimes = (day, open, start, end) =>
+  dbClient.openingTime.update({
+    where: {
+      day: day, // Assuming 'day' is a unique field in your table
+    },
+    data: {
+      open,
+      start,
+      end,
+    },
+  });
+
+export const deleteClosedDayById = (id) =>
+  dbClient.dayClosed.delete({
+    where: {
+      id,
+    },
+  });
+
 export const findDaysClosed = () =>
   dbClient.dayClosed.findMany({
     orderBy: {
