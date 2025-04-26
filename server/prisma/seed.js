@@ -36,15 +36,26 @@ const events = [
   },
 ];
 
-// Add a sample booking
+// Sample booking
 const booking = {
   time: 14, // 2pm
-  date: '2025-04-15T00:00:00.000Z', // today (you can adjust this if needed)
+  date: '2025-04-15T00:00:00.000Z',
   fullName: 'Jane Doe',
   phoneNumber: '123-456-7890',
   email: 'jane.doe@example.com',
-  bookingApproved: true
+  bookingApproved: true,
 };
+
+// Opening times
+const openingTimes = [
+  { dayOfWeek: 1, open: true, start: '09:00', end: '17:00' }, // Monday
+  { dayOfWeek: 2, open: true, start: '09:00', end: '17:00' }, // Tuesday
+  { dayOfWeek: 3, open: true, start: '09:00', end: '17:00' }, // Wednesday
+  { dayOfWeek: 4, open: true, start: '09:00', end: '17:00' }, // Thursday
+  { dayOfWeek: 5, open: true, start: '09:00', end: '17:00' }, // Friday
+  { dayOfWeek: 6, open: true, start: '10:00', end: '14:00' }, // Saturday
+  { dayOfWeek: 7, open: false, start: null, end: null },      // Sunday
+];
 
 async function seed() {
   try {
@@ -83,7 +94,32 @@ async function seed() {
       data: booking,
     });
 
-    console.log('Seed completed.');
+    // Create opening times
+    for (const time of openingTimes) {
+      await dbClient.openingTime.upsert({
+        where: { dayOfWeek: time.dayOfWeek },
+        update: {},
+        create: time,
+      });
+    }
+
+    // Create random day offs (one per month)
+    const currentYear = 2025;
+    for (let month = 0; month < 12; month++) {
+      const randomDay = Math.floor(Math.random() * 28) + 1; // 1-28
+      const date = new Date(currentYear, month, randomDay);
+
+      await dbClient.dayClosed.upsert({
+        where: { date },
+        update: {},
+        create: {
+          date,
+          reason: 'Scheduled Day Off',
+        },
+      });
+    }
+
+    console.log('🌱 Seed completed.');
   } catch (error) {
     console.error('Seeding failed:', error.message);
   } finally {

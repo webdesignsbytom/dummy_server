@@ -18,6 +18,30 @@ export const findActiveBookings = () =>
     },
   });
 
+export const findDaysClosed = () =>
+  dbClient.dayClosed.findMany({
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+
+export const findOpeningTimesAsObject = async () => {
+  const times = await dbClient.openingTime.findMany({
+    orderBy: {
+      dayOfWeek: 'asc',
+    },
+  });
+
+  return times.reduce((acc, time) => {
+    acc[time.dayOfWeek] = {
+      open: time.open,
+      start: time.start,
+      end: time.end,
+    };
+    return acc;
+  }, {}); // no "as" typing needed
+};
+
 export const checkBookingSlot = async (time, bookingDate) => {
   return dbClient.bookingItem.findFirst({
     where: {

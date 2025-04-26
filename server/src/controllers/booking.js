@@ -16,6 +16,8 @@ import {
   findBookingsByDate,
   findBookingsByEmail,
   findBookingsForDay,
+  findDaysClosed,
+  findOpeningTimesAsObject,
 } from '../domain/booking.js';
 // Response messages
 import {
@@ -53,13 +55,41 @@ export const getAllBookingsHandler = async (req, res) => {
       return sendMessageResponse(res, notFound.code, notFound.message);
     }
 
+    const foundOpeningTimes = await findOpeningTimesAsObject();
+
+    if (!foundOpeningTimes) {
+      const notFound = new NotFoundEvent(
+        req.user,
+        EVENT_MESSAGES.notFound,
+        EVENT_MESSAGES.openingTimesNotFound
+      );
+      myEmitterErrors.emit('error', notFound);
+      return sendMessageResponse(res, notFound.code, notFound.message);
+    }
+
+    const foundClosedDays = await findDaysClosed();
+
+    if (!foundClosedDays) {
+      const notFound = new NotFoundEvent(
+        req.user,
+        EVENT_MESSAGES.notFound,
+        EVENT_MESSAGES.closedDaysNotFound
+      );
+      myEmitterErrors.emit('error', notFound);
+      return sendMessageResponse(res, notFound.code, notFound.message);
+    }
+
     // Only keep time and date for each booking
     const shortBookings = foundBookings.map((booking) => ({
       time: booking.time,
       date: booking.date,
     }));
 
-    return sendDataResponse(res, 200, { bookings: shortBookings });
+    return sendDataResponse(res, 200, {
+      bookings: shortBookings,
+      openingTimes: foundOpeningTimes,
+      closedDays: foundClosedDays,
+    });
   } catch (err) {
     //
     const serverError = new ServerErrorEvent(
@@ -363,7 +393,7 @@ export const confirmNewBookingHandler = async (req, res) => {
     }
 
     const confirmedBooking = await confirmBooking(bookingId);
-console.log('confirmedBooking', confirmedBooking);
+    console.log('confirmedBooking', confirmedBooking);
     if (!confirmedBooking) {
       const notCreated = new BadRequestEvent(
         EVENT_MESSAGES.badRequest,

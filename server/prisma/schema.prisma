@@ -16,15 +16,15 @@ enum Role {
 }
 
 model User {
-  id                String             @id @default(uuid())
-  email             String             @unique
+  id                String                 @id @default(uuid())
+  email             String                 @unique
   password          String
-  role              Role               @default(USER)
+  role              Role                   @default(USER)
   emailVerification UserVerificationEmail?
-  createdEvents     Event[]            @relation("createdEvents")
-  receivedEvents    Event[]            @relation("receivedEvents")
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime?          @updatedAt
+  createdEvents     Event[]                @relation("createdEvents")
+  receivedEvents    Event[]                @relation("receivedEvents")
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime?              @updatedAt
 }
 
 model UserVerificationEmail {
@@ -72,6 +72,21 @@ model BookingItem {
   cancelled       Boolean   @default(false)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime? @updatedAt
+}
+
+model OpeningTime {
+  id        Int     @id @default(autoincrement())
+  dayOfWeek Int     @unique
+  open      Boolean
+  start     String?
+  end       String?
+}
+
+model DayClosed {
+  id        Int      @id @default(autoincrement())
+  date      DateTime @unique
+  reason    String?  
+  createdAt DateTime @default(now())
 }
 
 model Review {
