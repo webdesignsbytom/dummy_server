@@ -47,14 +47,19 @@ export const findReviewById = async (reviewId) => {
   });
 };
 
-export const findReviewsByDate = async (date) => {
+export const findReviewsByDate = async (dateString) => {
+  const date = new Date(dateString);
+
+  const startOfDay = new Date(date.setUTCHours(0, 0, 0, 0));
+  const endOfDay = new Date(date.setUTCHours(23, 59, 59, 999));
+
   return dbClient.review.findMany({
     where: {
-      date: {
-        equals: new Date(date),
+      createdAt: {
+        gte: startOfDay,
+        lte: endOfDay,
       },
     },
-    orderBy: { time: 'asc' },
   });
 };
 
