@@ -963,7 +963,7 @@ export const deleteAllBookingHandler = async (req, res) => {
   }
 };
 
-export const setDayOffHandler = async (req, res) => {
+export const setDayClosedHandler = async (req, res) => {
   try {
     const { date, reason } = req.body;
 
