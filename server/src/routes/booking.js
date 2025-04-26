@@ -39,6 +39,6 @@ router.patch('/cancel-booking/:bookingId', cancelBookingHandler);
 router.patch('/edit-booking/:bookingId', editBookingHandler);
 router.delete('/delete-booking/:bookingId', deleteBookingHandler);
 router.delete('/delete-all-bookings', deleteAllBookingHandler);
-router.delete('/remove-day-off', undoDayOffHandler);
+router.delete('/remove-day-closed', undoDayOffHandler);
 
 export default router;
