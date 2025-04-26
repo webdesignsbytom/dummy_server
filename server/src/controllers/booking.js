@@ -280,7 +280,7 @@ export const createNewBookingHandler = async (req, res) => {
     const rejectUrl = `${process.env.BOOKING_API_REJECT}/${createdBooking.id}`;
 
     const notificationSent = await sendBookingNotificationEmail(
-      process.env.BOOKING_RECIEVER_EMAIL,
+      process.env.BOOKING_ADMIN_RECIEVER_EMAIL,
       'New Booking Notification',
       'bookingNotification',
       {
@@ -374,7 +374,7 @@ console.log('confirmedBooking', confirmedBooking);
     }
 
     const ownerConfirmationEmailSent = await sendBookingConfirmedEmailToOwner(
-      process.env.BOOKING_RECIEVER_EMAIL, // Owner's email here
+      process.env.BOOKING_ADMIN_RECIEVER_EMAIL, // Owner's email here
       'New Booking Approved',
       'bookingApprovedOwner',
       {
@@ -396,7 +396,7 @@ console.log('confirmedBooking', confirmedBooking);
 
       const ownerConfirmationEmailFailedToSend =
         await sendBookingConfirmationFailed(
-          process.env.BOOKING_RECIEVER_EMAIL, // Owner's email here
+          process.env.BOOKING_ADMIN_RECIEVER_EMAIL, // Owner's email here
           'New Booking Approval Failed',
           'sendBookingConfirmationFailed',
           {
@@ -447,7 +447,7 @@ console.log('confirmedBooking', confirmedBooking);
 
       const ownerConfirmationEmailFailedToSend =
         await sendBookingConfirmationFailed(
-          process.env.BOOKING_RECIEVER_EMAIL, // Owner's email here
+          process.env.BOOKING_ADMIN_RECIEVER_EMAIL, // Owner's email here
           'New Booking Approval Confirmation Email Failed',
           'bookingApprovedCustomerFailed',
           {
@@ -519,7 +519,7 @@ export const denyNewBookingHandler = async (req, res) => {
 
     // Notify Owner: Booking Denied
     const ownerRejectionEmailSent = await sendBookingEmail(
-      process.env.BOOKING_RECIEVER_EMAIL,
+      process.env.BOOKING_ADMIN_RECIEVER_EMAIL,
       'Booking Denied',
       'bookingDeniedOwner',
       {
@@ -539,7 +539,7 @@ export const denyNewBookingHandler = async (req, res) => {
       );
 
       const ownerRejectionFailedToSend = await sendBookingEmail(
-        process.env.BOOKING_RECIEVER_EMAIL,
+        process.env.BOOKING_ADMIN_RECIEVER_EMAIL,
         'Booking Denial Notification Failed',
         'sendBookingDenialFailed',
         {
@@ -587,7 +587,7 @@ export const denyNewBookingHandler = async (req, res) => {
       );
 
       const rejectionFailedToNotifyOwner = await sendBookingEmail(
-        process.env.BOOKING_RECIEVER_EMAIL,
+        process.env.BOOKING_ADMIN_RECIEVER_EMAIL,
         'Booking Denial Customer Notification Failed',
         'bookingDeniedCustomerFailed',
         {
@@ -658,7 +658,7 @@ export const cancelBookingHandler = async (req, res) => {
 
     // Notify Owner: Booking Denied
     const ownerCancellationEmailSent = await sendBookingEmail(
-      process.env.BOOKING_RECIEVER_EMAIL,
+      process.env.BOOKING_ADMIN_RECIEVER_EMAIL,
       'Booking Cancelled',
       'bookingCancelledOwner',
       {
@@ -678,7 +678,7 @@ export const cancelBookingHandler = async (req, res) => {
       );
 
       const ownerCancellationFailedToSend = await sendBookingEmail(
-        process.env.BOOKING_RECIEVER_EMAIL,
+        process.env.BOOKING_ADMIN_RECIEVER_EMAIL,
         'Booking Denial Notification Failed',
         'bookingCancelledFailed',
         {
@@ -726,7 +726,7 @@ export const cancelBookingHandler = async (req, res) => {
       );
 
       const rejectionFailedToNotifyOwner = await sendBookingEmail(
-        process.env.BOOKING_RECIEVER_EMAIL,
+        process.env.BOOKING_ADMIN_RECIEVER_EMAIL,
         'Booking Cancelled Customer Notification Failed',
         'bookingCancelledCustomerFailed',
         {
