@@ -25,7 +25,7 @@ const app = express();
 app.disable('x-powered-by');
 app.use(
   cors({
-    origin: 'http://localhost:3000', // Allow requests from frontend
+    origin: 'https://dummy.bytetoast-studio.co.uk', // Allow requests from frontend
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   })
