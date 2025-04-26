@@ -97,7 +97,7 @@ export const updateBooking = async (id, data) => {
 };
 
 export const findBookingsByEmail = async (email) => {
-  return dbClient.bookingItem.findFirst({
+  return dbClient.bookingItem.findMany({
     where: { email: email },
     orderBy: { date: 'asc' },
   });
