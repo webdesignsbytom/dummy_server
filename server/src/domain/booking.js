@@ -36,7 +36,7 @@ export const deleteClosedDayByDate = (date) =>
 export const updateOpeningTimes = (day, open, start, end) =>
   dbClient.openingTime.update({
     where: {
-      day: day, // Assuming 'day' is a unique field in your table
+      dayOfWeek: day, // Assuming 'day' is a unique field in your table
     },
     data: {
       open,
