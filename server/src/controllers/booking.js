@@ -966,8 +966,7 @@ export const deleteAllBookingHandler = async (req, res) => {
 export const setDayClosedHandler = async (req, res) => {
   try {
     const { date, reason } = req.body;
-
-    if (!date || !reason) {
+    if (!date) {
       return sendMessageResponse(res, 400, 'Date and reason are required.');
     }
 
@@ -1031,7 +1030,11 @@ export const editOpeningTimesHandler = async (req, res) => {
     const { day, open, start, end } = req.body;
 
     if (typeof open !== 'boolean' || !start || !end || !day) {
-      return sendMessageResponse(res, 400, 'Day, open status, start time, and end time are required.');
+      return sendMessageResponse(
+        res,
+        400,
+        'Day, open status, start time, and end time are required.'
+      );
     }
 
     // Update the opening times for the given day
@@ -1051,7 +1054,10 @@ export const editOpeningTimesHandler = async (req, res) => {
       message: 'Opening times successfully updated.',
     });
   } catch (err) {
-    const serverError = new ServerErrorEvent(req.user, 'Edit opening times failed.');
+    const serverError = new ServerErrorEvent(
+      req.user,
+      'Edit opening times failed.'
+    );
     myEmitterErrors.emit('error', serverError);
     sendMessageResponse(res, serverError.code, serverError.message);
     throw err;
