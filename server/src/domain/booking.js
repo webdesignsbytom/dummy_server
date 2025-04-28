@@ -80,6 +80,7 @@ export const findOpeningTimesAsObject = async () => {
 
   return times.reduce((acc, time) => {
     acc[time.dayOfWeek] = {
+      dayOfWeek: time.dayOfWeek,
       open: time.open,
       start: time.start,
       end: time.end,

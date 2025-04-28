@@ -47,7 +47,6 @@ import { v4 as uuid } from 'uuid';
 export const getAllBookingsHandler = async (req, res) => {
   try {
     const foundBookings = await findActiveBookings();
-    console.log('1');
     if (!foundBookings) {
       const notFound = new NotFoundEvent(
         req.user,
@@ -59,7 +58,7 @@ export const getAllBookingsHandler = async (req, res) => {
     }
 
     const foundOpeningTimes = await findOpeningTimesAsObject();
-    console.log('2');
+    console.log('foundOpeningTimes', foundOpeningTimes);
     if (!foundOpeningTimes) {
       const notFound = new NotFoundEvent(
         req.user,
@@ -71,7 +70,6 @@ export const getAllBookingsHandler = async (req, res) => {
     }
 
     const foundClosedDays = await findDaysClosed();
-    console.log('3');
     if (!foundClosedDays) {
       const notFound = new NotFoundEvent(
         req.user,
@@ -82,14 +80,8 @@ export const getAllBookingsHandler = async (req, res) => {
       return sendMessageResponse(res, notFound.code, notFound.message);
     }
 
-    // Only keep time and date for each booking
-    const shortBookings = foundBookings.map((booking) => ({
-      time: booking.time,
-      date: booking.date,
-    }));
-
     return sendDataResponse(res, 200, {
-      bookings: shortBookings,
+      bookings: foundBookings,
       openingTimes: foundOpeningTimes,
       closedDays: foundClosedDays,
     });

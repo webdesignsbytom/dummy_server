@@ -32,7 +32,7 @@ router.get('/get-bookings-by-date/:date', getBookingsByDateHandler);
 router.get('/get-todays-date-bookings', getTodaysBookingsHandler);
 router.post('/create-new-booking', createNewBookingHandler);
 router.post('/set-day-closed', setDayClosedHandler);
-router.patch('/edit-opeing-times', editOpeningTimesHandler);
+router.patch('/edit-opening-times', editOpeningTimesHandler);
 router.patch('/confirm-booking/:bookingId', confirmNewBookingHandler);
 router.patch('/deny-booking/:bookingId', denyNewBookingHandler);
 router.patch('/cancel-booking/:bookingId', cancelBookingHandler);
