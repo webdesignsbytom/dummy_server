@@ -995,8 +995,10 @@ export const setDayClosedHandler = async (req, res) => {
 };
 
 export const undoDayOffHandler = async (req, res) => {
-  const { date } = req.body;
+  const { date } = req.params;
+
   console.log('date', date);
+
   if (!date) {
     return sendMessageResponse(res, 400, 'Date is required.');
   }
