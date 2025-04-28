@@ -1020,10 +1020,10 @@ export const undoDayOffHandler = async (req, res) => {
 };
 
 export const editOpeningTimesHandler = async (req, res) => {
-  try {
-    const { day, open, start, end } = req.body;
+  const { dayOfWeek, open, start, end } = req.body;
 
-    if (typeof open !== 'boolean' || !start || !end || !day) {
+  try {
+    if (typeof open !== 'boolean' || !start || !end || !dayOfWeek) {
       return sendMessageResponse(
         res,
         400,
@@ -1032,7 +1032,12 @@ export const editOpeningTimesHandler = async (req, res) => {
     }
 
     // Update the opening times for the given day
-    const updatedOpeningTime = await updateOpeningTimes(day, open, start, end);
+    const updatedOpeningTime = await updateOpeningTimes(
+      dayOfWeek,
+      open,
+      start,
+      end
+    );
 
     if (!updatedOpeningTime) {
       const notUpdated = new NotFoundEvent(
@@ -1044,8 +1049,20 @@ export const editOpeningTimesHandler = async (req, res) => {
       return sendMessageResponse(res, notUpdated.code, notUpdated.message);
     }
 
+    const foundOpeningTimes = await findOpeningTimesAsObject();
+
+    if (!foundOpeningTimes) {
+      const notFound = new NotFoundEvent(
+        req.user,
+        EVENT_MESSAGES.notFound,
+        EVENT_MESSAGES.openingTimesNotFound
+      );
+      myEmitterErrors.emit('error', notFound);
+      return sendMessageResponse(res, notFound.code, notFound.message);
+    }
+
     return sendDataResponse(res, 200, {
-      message: 'Opening times successfully updated.',
+      updatedTimes: foundOpeningTimes,
     });
   } catch (err) {
     const serverError = new ServerErrorEvent(
