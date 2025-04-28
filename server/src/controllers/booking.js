@@ -47,7 +47,7 @@ import { v4 as uuid } from 'uuid';
 export const getAllBookingsHandler = async (req, res) => {
   try {
     const foundBookings = await findActiveBookings();
-
+    console.log('1');
     if (!foundBookings) {
       const notFound = new NotFoundEvent(
         req.user,
@@ -59,7 +59,7 @@ export const getAllBookingsHandler = async (req, res) => {
     }
 
     const foundOpeningTimes = await findOpeningTimesAsObject();
-
+    console.log('2');
     if (!foundOpeningTimes) {
       const notFound = new NotFoundEvent(
         req.user,
@@ -71,7 +71,7 @@ export const getAllBookingsHandler = async (req, res) => {
     }
 
     const foundClosedDays = await findDaysClosed();
-
+    console.log('3');
     if (!foundClosedDays) {
       const notFound = new NotFoundEvent(
         req.user,
@@ -996,7 +996,7 @@ export const setDayClosedHandler = async (req, res) => {
 
 export const undoDayOffHandler = async (req, res) => {
   const { date } = req.body;
-
+  console.log('date', date);
   if (!date) {
     return sendMessageResponse(res, 400, 'Date is required.');
   }
