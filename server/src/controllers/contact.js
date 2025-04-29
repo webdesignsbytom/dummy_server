@@ -280,7 +280,7 @@ export const deleteCallbackFormHandler = async (req, res) => {
 export const deleteAllContactFormsHandler = async (req, res) => {
  
   try {
-    const deletedForm = await deleteAllContactForms(formId);
+    const deletedForm = await deleteAllContactForms();
     if (!deletedForm) {
       const badRequest = new BadRequestEvent(
         req.user,
