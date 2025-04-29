@@ -46,6 +46,40 @@ const booking = {
   bookingApproved: true,
 };
 
+const contactForms = [
+  {
+    firstName: 'Alice',
+    lastName: 'Smith',
+    email: 'alice.smith@example.com',
+    message:
+      'Hi, I’d like to inquire about your services for an upcoming event.',
+    phoneNumber: '555-123-4567',
+    location: 'London, UK',
+    businessName: 'Smith Events',
+  },
+  {
+    firstName: 'Bob',
+    lastName: 'Johnson',
+    email: 'bob.johnson@example.com',
+    message:
+      'Can I get a quote for monthly maintenance for my business website?',
+    phoneNumber: '555-987-6543',
+    location: 'Manchester, UK',
+    businessName: 'Johnson Solutions',
+  },
+];
+
+const callbackForms = [
+  {
+    fullName: 'Charlie Daniels',
+    phoneNumber: '444-111-2222',
+  },
+  {
+    fullName: 'Diana Prince',
+    phoneNumber: '333-222-1111',
+  },
+];
+
 // Opening times
 const openingTimes = [
   { dayOfWeek: 1, open: true, start: '09:00', end: '17:00' }, // Monday
@@ -54,7 +88,7 @@ const openingTimes = [
   { dayOfWeek: 4, open: true, start: '09:00', end: '17:00' }, // Thursday
   { dayOfWeek: 5, open: true, start: '09:00', end: '17:00' }, // Friday
   { dayOfWeek: 6, open: true, start: '10:00', end: '14:00' }, // Saturday
-  { dayOfWeek: 7, open: false, start: null, end: null },      // Sunday
+  { dayOfWeek: 7, open: false, start: null, end: null }, // Sunday
 ];
 
 async function seed() {
@@ -100,6 +134,20 @@ async function seed() {
         where: { dayOfWeek: time.dayOfWeek },
         update: {},
         create: time,
+      });
+    }
+
+    // Create contact forms
+    for (const contact of contactForms) {
+      await dbClient.contactForm.create({
+        data: contact,
+      });
+    }
+
+    // Create callback forms
+    for (const callback of callbackForms) {
+      await dbClient.callbackForm.create({
+        data: callback,
       });
     }
 
