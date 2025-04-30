@@ -20,7 +20,7 @@ import { createNewReview, deleteAllReviews, deleteReviewById, findAllReviews, fi
 export const getAllReviewsHandler = async (req, res) => {
   try {
     const foundReviews = await findAllReviews();
-
+console.log('foundReviews', foundReviews);
     if (!foundReviews) {
       const notFound = new NotFoundEvent(
         req.user,
@@ -132,12 +132,11 @@ export const getReviewsByEmailHandler = async (req, res) => {
 };
 
 export const createNewReviewHandler = async (req, res) => {
-  const { firstName, lastName, phoneNumber, email, rating, message } = req.body;
+  const { firstName, lastName, email, rating, message } = req.body;
 
   if (
     !firstName ||
     !lastName ||
-    !phoneNumber ||
     !email ||
     rating == null ||
     !message
@@ -153,7 +152,6 @@ export const createNewReviewHandler = async (req, res) => {
     const createdReview = await createNewReview(
       firstName,
       lastName,
-      phoneNumber,
       email,
       rating,
       message

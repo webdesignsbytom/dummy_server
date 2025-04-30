@@ -18,7 +18,6 @@ export const findReviewsForDay = async (date) => {
 export const createNewReview = async (
   firstName,
   lastName,
-  phoneNumber,
   email,
   rating,
   message
@@ -27,7 +26,6 @@ export const createNewReview = async (
     data: {
       firstName,
       lastName,
-      phoneNumber,
       email,
       rating,
       message,
