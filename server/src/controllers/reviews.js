@@ -20,7 +20,7 @@ import { createNewReview, deleteAllReviews, deleteReviewById, findAllReviews, fi
 export const getAllReviewsHandler = async (req, res) => {
   try {
     const foundReviews = await findAllReviews();
-console.log('foundReviews', foundReviews);
+    
     if (!foundReviews) {
       const notFound = new NotFoundEvent(
         req.user,
