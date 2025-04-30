@@ -51,6 +51,7 @@ export const getAllContactFormsHandler = async (req, res) => {
 };
 
 export const getAllCallbackFormsHandler = async (req, res) => {
+  console.log('AAAAAAAAAA');
   try {
     const foundCallbackForms = await findAllCallbackForms();
     console.log('found foundCallbackForms:', foundCallbackForms);
@@ -308,7 +309,8 @@ export const deleteAllContactFormsHandler = async (req, res) => {
 
 export const deleteAllCallbackFormsHandler = async (req, res) => {
   try {
-    const deletedForm = await deleteAllCallbackForms(formId);
+    const deletedForm = await deleteAllCallbackForms();
+    
     if (!deletedForm) {
       const badRequest = new BadRequestEvent(
         req.user,
