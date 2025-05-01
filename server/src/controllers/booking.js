@@ -277,7 +277,7 @@ export const createNewBookingHandler = async (req, res) => {
       date,
       fullName,
       phoneNumber,
-      email
+      lowerCaseEmail
     );
 
     if (!createdBooking) {
@@ -356,9 +356,6 @@ export const createNewBookingHandler = async (req, res) => {
         fullName,
         phoneNumber,
         email,
-        uniqueString,
-        approveUrl,
-        rejectUrl,
       }
     );
 
@@ -385,10 +382,16 @@ export const createNewBookingHandler = async (req, res) => {
 
 export const confirmNewBookingHandler = async (req, res) => {
   const { bookingId } = req.params;
+  const { uniqueString } = req.body;
 
   if (!bookingId) {
     return sendDataResponse(res, 409, {
       message: `Booking ID is missing.`,
+    });
+  }
+  if (!uniqueString) {
+    return sendDataResponse(res, 409, {
+      message: `Unique string is missing.`,
     });
   }
 
@@ -404,6 +407,25 @@ export const confirmNewBookingHandler = async (req, res) => {
       return sendMessageResponse(res, notFound.code, notFound.message);
     }
 
+    if (!foundBooking.uniqueString) {
+      return sendMessageResponse(res, 401, 'Missing confirmation string');
+    }
+
+    const isValid = await bcrypt.compare(
+      uniqueString,
+      foundBooking.uniqueString
+    );
+
+    console.log('IS VALID', isValid);
+
+    if (!isValid) {
+      return sendMessageResponse(
+        res,
+        401,
+        'Invalid or expired confirmation string'
+      );
+    }
+
     const confirmedBooking = await confirmBooking(bookingId);
     console.log('confirmedBooking', confirmedBooking);
     if (!confirmedBooking) {
@@ -415,7 +437,7 @@ export const confirmNewBookingHandler = async (req, res) => {
       return sendMessageResponse(res, notCreated.code, notCreated.message);
     }
 
-    const ownerConfirmationEmailSent = await sendBookingConfirmedEmailToOwner(
+    const ownerConfirmationEmailSent = await sendBookingEmail(
       process.env.BOOKING_ADMIN_RECIEVER_EMAIL, // Owner's email here
       'New Booking Approved',
       'bookingApprovedOwner',
@@ -437,7 +459,7 @@ export const confirmNewBookingHandler = async (req, res) => {
       );
 
       const ownerConfirmationEmailFailedToSend =
-        await sendBookingConfirmationFailed(
+        await sendBookingEmail(
           process.env.BOOKING_ADMIN_RECIEVER_EMAIL, // Owner's email here
           'New Booking Approval Failed',
           'sendBookingConfirmationFailed',
@@ -466,7 +488,7 @@ export const confirmNewBookingHandler = async (req, res) => {
 
     // Send confirmation to customer
     const customerConfirmationEmailSent =
-      await sendBookingConfirmedEmailToCustomer(
+      await sendBookingEmail(
         confirmedBooking.email, // Customers's email here
         'Booking Confirmed',
         'bookingApprovedCustomer',
@@ -488,7 +510,7 @@ export const confirmNewBookingHandler = async (req, res) => {
       );
 
       const ownerConfirmationEmailFailedToSend =
-        await sendBookingConfirmationFailed(
+        await sendBookingEmail(
           process.env.BOOKING_ADMIN_RECIEVER_EMAIL, // Owner's email here
           'New Booking Approval Confirmation Email Failed',
           'bookingApprovedCustomerFailed',
@@ -529,10 +551,16 @@ export const confirmNewBookingHandler = async (req, res) => {
 
 export const denyNewBookingHandler = async (req, res) => {
   const { bookingId } = req.params;
+  const { uniqueString } = req.body;
 
   if (!bookingId) {
     return sendDataResponse(res, 409, {
       message: `Booking ID is missing.`,
+    });
+  }
+  if (!uniqueString) {
+    return sendDataResponse(res, 409, {
+      message: `Unique string is missing.`,
     });
   }
 
@@ -546,6 +574,25 @@ export const denyNewBookingHandler = async (req, res) => {
       );
       myEmitterErrors.emit('error', notFound);
       return sendMessageResponse(res, notFound.code, notFound.message);
+    }
+
+    if (!foundBooking.uniqueString) {
+      return sendMessageResponse(res, 401, 'Missing confirmation string');
+    }
+
+    const isValid = await bcrypt.compare(
+      uniqueString,
+      foundBooking.uniqueString
+    );
+
+    console.log('IS VALID', isValid);
+
+    if (!isValid) {
+      return sendMessageResponse(
+        res,
+        401,
+        'Invalid or expired confirmation string'
+      );
     }
 
     const deniedBooking = await denyBooking(bookingId);
