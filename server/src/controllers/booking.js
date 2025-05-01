@@ -1,3 +1,4 @@
+import bcrypt from 'bcrypt';
 // Emitters
 import { myEmitterErrors } from '../event/errorEvents.js';
 import { myEmitterEvents } from '../event/eventEvents.js';
@@ -20,6 +21,7 @@ import {
   findBookingsForDay,
   findDaysClosed,
   findOpeningTimesAsObject,
+  updateBookingUniqueString,
   updateOpeningTimes,
 } from '../domain/booking.js';
 // Response messages
