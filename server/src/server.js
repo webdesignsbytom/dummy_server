@@ -15,7 +15,7 @@ import reviewRouter from './routes/reviews.js';
 import contactRouter from './routes/contact.js';
 import testRouter from './routes/tests.js';
 // Responses
-import { sendDataResponse } from './utils/responses.js'
+import { sendDataResponse } from './utils/responses.js';
 // Middleware
 import { generalRateLimiter } from './middleware/rateLimiters.js';
 
@@ -26,8 +26,7 @@ const app = express();
 app.disable('x-powered-by');
 app.use(
   cors({
-    origin: 'http://localhost:3000', 
-    // origin: 'https://dummy.bytetoast-studio.co.uk', 
+    origin: ['http://localhost:3000', 'https://dummy.bytetoast-studio.co.uk'],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   })
@@ -71,7 +70,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/test-bond', (req, res) => {
-  res.status(200).send('Congratulations Mr Bond you found my server lair.')
+  res.status(200).send('Congratulations Mr Bond you found my server lair.');
 });
 
 // For all unknown requests 404 page returns
@@ -96,8 +95,17 @@ app.use((error, req, res, next) => {
     return sendDataResponse(res, 404, 'Record does not exist');
   }
   // Handle MinIO configuration errors
-  if (error.message && (error.message.includes('MINIO_SECRET_KEY') || error.message.includes('MINIO_ACCESS_KEY'))) {
-    return res.status(400).json({ message: 'MinIO configuration error: Invalid or missing access/secret key' });
+  if (
+    error.message &&
+    (error.message.includes('MINIO_SECRET_KEY') ||
+      error.message.includes('MINIO_ACCESS_KEY'))
+  ) {
+    return res
+      .status(400)
+      .json({
+        message:
+          'MinIO configuration error: Invalid or missing access/secret key',
+      });
   }
 
   return sendDataResponse(res, 500, 'Server error event');
