@@ -288,6 +288,22 @@ export const createNewBookingHandler = async (req, res) => {
     }
 
     const uniqueString = uuid() + createdBooking.id;
+    const hashedString = await bcrypt.hash(uniqueString, 10);
+
+    // Create database verification item
+    const newVerificationString = await updateBookingUniqueString(
+      createdBooking.id,
+      hashedString
+    );
+
+    if (!newVerificationString) {
+      const notCreated = new BadRequestEvent(
+        EVENT_MESSAGES.badRequest,
+        EVENT_MESSAGES.updateBookingString
+      );
+      myEmitterErrors.emit('error', notCreated);
+      return sendMessageResponse(res, notCreated.code, notCreated.message);
+    }
 
     const formatDate = (dateString) => {
       const date = new Date(dateString);
@@ -301,8 +317,8 @@ export const createNewBookingHandler = async (req, res) => {
     const formattedDate = formatDate(date);
     console.log(formattedDate); // Output: 15/04/25
 
-    const approveUrl = `${process.env.BOOKING_API_APPROVE}/${createdBooking.id}`;
-    const rejectUrl = `${process.env.BOOKING_API_REJECT}/${createdBooking.id}`;
+    const approveUrl = `${process.env.BOOKING_API_APPROVE}/${uniqueString}/${createdBooking.id}`;
+    const rejectUrl = `${process.env.BOOKING_API_REJECT}/${uniqueString}/${createdBooking.id}`;
 
     const notificationSent = await sendBookingNotificationEmail(
       process.env.BOOKING_ADMIN_RECIEVER_EMAIL,
@@ -314,7 +330,6 @@ export const createNewBookingHandler = async (req, res) => {
         fullName,
         phoneNumber,
         email,
-        uniqueString,
         approveUrl,
         rejectUrl,
       }

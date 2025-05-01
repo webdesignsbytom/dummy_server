@@ -18,25 +18,35 @@ export const findActiveBookings = () =>
     },
   });
 
-  export const createClosedDay = async (date, reason) => {
-    // First check if a day with that date already exists
-    const existingClosedDay = await dbClient.dayClosed.findUnique({
-      where: { date },
-    });
-  
-    if (existingClosedDay) {
-      // Already exists — don't create again, just return null or throw a handled error
-      return null;
-    }
-  
-    // Otherwise create it
-    return dbClient.dayClosed.create({
-      data: {
-        date,
-        reason,
-      },
-    });
-  };
+export const updateBookingUniqueString = (id, string) =>
+  dbClient.bookingItem.update({
+    where: {
+      id: id,
+    },
+    data: {
+      uniqueString: string,
+    },
+  });
+
+export const createClosedDay = async (date, reason) => {
+  // First check if a day with that date already exists
+  const existingClosedDay = await dbClient.dayClosed.findUnique({
+    where: { date },
+  });
+
+  if (existingClosedDay) {
+    // Already exists — don't create again, just return null or throw a handled error
+    return null;
+  }
+
+  // Otherwise create it
+  return dbClient.dayClosed.create({
+    data: {
+      date,
+      reason,
+    },
+  });
+};
 
 export const deleteClosedDayByDate = (date) =>
   dbClient.dayClosed.delete({

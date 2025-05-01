@@ -162,7 +162,7 @@ export const registerNewUserHandler = async (req, res) => {
       'userVerifcationEmail',
       {
         email: createdUser.email,
-        uniqueString: newVerification.uniqueString,
+        uniqueString: uniqueString,
         expiryTime: newVerification.expiresAt,
         confirmationUrl: `${process.env.USER_VERIFICATION_URL}/verify-user/${userId}`,
         businessUrl: BusinessUrl,
@@ -226,7 +226,7 @@ export const verifyUserEmailAddressHandler = async (req, res) => {
     const { expiresAt } = foundVerification;
 
     // TODO: whats this all about?
-    if (expiresAt < Date.now()) {
+    if (new Date(expiresAt).getTime() < Date.now()) {
       await dbClient.userVerificationEmail.delete({ where: { userId } });
       // await dbClient.user.delete({ where: { userId } });
       return sendMessageResponse(res, 401, EVENT_MESSAGES.expiredLinkMessage);

@@ -66,6 +66,7 @@ model BookingItem {
   fullName        String    @default("")
   phoneNumber     String    @default("")
   email           String    @default("")
+  uniqueString    String    @default("")
   bookingApproved Boolean   @default(false)
   denied          Boolean   @default(false)
   cancelled       Boolean   @default(false)
@@ -84,19 +85,19 @@ model OpeningTime {
 model DayClosed {
   id        Int      @id @default(autoincrement())
   date      DateTime @unique
-  reason    String?  
+  reason    String?
   createdAt DateTime @default(now())
 }
 
 model Review {
-  id          String    @id @default(uuid())
-  firstName   String    @default("")
-  lastName    String    @default("")
-  email       String    @default("")
-  rating      Int       @default(5)
-  message     String    @default("")
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime? @updatedAt
+  id        String    @id @default(uuid())
+  firstName String    @default("")
+  lastName  String    @default("")
+  email     String    @default("")
+  rating    Int       @default(5)
+  message   String    @default("")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
 }
 
 // EVENTS
