@@ -36,14 +36,7 @@ import {
   NotFoundEvent,
   ServerErrorEvent,
 } from '../event/utils/errorUtils.js';
-import {
-  sendBookingConfirmationFailed,
-  sendBookingConfirmedEmailToCustomer,
-  sendBookingConfirmedEmailToOwner,
-  sendBookingEmail,
-  sendBookingNotificationEmail,
-  sendBookingRequestRecievedEmail,
-} from '../utils/email/emailHandler.js';
+import { sendBookingEmail } from '../utils/email/emailHandler.js';
 import { v4 as uuid } from 'uuid';
 
 export const getAllBookingsHandler = async (req, res) => {
@@ -322,7 +315,7 @@ export const createNewBookingHandler = async (req, res) => {
     const approveUrl = `${process.env.BOOKING_API_APPROVE}/${uniqueString}/${createdBooking.id}`;
     const rejectUrl = `${process.env.BOOKING_API_REJECT}/${uniqueString}/${createdBooking.id}`;
 
-    const notificationSent = await sendBookingNotificationEmail(
+    const notificationSent = await sendBookingEmail(
       process.env.BOOKING_ADMIN_RECIEVER_EMAIL,
       'New Booking Notification',
       'bookingNotification',
@@ -346,7 +339,7 @@ export const createNewBookingHandler = async (req, res) => {
       return sendMessageResponse(res, notCreated.code, notCreated.message);
     }
 
-    const bookingRecivedSent = await sendBookingRequestRecievedEmail(
+    const bookingRecivedSent = await sendBookingEmail(
       email,
       'New Booking Notification',
       'bookingRecieved',
@@ -458,20 +451,19 @@ export const confirmNewBookingHandler = async (req, res) => {
         EVENT_MESSAGES.recievedBookingSendingFail
       );
 
-      const ownerConfirmationEmailFailedToSend =
-        await sendBookingEmail(
-          process.env.BOOKING_ADMIN_RECIEVER_EMAIL, // Owner's email here
-          'New Booking Approval Failed',
-          'sendBookingConfirmationFailed',
-          {
-            time: confirmedBooking.time,
-            date: confirmedBooking.date,
-            fullName: confirmedBooking.fullName,
-            phoneNumber: confirmedBooking.phoneNumber,
-            email: confirmedBooking.email,
-            uniqueString: confirmedBooking.id,
-          }
-        );
+      const ownerConfirmationEmailFailedToSend = await sendBookingEmail(
+        process.env.BOOKING_ADMIN_RECIEVER_EMAIL, // Owner's email here
+        'New Booking Approval Failed',
+        'sendBookingConfirmationFailed',
+        {
+          time: confirmedBooking.time,
+          date: confirmedBooking.date,
+          fullName: confirmedBooking.fullName,
+          phoneNumber: confirmedBooking.phoneNumber,
+          email: confirmedBooking.email,
+          uniqueString: confirmedBooking.id,
+        }
+      );
 
       if (!ownerConfirmationEmailFailedToSend) {
         const notCreated = new BadRequestEvent(
@@ -487,11 +479,31 @@ export const confirmNewBookingHandler = async (req, res) => {
     }
 
     // Send confirmation to customer
-    const customerConfirmationEmailSent =
-      await sendBookingEmail(
-        confirmedBooking.email, // Customers's email here
-        'Booking Confirmed',
-        'bookingApprovedCustomer',
+    const customerConfirmationEmailSent = await sendBookingEmail(
+      confirmedBooking.email, // Customers's email here
+      'Booking Confirmed',
+      'bookingApprovedCustomer',
+      {
+        time: confirmedBooking.time,
+        date: confirmedBooking.date,
+        fullName: confirmedBooking.fullName,
+        phoneNumber: confirmedBooking.phoneNumber,
+        email: confirmedBooking.email,
+        uniqueString: confirmedBooking.id,
+      }
+    );
+
+    // Failed to send confirmation to owner
+    if (!customerConfirmationEmailSent) {
+      const notCreated = new BadRequestEvent(
+        EVENT_MESSAGES.badRequest,
+        EVENT_MESSAGES.recievedBookingSendingFail
+      );
+
+      const ownerConfirmationEmailFailedToSend = await sendBookingEmail(
+        process.env.BOOKING_ADMIN_RECIEVER_EMAIL, // Owner's email here
+        'New Booking Approval Confirmation Email Failed',
+        'bookingApprovedCustomerFailed',
         {
           time: confirmedBooking.time,
           date: confirmedBooking.date,
@@ -501,28 +513,6 @@ export const confirmNewBookingHandler = async (req, res) => {
           uniqueString: confirmedBooking.id,
         }
       );
-
-    // Failed to send confirmation to owner
-    if (!customerConfirmationEmailSent) {
-      const notCreated = new BadRequestEvent(
-        EVENT_MESSAGES.badRequest,
-        EVENT_MESSAGES.recievedBookingSendingFail
-      );
-
-      const ownerConfirmationEmailFailedToSend =
-        await sendBookingEmail(
-          process.env.BOOKING_ADMIN_RECIEVER_EMAIL, // Owner's email here
-          'New Booking Approval Confirmation Email Failed',
-          'bookingApprovedCustomerFailed',
-          {
-            time: confirmedBooking.time,
-            date: confirmedBooking.date,
-            fullName: confirmedBooking.fullName,
-            phoneNumber: confirmedBooking.phoneNumber,
-            email: confirmedBooking.email,
-            uniqueString: confirmedBooking.id,
-          }
-        );
 
       if (!ownerConfirmationEmailFailedToSend) {
         const notCreated = new BadRequestEvent(
