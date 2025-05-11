@@ -38,11 +38,19 @@ export const EVENT_MESSAGES = {
   confirmBookingFail: `Failed to confirm booking.`,
   updateBookingFail: `Failed to update booking.`,
   denyBookingFail: `Failed to deny booking.`,
-  // Bookings
+  // Reviews
   reviewTag: `Review database.`,
   reviewNotFound: `Failed to find review/s.`,
   createReviewFail: `Failed to create review.`,
   deleteReviewFail: `Failed to delete review.`,
+  // Newsletter
+  newsletterTag: `Newsletter database.`,
+  newsletterNotFound: `Failed to find newsletter/s.`,
+  newsletterSubscribersNotFound: `Failed to find newsletter subscriber.`,
+  subscribeToNewsletterFail: `Failed to subscribe to newsletter.`,
+  createNewsletterFail: `Failed to create newsletter.`,
+  deleteSubscriberFailed: `Failed to delete newsletter subscriber from list.`,
+  deleteNewsletterFail: `Failed to delete newsletter.`,
   // Users
   userTag: `User database.`,
   userNotFound: `Failed to find user(s).`,

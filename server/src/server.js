@@ -12,6 +12,7 @@ import eventRouter from './routes/events.js';
 import userRouter from './routes/users.js';
 import bookingRouter from './routes/booking.js';
 import reviewRouter from './routes/reviews.js';
+import newsletterRouter from './routes/newsletter.js';
 import contactRouter from './routes/contact.js';
 import testRouter from './routes/tests.js';
 // Responses
@@ -58,6 +59,7 @@ app.use('/', authRouter);
 app.use('/events', eventRouter);
 app.use('/users', userRouter);
 app.use('/reviews', reviewRouter);
+app.use('/newsletter', newsletterRouter);
 app.use('/contact', contactRouter);
 app.use('/bookings', bookingRouter);
 app.use('/tests', testRouter);
@@ -100,12 +102,10 @@ app.use((error, req, res, next) => {
     (error.message.includes('MINIO_SECRET_KEY') ||
       error.message.includes('MINIO_ACCESS_KEY'))
   ) {
-    return res
-      .status(400)
-      .json({
-        message:
-          'MinIO configuration error: Invalid or missing access/secret key',
-      });
+    return res.status(400).json({
+      message:
+        'MinIO configuration error: Invalid or missing access/secret key',
+    });
   }
 
   return sendDataResponse(res, 500, 'Server error event');

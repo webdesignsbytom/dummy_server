@@ -89,6 +89,15 @@ model DayClosed {
   createdAt DateTime @default(now())
 }
 
+// Newsletter
+
+model NewsletterSubscriber {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}
+
+// Reviews
 model Review {
   id        String    @id @default(uuid())
   firstName String    @default("")

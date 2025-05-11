@@ -193,6 +193,12 @@ const reviews = [
   },
 ];
 
+const newsletterSubs = [
+  { email: 'subscriber1@example.com' },
+  { email: 'subscriber2@example.com' },
+  { email: 'subscriber3@example.com' },
+];
+
 async function seed() {
   try {
     // Validate environment variables
@@ -250,6 +256,13 @@ async function seed() {
     for (const contact of contactForms) {
       await dbClient.contactForm.create({
         data: contact,
+      });
+    }
+
+    // Create newsletter subscriptions
+    for (const sub of newsletterSubs) {
+      await dbClient.newsletterSub.create({
+        data: sub,
       });
     }
 
