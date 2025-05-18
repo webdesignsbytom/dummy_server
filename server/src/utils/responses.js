@@ -18,7 +18,8 @@ export const EVENT_MESSAGES = {
   // Contacts
   contactTag: `Contact database.`,
   contactFormsNotFound: `Failed to find contact form(s).`,
-  createContactFail: `Failed to create contact.`,
+  createContactFormFail: `Failed to create contact form.`,
+  createCallbackFormFail: `Failed to create callback form.`,
   // Events
   eventTag: `Event database.`,
   eventNotFound: `Failed to find event.`,

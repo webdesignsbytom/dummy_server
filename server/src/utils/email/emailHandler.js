@@ -36,6 +36,10 @@ const USER_RESET_PASS = process.env.USER_RESET_PASS;
 const BOOKING_ADMIN_EMAIL = process.env.BOOKING_ADMIN_EMAIL;
 const BOOKING_ADMIN_PASS = process.env.BOOKING_ADMIN_PASS;
 
+// Contact
+const CONTACT_ADMIN_EMAIL = process.env.CONTACT_ADMIN_EMAIL;
+const CONTACT_ADMIN_PASS = process.env.CONTACT_ADMIN_PASS;
+
 // Set up handlebars for HTML email templates
 const handlebarOptionsUserEmails = {
   viewEngine: {
@@ -53,6 +57,15 @@ const handlebarOptionsBookingEmails = {
     defaultLayout: false,
   },
   viewPath: path.join(__dirname, 'booking'),  // Corrected path
+};
+
+const handlebarOptionsContactEmails = {
+  viewEngine: {
+    extname: '.hbs',
+    partialsDir: path.join(__dirname, 'contact'),  // Corrected path
+    defaultLayout: false,
+  },
+  viewPath: path.join(__dirname, 'contact'),  // Corrected path
 };
 
 // Transporters
@@ -96,6 +109,17 @@ const bookingTransporter = nodemailer.createTransport({
   },
 });
 
+// Contact
+const contactTransporter = nodemailer.createTransport({
+  host: EMAIL_HOST,
+  port: EMAIL_PORT,
+  secure: EMAIL_PORT === 465, // SSL for 465, TLS for 587
+  auth: {
+    user: CONTACT_ADMIN_EMAIL,
+    pass: CONTACT_ADMIN_PASS,
+  },
+});
+
 
 // Users
 userAdminTransporter.use('compile', hbs(handlebarOptionsUserEmails));
@@ -103,6 +127,8 @@ userVerificationTransporter.use('compile', hbs(handlebarOptionsUserEmails));
 userPasswordResetTransporter.use('compile', hbs(handlebarOptionsUserEmails));
 // Booking
 bookingTransporter.use('compile', hbs(handlebarOptionsBookingEmails));
+// Contact
+contactTransporter.use('compile', hbs(handlebarOptionsContactEmails));
 
 
 // Email templates
@@ -201,6 +227,32 @@ export const sendBookingEmail = async (
   try {
     const info = await bookingTransporter.sendMail(mailOptions);
     console.log(`✅ Booking Confirmation Email Sent: ${info.recipient}`);
+    return true;
+  } catch (err) {
+    console.error('❌ Error sending email:', err);
+    return false;
+  }
+};
+
+// Contact
+export const sendContactEmail = async (
+  recipient,
+  subject,
+  template,
+  context = {}
+) => {
+  console.log('sendContactEmail!!!', recipient, subject, template, context);
+  const mailOptions = {
+    from: `"${BusinessName}" <${CONTACT_ADMIN_EMAIL}>`,
+    to: recipient,
+    subject,
+    template, // Matches the .hbs template
+    context, // Data for template rendering
+  };
+
+  try {
+    const info = await contactTransporter.sendMail(mailOptions);
+    console.log(`✅ Contact Confirmation Email Sent: ${info.recipient}`);
     return true;
   } catch (err) {
     console.error('❌ Error sending email:', err);

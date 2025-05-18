@@ -16,6 +16,7 @@ import {
   NotFoundEvent,
   ServerErrorEvent,
 } from '../event/utils/errorUtils.js';
+import { sendContactEmail } from '../utils/email/emailHandler.js';
 import {
   EVENT_MESSAGES,
   sendDataResponse,
@@ -123,6 +124,33 @@ export const createNewContactFormHandler = async (req, res) => {
       );
       myEmitterErrors.emit('error', badRequest);
       return sendMessageResponse(res, badRequest.code, badRequest.message);
+    }
+
+    const notificationSent = await sendContactEmail(
+      process.env.CONTACT_ADMIN_RECIEVER_EMAIL,
+      'New Contact Form Recieved',
+      'contactFormNotification',
+      {
+        title: 'New Contact Form Submission',
+        heading: 'You’ve received a new message from your website!',
+        firstName,
+        lastName,
+        email,
+        phoneNumber,
+        location,
+        businessName,
+        projectType,
+        message,
+      }
+    );
+
+    if (!notificationSent) {
+      const notCreated = new BadRequestEvent(
+        EVENT_MESSAGES.badRequest,
+        EVENT_MESSAGES.notificationSendingFail
+      );
+      myEmitterErrors.emit('error', notCreated);
+      return sendMessageResponse(res, notCreated.code, notCreated.message);
     }
 
     return sendDataResponse(res, 201, { contactForm: createdContactForm });
@@ -279,7 +307,6 @@ export const deleteCallbackFormHandler = async (req, res) => {
 };
 
 export const deleteAllContactFormsHandler = async (req, res) => {
- 
   try {
     const deletedForm = await deleteAllContactForms();
     if (!deletedForm) {
@@ -310,7 +337,7 @@ export const deleteAllContactFormsHandler = async (req, res) => {
 export const deleteAllCallbackFormsHandler = async (req, res) => {
   try {
     const deletedForm = await deleteAllCallbackForms();
-    
+
     if (!deletedForm) {
       const badRequest = new BadRequestEvent(
         req.user,
