@@ -82,7 +82,7 @@ export const subscribeToNewsletterHandler = async (req, res) => {
 };
 
 export const deleteNewsletterSubscriberByIdHandler = async (req, res) => {
-  const { id } = req.params;
+  const { id } = req.body;
 
   try {
     if (!id) {
