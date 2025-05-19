@@ -14,7 +14,7 @@ const router = Router();
 
 router.get('/get-subscriber-list', getAllNewsletterSubscribersHandler);
 router.post('/subscribe-to-newsletter', subscribeToNewsletterHandler);
-router.delete('/delete-subscriber-by-id/', deleteNewsletterSubscriberByIdHandler);
-router.delete('/delete-subscriber-by-email/', deleteNewsletterSubscriberByEmailHandler);
+router.delete('/delete-subscriber-by-id/:id', deleteNewsletterSubscriberByIdHandler);
+router.delete('/delete-subscriber-by-email/:email', deleteNewsletterSubscriberByEmailHandler);
 
 export default router;

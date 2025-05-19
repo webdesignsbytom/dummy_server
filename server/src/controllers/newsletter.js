@@ -82,7 +82,7 @@ export const subscribeToNewsletterHandler = async (req, res) => {
 };
 
 export const deleteNewsletterSubscriberByIdHandler = async (req, res) => {
-  const { id } = req.body;
+  const { id } = req.params;
 
   try {
     if (!id) {
@@ -103,13 +103,13 @@ export const deleteNewsletterSubscriberByIdHandler = async (req, res) => {
 
     const deletedSub = await deleteNewsletterSubscriberById(id);
     if (!deletedSub) {
-      const notFound = new BadRequestEvent(
+      const badRequest = new BadRequestEvent(
         req.user,
         EVENT_MESSAGES.badRequest,
         EVENT_MESSAGES.deleteSubscriberFailed
       );
-      myEmitterErrors.emit('error', notFound);
-      return sendMessageResponse(res, notFound.code, notFound.message);
+      myEmitterErrors.emit('error', badRequest);
+      return sendMessageResponse(res, badRequest.code, badRequest.message);
     }
 
     return sendMessageResponse(res, 200, 'Subscriber deleted successfully');
@@ -125,7 +125,7 @@ export const deleteNewsletterSubscriberByIdHandler = async (req, res) => {
 };
 
 export const deleteNewsletterSubscriberByEmailHandler = async (req, res) => {
-  const { email } = req.body;
+  const { email } = req.params;
 
   try {
     if (!email) {
@@ -146,13 +146,39 @@ export const deleteNewsletterSubscriberByEmailHandler = async (req, res) => {
 
     const deletedSub = await deleteNewsletterSubscriberByEmail(email);
     if (!deletedSub) {
-      const notFound = new BadRequestEvent(
+      const badRequest = new BadRequestEvent(
         req.user,
         EVENT_MESSAGES.badRequest,
         EVENT_MESSAGES.deleteSubscriberFailed
       );
-      myEmitterErrors.emit('error', notFound);
-      return sendMessageResponse(res, notFound.code, notFound.message);
+      myEmitterErrors.emit('error', badRequest);
+      return sendMessageResponse(res, badRequest.code, badRequest.message);
+    }
+
+    return sendMessageResponse(res, 200, 'Subscriber deleted successfully');
+  } catch (err) {
+    const serverError = new ServerErrorEvent(
+      req.user,
+      'Delete newsletter subscriber by email failed'
+    );
+    myEmitterErrors.emit('error', serverError);
+    sendMessageResponse(res, serverError.code, serverError.message);
+    throw err;
+  }
+};
+
+export const deleteAllNewsletterSubscribersHandler = async (req, res) => {
+
+  try {
+    const deletedSubs = await deleteNewsletterSubscriberByEmail(email);
+    if (!deletedSubs) {
+      const badRequest = new BadRequestEvent(
+        req.user,
+        EVENT_MESSAGES.badRequest,
+        EVENT_MESSAGES.deleteSubscriberFailed
+      );
+      myEmitterErrors.emit('error', badRequest);
+      return sendMessageResponse(res, badRequest.code, badRequest.message);
     }
 
     return sendMessageResponse(res, 200, 'Subscriber deleted successfully');
