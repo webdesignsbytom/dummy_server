@@ -20,3 +20,6 @@ export const findNewsletterSubscriberByEmail = async (email) =>
 
 export const deleteNewsletterSubscriberByEmail = async (email) =>
   dbClient.newsletterSubscriber.delete({ where: { email } });
+
+export const deleteAllSubscribers = async () =>
+  dbClient.newsletterSubscriber.deleteMany({});

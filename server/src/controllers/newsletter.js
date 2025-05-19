@@ -1,5 +1,6 @@
 import {
   createNewsletterSubscriber,
+  deleteAllSubscribers,
   deleteNewsletterSubscriberByEmail,
   deleteNewsletterSubscriberById,
   findAllNewsletterSubscribers,
@@ -170,7 +171,7 @@ export const deleteNewsletterSubscriberByEmailHandler = async (req, res) => {
 export const deleteAllNewsletterSubscribersHandler = async (req, res) => {
 
   try {
-    const deletedSubs = await deleteNewsletterSubscriberByEmail(email);
+    const deletedSubs = await deleteAllSubscribers();
     if (!deletedSubs) {
       const badRequest = new BadRequestEvent(
         req.user,
