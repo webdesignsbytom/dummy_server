@@ -258,10 +258,10 @@ async function seed() {
         data: contact,
       });
     }
-
+    
     // Create newsletter subscriptions
     for (const sub of newsletterSubs) {
-      await dbClient.newsletterSub.create({
+      await dbClient.newsletterSubscriber.create({
         data: sub,
       });
     }

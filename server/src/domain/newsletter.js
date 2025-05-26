@@ -1,25 +1,25 @@
 import dbClient from '../utils/dbClient.js';
 
-export const findAllNewsletterSubscribers = async () =>
+export const findAllNewsletterSubscribers = () =>
   dbClient.newsletterSubscriber.findMany({});
 
-export const findNewletterSubscriberByEmail = async (email) =>
+export const findNewletterSubscriberByEmail = (email) =>
   dbClient.newsletterSubscriber.findUnique({ where: { email } });
 
-export const createNewsletterSubscriber = async (email) =>
+export const createNewsletterSubscriber = (email) =>
   dbClient.newsletterSubscriber.create({ data: { email } });
 
-export const findNewsletterSubscriberById = async (id) =>
+export const findNewsletterSubscriberById = (id) =>
   dbClient.newsletterSubscriber.findUnique({ where: { id } });
 
-export const deleteNewsletterSubscriberById = async (id) =>
+export const deleteNewsletterSubscriberById = (id) =>
   dbClient.newsletterSubscriber.delete({ where: { id } });
 
-export const findNewsletterSubscriberByEmail = async (email) =>
+export const findNewsletterSubscriberByEmail = (email) =>
   dbClient.newsletterSubscriber.findUnique({ where: { email } });
 
-export const deleteNewsletterSubscriberByEmail = async (email) =>
+export const deleteNewsletterSubscriberByEmail = (email) =>
   dbClient.newsletterSubscriber.delete({ where: { email } });
 
-export const deleteAllSubscribers = async () =>
+export const deleteAllSubscribers = () =>
   dbClient.newsletterSubscriber.deleteMany({});

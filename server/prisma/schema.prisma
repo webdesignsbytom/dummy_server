@@ -90,7 +90,6 @@ model DayClosed {
 }
 
 // Newsletter
-
 model NewsletterSubscriber {
   id        String   @id @default(uuid())
   email     String   @unique
