@@ -9,15 +9,16 @@ import {
   deleteNewsletterSubscriberByIdHandler,
   getAllNewsletterSubscribersHandler,
   subscribeToNewsletterHandler,
+  createNewsletterDraftHandler,
+  publishNewsletterHandler,
+  saveNewsletterDraftHandler,
 } from '../controllers/newsletter.js';
 
 const router = Router();
 
+// Subscribers
 router.get('/get-subscriber-list', getAllNewsletterSubscribersHandler);
 router.post('/subscribe-to-newsletter', subscribeToNewsletterHandler);
-router.post('/create-new', createNewsletterDraftHandler);
-router.post('/publish', publishNewsletterHandler);
-router.post('/save-draft', saveNewsletterDraftHandler);
 router.delete(
   '/delete-subscriber-by-id/:id',
   deleteNewsletterSubscriberByIdHandler
@@ -27,5 +28,10 @@ router.delete(
   deleteNewsletterSubscriberByEmailHandler
 );
 router.delete('/delete-all-subscribers', deleteAllNewsletterSubscribersHandler);
+
+// Publication Admin
+router.post('/create-new', createNewsletterDraftHandler);
+router.patch('/save-draft', saveNewsletterDraftHandler);
+router.patch('/publish', publishNewsletterHandler);
 
 export default router;
