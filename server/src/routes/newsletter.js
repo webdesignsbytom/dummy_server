@@ -13,7 +13,8 @@ import {
   publishNewsletterHandler,
   saveNewsletterDraftHandler,
   getNewsletterByDateHandler,
-  getNewsletterByIdHandler,deleteNewsletterHandler
+  getNewsletterByIdHandler,
+  deleteNewsletterHandler,
 } from '../controllers/newsletter.js';
 
 const router = Router();
