@@ -27,3 +27,9 @@ export const deleteAllSubscribers = () =>
 // Admin
 export const createNewNewsletter = () =>
   dbClient.newsletterPublication.create({ data: {} });
+
+export const findNewsletterPublicationById = (id) =>
+  dbClient.newsletterPublication.findUnique({ where: { id } });
+
+export const findNewsletterPublicationByDate = (date) =>
+  dbClient.newsletterPublication.findUnique({ where: { sentAt: date } });

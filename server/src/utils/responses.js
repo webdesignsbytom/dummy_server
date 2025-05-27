@@ -48,6 +48,7 @@ export const EVENT_MESSAGES = {
   newsletterTag: `Newsletter database.`,
   newsletterNotFound: `Failed to find newsletter/s.`,
   newsletterSubscribersNotFound: `Failed to find newsletter subscriber.`,
+  newsletterPublicatonNotFound: `Failed to find newsletter publication.`,
   subscribeToNewsletterFail: `Failed to subscribe to newsletter.`,
   createNewsletterFail: `Failed to create newsletter.`,
   deleteSubscriberFailed: `Failed to delete newsletter subscriber from list.`,

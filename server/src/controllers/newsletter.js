@@ -6,6 +6,8 @@ import {
   deleteNewsletterSubscriberById,
   findAllNewsletterSubscribers,
   findNewletterSubscriberByEmail,
+  findNewsletterPublicationByDate,
+  findNewsletterPublicationById,
   findNewsletterSubscriberByEmail,
   findNewsletterSubscriberById,
 } from '../domain/newsletter.js';
@@ -173,7 +175,6 @@ export const deleteNewsletterSubscriberByEmailHandler = async (req, res) => {
 };
 
 export const deleteAllNewsletterSubscribersHandler = async (req, res) => {
-
   try {
     const deletedSubs = await deleteAllSubscribers();
     if (!deletedSubs) {
@@ -201,47 +202,75 @@ export const deleteAllNewsletterSubscribersHandler = async (req, res) => {
 ///// Publication admin //////
 
 export const getNewsletterByIdHandler = async (req, res) => {
-  try {
-    const foundSubscribers = await findAllNewsletterSubscribers();
-    console.log('found subscribers:', foundSubscribers);
+  const { newsletterId } = req.params;
 
-    if (!foundSubscribers) {
+  if (!newsletterId) {
+    return sendDataResponse(res, 409, {
+      message: `Newsletter publication ID is missing.`,
+    });
+  }
+
+  try {
+    const foundNewsletterPublication = await findNewsletterPublicationById(
+      newsletterId
+    );
+    console.log('found pub:', foundNewsletterPublication);
+
+    if (!foundNewsletterPublication) {
       const notFound = new NotFoundEvent(
         req.user,
         EVENT_MESSAGES.notFound,
-        EVENT_MESSAGES.newsletterSubscribersNotFound
+        EVENT_MESSAGES.newsletterPublicatonNotFound
       );
       myEmitterErrors.emit('error', notFound);
       return sendMessageResponse(res, notFound.code, notFound.message);
     }
 
-    return sendDataResponse(res, 200, { subscribers: foundSubscribers });
+    return sendDataResponse(res, 200, {
+      newsletter: foundNewsletterPublication,
+    });
   } catch (err) {
     const serverError = new ServerErrorEvent(
       req.user,
-      'Get all subscribers failed'
+      'Get newsletter by ID failed.'
     );
     myEmitterErrors.emit('error', serverError);
     sendMessageResponse(res, serverError.code, serverError.message);
     throw err;
   }
 };
-export const getNewsletterByDateHandler = async (req, res) => {
-  try {
-    const foundSubscribers = await findAllNewsletterSubscribers();
-    console.log('found subscribers:', foundSubscribers);
 
-    if (!foundSubscribers) {
+export const getNewsletterByDateHandler = async (req, res) => {
+  const { publicationDate } = req.params;
+
+  if (!publicationDate) {
+    return sendDataResponse(res, 409, {
+      message: `Newsletter publication ID is missing.`,
+    });
+  }
+
+  try {
+    const foundNewsletterPublication = await findNewsletterPublicationByDate(
+      publicationDate
+    );
+    console.log(
+      'found foundNewsletterPublication:',
+      foundNewsletterPublication
+    );
+
+    if (!foundNewsletterPublication) {
       const notFound = new NotFoundEvent(
         req.user,
         EVENT_MESSAGES.notFound,
-        EVENT_MESSAGES.newsletterSubscribersNotFound
+        EVENT_MESSAGES.newsletterPublicatonNotFound
       );
       myEmitterErrors.emit('error', notFound);
       return sendMessageResponse(res, notFound.code, notFound.message);
     }
 
-    return sendDataResponse(res, 200, { subscribers: foundSubscribers });
+    return sendDataResponse(res, 200, {
+      newsletter: foundNewsletterPublication,
+    });
   } catch (err) {
     const serverError = new ServerErrorEvent(
       req.user,
