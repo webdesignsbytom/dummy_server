@@ -15,6 +15,9 @@ const router = Router();
 
 router.get('/get-subscriber-list', getAllNewsletterSubscribersHandler);
 router.post('/subscribe-to-newsletter', subscribeToNewsletterHandler);
+router.post('/create-new', createNewsletterDraftHandler);
+router.post('/publish', publishNewsletterHandler);
+router.post('/save-draft', saveNewsletterDraftHandler);
 router.delete(
   '/delete-subscriber-by-id/:id',
   deleteNewsletterSubscriberByIdHandler
