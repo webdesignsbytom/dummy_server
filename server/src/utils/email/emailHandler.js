@@ -40,6 +40,10 @@ const BOOKING_ADMIN_PASS = process.env.BOOKING_ADMIN_PASS;
 const CONTACT_ADMIN_EMAIL = process.env.CONTACT_ADMIN_EMAIL;
 const CONTACT_ADMIN_PASS = process.env.CONTACT_ADMIN_PASS;
 
+// Newsletter
+const NEWSLETTER_ADMIN_EMAIL = process.env.NEWSLETTER_ADMIN_EMAIL;
+const NEWSLETTER_ADMIN_PASS = process.env.NEWSLETTER_ADMIN_PASS;
+
 // Set up handlebars for HTML email templates
 const handlebarOptionsUserEmails = {
   viewEngine: {
@@ -66,6 +70,15 @@ const handlebarOptionsContactEmails = {
     defaultLayout: false,
   },
   viewPath: path.join(__dirname, 'contact'),  // Corrected path
+};
+
+const handlebarOptionsNewsletterEmails = {
+  viewEngine: {
+    extname: '.hbs',
+    partialsDir: path.join(__dirname, 'newsletter'),  // Corrected path
+    defaultLayout: false,
+  },
+  viewPath: path.join(__dirname, 'newsletter'),  // Corrected path
 };
 
 // Transporters
@@ -120,6 +133,17 @@ const contactTransporter = nodemailer.createTransport({
   },
 });
 
+// Newsletter
+const newsletterTransporter = nodemailer.createTransport({
+  host: EMAIL_HOST,
+  port: EMAIL_PORT,
+  secure: EMAIL_PORT === 465, // SSL for 465, TLS for 587
+  auth: {
+    user: NEWSLETTER_ADMIN_EMAIL,
+    pass: NEWSLETTER_ADMIN_PASS,
+  },
+});
+
 
 // Users
 userAdminTransporter.use('compile', hbs(handlebarOptionsUserEmails));
@@ -129,6 +153,8 @@ userPasswordResetTransporter.use('compile', hbs(handlebarOptionsUserEmails));
 bookingTransporter.use('compile', hbs(handlebarOptionsBookingEmails));
 // Contact
 contactTransporter.use('compile', hbs(handlebarOptionsContactEmails));
+// Newsletter
+newsletterTransporter.use('compile', hbs(handlebarOptionsNewsletterEmails));
 
 
 // Email templates
@@ -253,6 +279,32 @@ export const sendContactEmail = async (
   try {
     const info = await contactTransporter.sendMail(mailOptions);
     console.log(`✅ Contact Confirmation Email Sent: ${info.recipient}`);
+    return true;
+  } catch (err) {
+    console.error('❌ Error sending email:', err);
+    return false;
+  }
+};
+
+// Newsletter
+export const sendNewsletterEmail = async (
+  recipient,
+  subject,
+  template,
+  context = {}
+) => {
+  console.log('sendNewsletterEmail!!!', recipient, subject, template, context);
+  const mailOptions = {
+    from: `"${BusinessName}" <${NEWSLETTER_ADMIN_EMAIL}>`,
+    to: recipient,
+    subject,
+    template, // Matches the .hbs template
+    context, // Data for template rendering
+  };
+
+  try {
+    const info = await newsletterTransporter.sendMail(mailOptions);
+    console.log(`✅ Newsletter Confirmation Email Sent: ${info.recipient}`);
     return true;
   } catch (err) {
     console.error('❌ Error sending email:', err);
