@@ -23,3 +23,7 @@ export const deleteNewsletterSubscriberByEmail = (email) =>
 
 export const deleteAllSubscribers = () =>
   dbClient.newsletterSubscriber.deleteMany({});
+
+// Admin
+export const createNewNewsletter = () =>
+  dbClient.newsletterPublication.create({ data: {} });

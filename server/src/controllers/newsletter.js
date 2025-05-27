@@ -1,4 +1,5 @@
 import {
+  createNewNewsletter,
   createNewsletterSubscriber,
   deleteAllSubscribers,
   deleteNewsletterSubscriberByEmail,
@@ -251,26 +252,27 @@ export const getNewsletterByDateHandler = async (req, res) => {
     throw err;
   }
 };
+
 export const createNewsletterDraftHandler = async (req, res) => {
   try {
-    const foundSubscribers = await findAllNewsletterSubscribers();
-    console.log('found subscribers:', foundSubscribers);
+    const createdNewsletter = await createNewNewsletter();
+    console.log('createdNewsletter:', createdNewsletter);
 
-    if (!foundSubscribers) {
-      const notFound = new NotFoundEvent(
+    if (!createdNewsletter) {
+      const badRequest = new BadRequestEvent(
         req.user,
-        EVENT_MESSAGES.notFound,
-        EVENT_MESSAGES.newsletterSubscribersNotFound
+        EVENT_MESSAGES.badRequest,
+        EVENT_MESSAGES.createNewsletterFail
       );
-      myEmitterErrors.emit('error', notFound);
-      return sendMessageResponse(res, notFound.code, notFound.message);
+      myEmitterErrors.emit('error', badRequest);
+      return sendMessageResponse(res, badRequest.code, badRequest.message);
     }
 
-    return sendDataResponse(res, 200, { subscribers: foundSubscribers });
+    return sendDataResponse(res, 200, { newsletter: createdNewsletter });
   } catch (err) {
     const serverError = new ServerErrorEvent(
       req.user,
-      'Get all subscribers failed'
+      'Create new newsletter failed'
     );
     myEmitterErrors.emit('error', serverError);
     sendMessageResponse(res, serverError.code, serverError.message);
