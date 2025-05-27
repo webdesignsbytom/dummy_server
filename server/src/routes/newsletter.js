@@ -12,6 +12,8 @@ import {
   createNewsletterDraftHandler,
   publishNewsletterHandler,
   saveNewsletterDraftHandler,
+  getNewsletterByDateHandler,
+  getNewsletterByIdHandler,
 } from '../controllers/newsletter.js';
 
 const router = Router();
@@ -30,8 +32,14 @@ router.delete(
 router.delete('/delete-all-subscribers', deleteAllNewsletterSubscribersHandler);
 
 // Publication Admin
+router.get('/get-newsletter-by-id/:newsletterId', getNewsletterByIdHandler);
+router.get(
+  '/get-newsletter-by-date/:publicationDate',
+  getNewsletterByDateHandler
+);
 router.post('/create-new', createNewsletterDraftHandler);
 router.patch('/save-draft', saveNewsletterDraftHandler);
 router.patch('/publish', publishNewsletterHandler);
+router.delete('/delete-newsletter', deleteAllNewsletterSubscribersHandler);
 
 export default router;

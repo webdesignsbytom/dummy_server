@@ -197,7 +197,60 @@ export const deleteAllNewsletterSubscribersHandler = async (req, res) => {
   }
 };
 
+///// Publication admin //////
 
+export const getNewsletterByIdHandler = async (req, res) => {
+  try {
+    const foundSubscribers = await findAllNewsletterSubscribers();
+    console.log('found subscribers:', foundSubscribers);
+
+    if (!foundSubscribers) {
+      const notFound = new NotFoundEvent(
+        req.user,
+        EVENT_MESSAGES.notFound,
+        EVENT_MESSAGES.newsletterSubscribersNotFound
+      );
+      myEmitterErrors.emit('error', notFound);
+      return sendMessageResponse(res, notFound.code, notFound.message);
+    }
+
+    return sendDataResponse(res, 200, { subscribers: foundSubscribers });
+  } catch (err) {
+    const serverError = new ServerErrorEvent(
+      req.user,
+      'Get all subscribers failed'
+    );
+    myEmitterErrors.emit('error', serverError);
+    sendMessageResponse(res, serverError.code, serverError.message);
+    throw err;
+  }
+};
+export const getNewsletterByDateHandler = async (req, res) => {
+  try {
+    const foundSubscribers = await findAllNewsletterSubscribers();
+    console.log('found subscribers:', foundSubscribers);
+
+    if (!foundSubscribers) {
+      const notFound = new NotFoundEvent(
+        req.user,
+        EVENT_MESSAGES.notFound,
+        EVENT_MESSAGES.newsletterSubscribersNotFound
+      );
+      myEmitterErrors.emit('error', notFound);
+      return sendMessageResponse(res, notFound.code, notFound.message);
+    }
+
+    return sendDataResponse(res, 200, { subscribers: foundSubscribers });
+  } catch (err) {
+    const serverError = new ServerErrorEvent(
+      req.user,
+      'Get all subscribers failed'
+    );
+    myEmitterErrors.emit('error', serverError);
+    sendMessageResponse(res, serverError.code, serverError.message);
+    throw err;
+  }
+};
 export const createNewsletterDraftHandler = async (req, res) => {
   try {
     const foundSubscribers = await findAllNewsletterSubscribers();
