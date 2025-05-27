@@ -2,6 +2,7 @@ import {
   createNewNewsletter,
   createNewsletterSubscriber,
   deleteAllSubscribers,
+  deleteNewsletterById,
   deleteNewsletterSubscriberByEmail,
   deleteNewsletterSubscriberById,
   findAllNewsletterSubscribers,
@@ -200,7 +201,6 @@ export const deleteAllNewsletterSubscribersHandler = async (req, res) => {
 };
 
 ///// Publication admin //////
-
 export const getNewsletterByIdHandler = async (req, res) => {
   const { newsletterId } = req.params;
 
@@ -310,21 +310,37 @@ export const createNewsletterDraftHandler = async (req, res) => {
 };
 
 export const publishNewsletterHandler = async (req, res) => {
-  try {
-    const foundSubscribers = await findAllNewsletterSubscribers();
-    console.log('found subscribers:', foundSubscribers);
+  const { newsletterId } = req.params;
 
-    if (!foundSubscribers) {
+  if (!newsletterId) {
+    return sendDataResponse(res, 409, {
+      message: `Newsletter publication ID is missing.`,
+    });
+  }
+
+  try {
+    const foundNewsletterPublication = await findNewsletterPublicationById(
+      newsletterId
+    );
+    console.log('found pub:', foundNewsletterPublication);
+
+    if (!foundNewsletterPublication) {
       const notFound = new NotFoundEvent(
         req.user,
         EVENT_MESSAGES.notFound,
-        EVENT_MESSAGES.newsletterSubscribersNotFound
+        EVENT_MESSAGES.newsletterPublicatonNotFound
       );
       myEmitterErrors.emit('error', notFound);
       return sendMessageResponse(res, notFound.code, notFound.message);
     }
 
-    return sendDataResponse(res, 200, { subscribers: foundSubscribers });
+    // List of subs and name
+    // Send each an email with name on the top
+    // Try to disconnect and send to not have to keep connection alive
+
+    return sendDataResponse(res, 200, {
+      status: 'Success - Newsletter was published',
+    });
   } catch (err) {
     const serverError = new ServerErrorEvent(
       req.user,
@@ -362,26 +378,52 @@ export const saveNewsletterDraftHandler = async (req, res) => {
     throw err;
   }
 };
-export const deleteNewsletterHandler = async (req, res) => {
-  try {
-    const foundSubscribers = await findAllNewsletterSubscribers();
-    console.log('found subscribers:', foundSubscribers);
 
-    if (!foundSubscribers) {
+export const deleteNewsletterHandler = async (req, res) => {
+  const { newsletterId } = req.params;
+
+  if (!newsletterId) {
+    return sendDataResponse(res, 409, {
+      message: `Newsletter publication ID is missing.`,
+    });
+  }
+
+  try {
+    const foundNewsletterPublication = await findNewsletterPublicationById(
+      newsletterId
+    );
+    console.log('found pub:', foundNewsletterPublication);
+
+    if (!foundNewsletterPublication) {
       const notFound = new NotFoundEvent(
         req.user,
         EVENT_MESSAGES.notFound,
-        EVENT_MESSAGES.newsletterSubscribersNotFound
+        EVENT_MESSAGES.newsletterPublicatonNotFound
       );
       myEmitterErrors.emit('error', notFound);
       return sendMessageResponse(res, notFound.code, notFound.message);
     }
 
-    return sendDataResponse(res, 200, { subscribers: foundSubscribers });
+    const deletedNewsletter = await deleteNewsletterById(newsletterId);
+    console.log('deletedNewsletter:', deletedNewsletter);
+
+    if (!deletedNewsletter) {
+      const badRequest = new BadRequestEvent(
+        req.user,
+        EVENT_MESSAGES.badRequest,
+        EVENT_MESSAGES.deleteNewsletterFail
+      );
+      myEmitterErrors.emit('error', badRequest);
+      return sendMessageResponse(res, badRequest.code, badRequest.message);
+    }
+
+    return sendDataResponse(res, 200, {
+      message: 'Success: Newsletter deleted',
+    });
   } catch (err) {
     const serverError = new ServerErrorEvent(
       req.user,
-      'Get all subscribers failed'
+      'Delete newsletter failed'
     );
     myEmitterErrors.emit('error', serverError);
     sendMessageResponse(res, serverError.code, serverError.message);

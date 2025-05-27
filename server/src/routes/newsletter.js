@@ -40,7 +40,7 @@ router.get(
 );
 router.post('/create-new', createNewsletterDraftHandler);
 router.patch('/save-draft', saveNewsletterDraftHandler);
-router.patch('/publish', publishNewsletterHandler);
-router.delete('/delete-newsletter', deleteNewsletterHandler);
+router.patch('/publish/:newsletterId', publishNewsletterHandler);
+router.delete('/delete-newsletter/:newsletterId', deleteNewsletterHandler);
 
 export default router;

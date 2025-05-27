@@ -33,3 +33,6 @@ export const findNewsletterPublicationById = (id) =>
 
 export const findNewsletterPublicationByDate = (date) =>
   dbClient.newsletterPublication.findUnique({ where: { sentAt: date } });
+
+export const deleteNewsletterById = (id) =>
+  dbClient.newsletterPublication.delete({ where: { id } });

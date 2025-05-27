@@ -51,6 +51,7 @@ export const EVENT_MESSAGES = {
   newsletterPublicatonNotFound: `Failed to find newsletter publication.`,
   subscribeToNewsletterFail: `Failed to subscribe to newsletter.`,
   createNewsletterFail: `Failed to create newsletter.`,
+  publishNewsletterFail: `Failed to publish newsletter.`,
   deleteSubscriberFailed: `Failed to delete newsletter subscriber from list.`,
   deleteNewsletterFail: `Failed to delete newsletter.`,
   // Users
