@@ -13,7 +13,7 @@ import {
   publishNewsletterHandler,
   saveNewsletterDraftHandler,
   getNewsletterByDateHandler,
-  getNewsletterByIdHandler,
+  getNewsletterByIdHandler,deleteNewsletterHandler
 } from '../controllers/newsletter.js';
 
 const router = Router();
@@ -40,6 +40,6 @@ router.get(
 router.post('/create-new', createNewsletterDraftHandler);
 router.patch('/save-draft', saveNewsletterDraftHandler);
 router.patch('/publish', publishNewsletterHandler);
-router.delete('/delete-newsletter', deleteAllNewsletterSubscribersHandler);
+router.delete('/delete-newsletter', deleteNewsletterHandler);
 
 export default router;
