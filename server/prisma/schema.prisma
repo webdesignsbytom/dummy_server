@@ -93,6 +93,7 @@ model DayClosed {
 model NewsletterSubscriber {
   id        String   @id @default(uuid())
   email     String   @unique
+  name      String   @default("")
   createdAt DateTime @default(now())
 }
 

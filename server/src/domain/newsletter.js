@@ -6,8 +6,8 @@ export const findAllNewsletterSubscribers = () =>
 export const findNewletterSubscriberByEmail = (email) =>
   dbClient.newsletterSubscriber.findUnique({ where: { email } });
 
-export const createNewsletterSubscriber = (email) =>
-  dbClient.newsletterSubscriber.create({ data: { email } });
+export const createNewsletterSubscriber = (email, name) =>
+  dbClient.newsletterSubscriber.create({ data: { email, name } });
 
 export const findNewsletterSubscriberById = (id) =>
   dbClient.newsletterSubscriber.findUnique({ where: { id } });

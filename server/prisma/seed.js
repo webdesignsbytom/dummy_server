@@ -194,9 +194,9 @@ const reviews = [
 ];
 
 const newsletterSubs = [
-  { email: 'subscriber1@example.com' },
-  { email: 'subscriber2@example.com' },
-  { email: 'subscriber3@example.com' },
+  { email: 'subscriber1@example.com', name: 'Timmy' },
+  { email: 'subscriber2@example.com', name: 'Sam' },
+  { email: 'subscriber3@example.com', name: 'Karol' },
 ];
 
 async function seed() {
@@ -258,7 +258,7 @@ async function seed() {
         data: contact,
       });
     }
-    
+
     // Create newsletter subscriptions
     for (const sub of newsletterSubs) {
       await dbClient.newsletterSubscriber.create({

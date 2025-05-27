@@ -48,10 +48,13 @@ export const getAllNewsletterSubscribersHandler = async (req, res) => {
 };
 
 export const subscribeToNewsletterHandler = async (req, res) => {
-  const { email } = req.body;
+  const { email, name } = req.body;
 
   try {
     if (!email) {
+      return sendMessageResponse(res, 400, 'Email is required');
+    }
+    if (!name) {
       return sendMessageResponse(res, 400, 'Email is required');
     }
 
@@ -61,7 +64,7 @@ export const subscribeToNewsletterHandler = async (req, res) => {
       return sendMessageResponse(res, 409, 'Email already subscribed');
     }
 
-    const newSubscriber = await createNewsletterSubscriber(email);
+    const newSubscriber = await createNewsletterSubscriber(email, name);
 
     if (!newSubscriber) {
       const notFound = new BadRequestEvent(
