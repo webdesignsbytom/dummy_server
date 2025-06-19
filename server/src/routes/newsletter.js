@@ -16,16 +16,26 @@ import {
   getNewsletterByIdHandler,
   deleteNewsletterHandler,
   unsubscribeNewsletterLinkHandler,
+  confirmEmailAddressHandler,
+  getAllNewsletterVerificationTokensHandler,
 } from '../controllers/newsletter.js';
 
 const router = Router();
 
 // Subscribers
 router.post('/subscribe-to-newsletter', subscribeToNewsletterHandler);
-router.delete('/unsubscribe/:userId/:uniqueString', unsubscribeNewsletterLinkHandler);
+router.patch(
+  '/confirm-email/:userId/:verificationId/:uniqueString',
+  confirmEmailAddressHandler
+);
+router.delete(
+  '/unsubscribe/:userId/:uniqueString',
+  unsubscribeNewsletterLinkHandler
+);
 
 // Admin
 router.get('/get-subscriber-list', getAllNewsletterSubscribersHandler);
+router.get('/get-verification-token-list', getAllNewsletterVerificationTokensHandler);
 router.get('/get-newsletter-by-id/:newsletterId', getNewsletterByIdHandler);
 router.get(
   '/get-newsletter-by-date/:publicationDate',

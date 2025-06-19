@@ -7,12 +7,16 @@ import {
   deleteNewsletterSubscriberById,
   deleteNewsletterVerifcationToken,
   findAllNewsletterSubscribers,
+  findAllVerificationTokens,
   findNewletterSubscriberByEmail,
   findNewsletterPublicationByDate,
   findNewsletterPublicationById,
   findNewsletterSubscriberByEmail,
   findNewsletterSubscriberById,
+  findNewsletterTokenById,
+  findNewsletterTokenWithUser,
   saveNewsletterVerificationToken,
+  verifyNewsletterSubscriber,
 } from '../domain/newsletter.js';
 import { myEmitterErrors } from '../event/errorEvents.js';
 import {
@@ -114,7 +118,7 @@ export const subscribeToNewsletterHandler = async (req, res) => {
         name: newSubscriber.name,
         uniqueString: uniqueString,
         expiryTime: verificationToken.expiresAt,
-        verificationUrl: `${process.env.NEWSLETTER_CONFIRM_EMAIL_URL}/subscribe?id=${newSubscriber.id}$uniqueString=${verificationToken.uniqueString}`,
+        verificationUrl: `${process.env.NEWSLETTER_CONFIRM_EMAIL_URL}/subscribe/${newSubscriber.id}/${verificationToken.uniqueString}/${verificationToken.id}`,
         businessUrl: `${BusinessUrl}`,
         businessName: `${BusinessName}`,
       }
@@ -123,12 +127,12 @@ export const subscribeToNewsletterHandler = async (req, res) => {
     console.log('verificationEmailSent');
 
     if (!verificationEmailSent) {
-      const notCreated = new BadRequestEvent(
+      const badRequest = new BadRequestEvent(
         EVENT_MESSAGES.badRequest,
         EVENT_MESSAGES.verificationEmailFailed
       );
-      myEmitterErrors.emit('error', notCreated);
-      return sendMessageResponse(res, notCreated.code, notCreated.message);
+      myEmitterErrors.emit('error', badRequest);
+      return sendMessageResponse(res, badRequest.code, badRequest.message);
     }
     console.log('XXXX');
     return sendDataResponse(res, 201, { subscriber: newSubscriber });
@@ -239,7 +243,11 @@ export const deleteAllNewsletterSubscribersHandler = async (req, res) => {
       return sendMessageResponse(res, badRequest.code, badRequest.message);
     }
 
-    return sendMessageResponse(res, 200, 'Subscriber deleted successfully');
+    return sendMessageResponse(
+      res,
+      200,
+      'Subscribers all deleted successfully'
+    );
   } catch (err) {
     const serverError = new ServerErrorEvent(
       req.user,
@@ -523,7 +531,7 @@ export const sendBulkNewsletterEmail = async (req, res) => {
     console.log('Sending newsletter to all subscribers...');
     const results = await Promise.allSettled(
       foundSubscribers.map(async (subscriber) => {
-        const unsubscribeLink = `${process.env.URL}/subscriber/unsubscribe?id=${subscriber.id}`;
+        const unsubscribeLink = `${process.env.URL}/unsubscribe?id=${subscriber.id}&uninqeString=${subscriber.uniqueStringUnsubscribe}`;
 
         // ✅ Send to each subscriber using your single-email function
         return await sendNewsletterEmail(
@@ -560,7 +568,6 @@ export const sendBulkNewsletterEmail = async (req, res) => {
   }
 };
 
-
 export const unsubscribeNewsletterLinkHandler = async (req, res) => {
   const { userId, uniqueString } = req.params;
 
@@ -574,23 +581,137 @@ export const unsubscribeNewsletterLinkHandler = async (req, res) => {
     if (!subscriber) {
       return sendMessageResponse(res, 404, 'Subscriber not found.');
     }
-
-    // Find their verification token by subscriberId
-    const tokenRecord = await prisma.newsletterVerificationToken.findUnique({
-      where: { subscriberId: userId },
-    });
+    const token = await findNewsletterTokenById(userId);
 
     // Delete the subscriber
-    await deleteNewsletterSubscriberById(userId);
+    const deletedSubscriber = await deleteNewsletterSubscriberById(userId);
+    if (!deletedSubscriber) {
+      const badRequest = new BadRequestEvent(
+        userId,
+        EVENT_MESSAGES.badRequest,
+        EVENT_MESSAGES.deleteSubscriberFailed
+      );
+      myEmitterErrors.emit('error', badRequest);
+      return sendMessageResponse(res, badRequest.code, badRequest.message);
+    }
 
     // Optionally delete the token too
-    await deleteNewsletterVerifcationToken(userId)
+    if (token) {
+      const deletedToken = await deleteNewsletterVerifcationToken(userId);
 
-    return sendMessageResponse(res, 200, 'You have been unsubscribed successfully.');
+      if (!deletedToken) {
+        const badRequest = new BadRequestEvent(
+          userId,
+          EVENT_MESSAGES.badRequest,
+          EVENT_MESSAGES.deleteNewsletterTokenFailed
+        );
+        myEmitterErrors.emit('error', badRequest);
+        return sendMessageResponse(res, badRequest.code, badRequest.message);
+      }
+    }
+
+    return sendMessageResponse(
+      res,
+      200,
+      'You have been unsubscribed successfully.'
+    );
   } catch (err) {
     const serverError = new ServerErrorEvent(
       req.user,
       `Unsubscribe failed: ${err.message}`
+    );
+    myEmitterErrors.emit('error', serverError);
+    sendMessageResponse(res, serverError.code, serverError.message);
+    throw err;
+  }
+};
+
+export const confirmEmailAddressHandler = async (req, res) => {
+  const { userId, verificationId, uniqueString } = req.params;
+
+  if (!userId || !verificationId || !uniqueString) {
+    return sendMessageResponse(
+      res,
+      400,
+      'Missing one or more required parameters.'
+    );
+  }
+
+  try {
+    // Get token record
+    const token = await findNewsletterTokenWithUser(verificationId);
+
+    if (!token || token.subscriberId !== userId) {
+      const notFound = new NotFoundEvent(
+        req.user,
+        EVENT_MESSAGES.verificationNotFound
+      );
+      myEmitterErrors.emit('error', notFound);
+      return sendMessageResponse(
+        res,
+        404,
+        'Invalid or expired verification link.'
+      );
+    }
+
+    // Check if expired
+    if (new Date(token.expiresAt).getTime() < Date.now()) {
+      await prisma.newsletterVerificationToken.delete({
+        where: { id: verificationId },
+      });
+      return sendMessageResponse(res, 410, 'Verification link has expired.');
+    }
+
+    // Check if token matches (use bcrypt if stored as hash)
+    const isValid = token.uniqueString === uniqueString;
+
+    if (!isValid) {
+      return sendMessageResponse(res, 401, 'Verification string is invalid.');
+    }
+
+    console.log('AAAAA');
+    // Mark subscriber as verified
+    await verifyNewsletterSubscriber(userId);
+    console.log('BBB');
+
+    // Delete verification token
+    await verifyNewsletterSubscriber(userId);
+console.log('XXXX');
+    return sendMessageResponse(
+      res,
+      200,
+      'Your email has been verified successfully.'
+    );
+  } catch (err) {
+    const serverError = new ServerErrorEvent(
+      req.user,
+      `Email verification failed: ${err.message}`
+    );
+    myEmitterErrors.emit('error', serverError);
+    sendMessageResponse(res, serverError.code, serverError.message);
+    throw err;
+  }
+};
+
+export const getAllNewsletterVerificationTokensHandler = async (req, res) => {
+  try {
+    const foundtokens = await findAllVerificationTokens();
+
+    if (!foundtokens || foundtokens.length === 0) {
+      const notFound = new NotFoundEvent(
+        req.user,
+        EVENT_MESSAGES.notFound,
+        EVENT_MESSAGES.noVerificationTokensFound
+      );
+      myEmitterErrors.emit('error', notFound);
+      return sendMessageResponse(res, 404, 'No verification tokens found.');
+    }
+
+    return sendDataResponse(res, 200, { tokens: foundtokens });
+  } catch (err) {
+    const serverError = new ServerErrorEvent(
+      req.user,
+      `Failed to fetch newsletter verification tokens: ${err.message}`
     );
     myEmitterErrors.emit('error', serverError);
     sendMessageResponse(res, serverError.code, serverError.message);

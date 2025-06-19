@@ -12,8 +12,22 @@ export const createNewsletterSubscriber = (email, name) =>
 export const findNewsletterSubscriberById = (id) =>
   dbClient.newsletterSubscriber.findUnique({ where: { id } });
 
+export const findNewsletterTokenById = (id) =>
+  dbClient.newsletterVerificationToken.findUnique({ where: { id } });
+
+export const findNewsletterTokenWithUser = (id) =>
+  dbClient.newsletterVerificationToken.findUnique({
+    where: { id },
+  });
+
 export const deleteNewsletterSubscriberById = (id) =>
   dbClient.newsletterSubscriber.delete({ where: { id } });
+
+export const verifyNewsletterSubscriber = (id) =>
+  dbClient.newsletterSubscriber.update({
+    where: { id },
+    data: { verified: true },
+  });
 
 export const findNewsletterSubscriberByEmail = (email) =>
   dbClient.newsletterSubscriber.findUnique({ where: { email } });
@@ -26,8 +40,11 @@ export const deleteAllSubscribers = () =>
 
 export const deleteNewsletterVerifcationToken = (id) =>
   dbClient.newsletterVerificationToken.delete({
-      where: { subscriberId: id },
-    });
+    where: { subscriberId: id },
+  });
+
+export const findAllVerificationTokens = () =>
+  dbClient.newsletterVerificationToken.findMany({});
 
 export const saveNewsletterVerificationToken = async (
   subscriberId,
