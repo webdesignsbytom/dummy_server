@@ -2,9 +2,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import dbClient from '../utils/dbClient.js';
 // Email handlers
-import {
-  sendUserVerificationEmail,
-} from '../services/email/emailHandler.js';
+import { sendUserVerificationEmail } from '../services/email/emailHandler.js';
 import {
   createVerificationEmailHandler,
   createPasswordResetEmailHandler,
@@ -110,19 +108,19 @@ export const getUserByIdHandler = async (req, res) => {
 };
 
 export const registerNewUserHandler = async (req, res) => {
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    const missingField = new MissingFieldEvent(
-      null,
-      'Registration: Missing Field/s event.'
-    );
-    return sendMessageResponse(res, missingField.code, missingField.message);
-  }
-
-  const lowerCaseEmail = email.toLowerCase();
+  const { email, password, agreedToTerms } = req.body;
 
   try {
+    if (!email || !password || !agreedToTerms) {
+      const missingField = new MissingFieldEvent(
+        null,
+        'Registration: Missing Field/s event.'
+      );
+      return sendMessageResponse(res, missingField.code, missingField.message);
+    }
+
+    const lowerCaseEmail = email.toLowerCase();
+
     const foundUser = await findUserByEmail(lowerCaseEmail);
     if (foundUser) {
       return sendDataResponse(res, 400, { message: EVENT_MESSAGES.emailInUse });
@@ -141,43 +139,45 @@ export const registerNewUserHandler = async (req, res) => {
       return sendMessageResponse(res, notCreated.code, notCreated.message);
     }
 
-    const userId = createdUser.id;
-
     delete createdUser.password;
     delete createdUser.updatedAt;
 
-    const uniqueString = uuid() + userId;
+    const uniqueString = uuid() + createdUser.id;
     const hashedString = await bcrypt.hash(uniqueString, 10);
 
     // Create database verification item
     const newVerification = await createVerificationEmailHandler(
-      userId,
+      createdUser.id,
       hashedString
     );
     console.log('newVerification', newVerification);
+    // Year for email copyright
+    const year = new Date().getFullYear();
 
     // Send email
     const verificationEmailSent = await sendUserVerificationEmail(
       createdUser.email,
-      'Verify email address',
+      `${BusinessName}: Verify email address`,
       'userVerifcationEmail',
       {
         email: createdUser.email,
         uniqueString: uniqueString,
         expiryTime: newVerification.expiresAt,
-        confirmationUrl: `${process.env.USER_VERIFICATION_URL}/verify-user/${userId}`,
+        confirmationUrl: `${process.env.USER_VERIFICATION_URL}/verify-email?id=${createdUser.email}$uniqueString=${uniqueString}`,
         businessUrl: BusinessUrl,
         businessName: BusinessName,
+        year: year,
       }
     );
 
     if (!verificationEmailSent) {
-      const notCreated = new BadRequestEvent(
+      const badRequest = new BadRequestEvent(
+        'New User',
         EVENT_MESSAGES.badRequest,
         EVENT_MESSAGES.verificationEmailFailed
       );
-      myEmitterErrors.emit('error', notCreated);
-      return sendMessageResponse(res, notCreated.code, notCreated.message);
+      myEmitterErrors.emit('error', badRequest);
+      return sendMessageResponse(res, badRequest.code, badRequest.message);
     }
 
     myEmitterUsers.emit('register', createdUser);
