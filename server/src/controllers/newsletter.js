@@ -678,7 +678,7 @@ export const confirmEmailAddressHandler = async (req, res) => {
     await verifyNewsletterSubscriber(userId);
     console.log('XXXX');
 
-    return sendMessageResponse(res, 200, {
+    return sendDataResponse(res, 200, {
       message: 'Your email has been verified successfully.',
     });
   } catch (err) {
