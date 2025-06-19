@@ -15,14 +15,20 @@
       <main style="padding: 20px 0;">
         <p style="font-size: 16px; line-height: 1.5;">Hello {{name}},</p>
 
-        <div style="font-size: 16px; line-height: 1.6;">
-          {{{content}}}
-        </div>
-      </main>
+        <p style="font-size: 16px; line-height: 1.6;">
+          Thank you for subscribing to our newsletter! To confirm your subscription, please click the button below:
+        </p>
 
-      <div style="margin-top: 30px; font-size: 14px; color: #777;">
-        <p>If you no longer wish to receive these emails, you can <a href="{{unsubscribeLink}}" style="color: #007BFF;">unsubscribe here</a>.</p>
-      </div>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="{{verificationUrl}}" style="display: inline-block; padding: 12px 24px; background-color: #007BFF; color: #ffffff; text-decoration: none; border-radius: 5px; font-size: 16px;">
+            Confirm Subscription
+          </a>
+        </div>
+
+        <p style="font-size: 14px; color: #777;">
+          This link will expire on <strong>{{expiryTime}}</strong>.
+        </p>
+      </main>
 
       <footer style="border-top: 1px solid #ddd; padding-top: 20px; text-align: center; font-size: 14px; color: #999;">
         <p><strong>{{businessName}}</strong></p>

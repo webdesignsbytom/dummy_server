@@ -91,10 +91,23 @@ model DayClosed {
 
 // Newsletter
 model NewsletterSubscriber {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  name      String   @default("")
-  createdAt DateTime @default(now())
+  id             String   @id @default(uuid())
+  email          String   @unique
+  name           String   @default("")
+  verified       Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  verificationToken NewsletterVerificationToken?
+}
+
+model NewsletterVerificationToken {
+  id             String                 @id @default(uuid())
+  uniqueString   String                @unique
+  subscriberId   String                @unique
+  subscriber     NewsletterSubscriber  @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
+  expiresAt      DateTime
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime?             @updatedAt
 }
 
 model NewsletterPublication {

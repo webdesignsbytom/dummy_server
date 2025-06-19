@@ -11,6 +11,7 @@ import {
   findNewsletterPublicationById,
   findNewsletterSubscriberByEmail,
   findNewsletterSubscriberById,
+  saveNewsletterVerificationToken,
 } from '../domain/newsletter.js';
 import { myEmitterErrors } from '../event/errorEvents.js';
 import {
@@ -60,7 +61,7 @@ export const subscribeToNewsletterHandler = async (req, res) => {
       return sendMessageResponse(res, 400, 'Email is required');
     }
     if (!name) {
-      return sendMessageResponse(res, 400, 'Email is required');
+      return sendMessageResponse(res, 400, 'Name is required');
     }
 
     const existing = await findNewletterSubscriberByEmail(email);
@@ -72,13 +73,58 @@ export const subscribeToNewsletterHandler = async (req, res) => {
     const newSubscriber = await createNewsletterSubscriber(email, name);
 
     if (!newSubscriber) {
-      const notFound = new BadRequestEvent(
+      const badRequest = new BadRequestEvent(
         req.user,
         EVENT_MESSAGES.badRequest,
         EVENT_MESSAGES.subscribeToNewsletterFail
       );
-      myEmitterErrors.emit('error', notFound);
-      return sendMessageResponse(res, notFound.code, notFound.message);
+      myEmitterErrors.emit('error', badRequest);
+      return sendMessageResponse(res, badRequest.code, badRequest.message);
+    }
+
+    // Optional: Add verification step logic (UUID, token, etc.)
+    const uniqueString = crypto.randomUUID(); // or another token generator
+    const expiryTime = new Date(Date.now() + 1000 * 60 * 60 * 24); // 24 hours from now
+
+    // If you're saving verification tokens to DB, you'd do that here:
+    const verificationToken = await saveNewsletterVerificationToken(
+      newSubscriber.id,
+      uniqueString,
+      expiryTime
+    );
+
+    if (!verificationToken) {
+      const badRequest = new BadRequestEvent(
+        req.user,
+        EVENT_MESSAGES.badRequest,
+        EVENT_MESSAGES.failedToCreateVerificationToken
+      );
+      myEmitterErrors.emit('error', badRequest);
+      return sendMessageResponse(res, badRequest.code, badRequest.message);
+    }
+    // Send email
+    const verificationEmailSent = await sendNewsletterEmail(
+      newSubscriber.email,
+      'Newsletter: Verify email address',
+      'newsletterVerificationEmail',
+      {
+        email: newSubscriber.email,
+        name: newSubscriber.name,
+        uniqueString: uniqueString,
+        expiryTime: verificationToken.expiresAt,
+        verificationUrl: `${process.env.NEWSLETTER_CONFIRM_EMAIL_URL}/subscribe?id=${newSubscriber.id}$uniqueString=${verificationToken.uniqueString}`,
+        businessUrl: BusinessUrl,
+        businessName: BusinessName,
+      }
+    );
+
+    if (!verificationEmailSent) {
+      const notCreated = new BadRequestEvent(
+        EVENT_MESSAGES.badRequest,
+        EVENT_MESSAGES.verificationEmailFailed
+      );
+      myEmitterErrors.emit('error', notCreated);
+      return sendMessageResponse(res, notCreated.code, notCreated.message);
     }
 
     return sendDataResponse(res, 201, { subscriber: newSubscriber });
@@ -442,6 +488,21 @@ export const sendBulkNewsletterEmail = async (req, res) => {
       });
     }
 
+    const foundNewsletterPublication = await findNewsletterPublicationById(
+      newsletterId
+    );
+    console.log('found pub:', foundNewsletterPublication);
+
+    if (!foundNewsletterPublication) {
+      const notFound = new NotFoundEvent(
+        req.user,
+        EVENT_MESSAGES.notFound,
+        EVENT_MESSAGES.newsletterPublicatonNotFound
+      );
+      myEmitterErrors.emit('error', notFound);
+      return sendMessageResponse(res, notFound.code, notFound.message);
+    }
+
     const foundSubscribers = await findAllNewsletterSubscribers();
     console.log('found subscribers:', foundSubscribers);
 
@@ -458,25 +519,28 @@ export const sendBulkNewsletterEmail = async (req, res) => {
     console.log('Sending newsletter to all subscribers...');
     const results = await Promise.allSettled(
       foundSubscribers.map(async (subscriber) => {
-        const unsubscribeLink = `${process.env.URL}/subscriber/unsubscribe?id=${subscriber.id}&email=${subscriber.email}`;
-        const personalizedContext = {
-          ...context,
-          unsubscribeLink,
-          name: subscriber.name || '', // Optional name
-        };
+        const unsubscribeLink = `${process.env.URL}/subscriber/unsubscribe?id=${subscriber.id}`;
 
         // ✅ Send to each subscriber using your single-email function
         return await sendNewsletterEmail(
           subscriber.email,
-          subject,
-          template,
-          personalizedContext
+          `Newsletter: ${foundNewsletterPublication.title}`,
+          'newsletterConfirmationEmail',
+          {
+            name: subscriber.name || '',
+            email: subscriber.email,
+            title: foundNewsletterPublication.title,
+            content: foundNewsletterPublication.content,
+            unsubscribeLink: unsubscribeLink,
+            businessUrl: BusinessUrl,
+            businessName: BusinessName,
+          }
         );
       })
     );
 
     console.log('✅ All newsletter emails processed');
-    
+
     return sendDataResponse(res, 200, {
       message: 'Success',
       results: results,

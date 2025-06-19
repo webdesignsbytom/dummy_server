@@ -50,6 +50,7 @@ export const EVENT_MESSAGES = {
   newsletterSubscribersNotFound: `Failed to find newsletter subscriber.`,
   newsletterPublicatonNotFound: `Failed to find newsletter publication.`,
   subscribeToNewsletterFail: `Failed to subscribe to newsletter.`,
+  failedToCreateVerificationToken: `Failed to create verification token.`,
   createNewsletterFail: `Failed to create newsletter.`,
   publishNewsletterFail: `Failed to publish newsletter.`,
   deleteSubscriberFailed: `Failed to delete newsletter subscriber from list.`,
