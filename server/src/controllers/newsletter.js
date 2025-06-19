@@ -640,7 +640,7 @@ export const confirmEmailAddressHandler = async (req, res) => {
   try {
     // Get token record
     const token = await findNewsletterTokenWithUser(verificationId);
-
+    console.log('token', token);
     if (!token || token.subscriberId !== userId) {
       const notFound = new NotFoundEvent(
         req.user,
@@ -676,12 +676,11 @@ export const confirmEmailAddressHandler = async (req, res) => {
 
     // Delete verification token
     await verifyNewsletterSubscriber(userId);
-console.log('XXXX');
-    return sendMessageResponse(
-      res,
-      200,
-      'Your email has been verified successfully.'
-    );
+    console.log('XXXX');
+
+    return sendMessageResponse(res, 200, {
+      message: 'Your email has been verified successfully.',
+    });
   } catch (err) {
     const serverError = new ServerErrorEvent(
       req.user,
