@@ -22,6 +22,7 @@ import {
   findUsersByRole,
   findEmailVerificationById,
   updateEmailVerificationById,
+  findEmailVerificationByEmail,
 } from '../domain/users.js';
 // Response messages
 import {
@@ -164,7 +165,7 @@ export const registerNewUserHandler = async (req, res) => {
         email: createdUser.email,
         uniqueString: uniqueString,
         expiryTime: newVerification.expiresAt,
-        confirmationUrl: `${process.env.USER_VERIFICATION_URL}/verify-email?id=${createdUser.email}$uniqueString=${uniqueString}`,
+        confirmationUrl: `${process.env.USER_VERIFICATION_URL}/verify-email?email=${createdUser.email}$uniqueString=${uniqueString}`,
         businessUrl: BusinessUrl,
         businessName: BusinessName,
         year: year,
@@ -195,42 +196,25 @@ export const registerNewUserHandler = async (req, res) => {
 };
 
 export const verifyUserEmailAddressHandler = async (req, res) => {
-  const { userId, uniqueString } = req.params;
+  const { email, uniqueString } = req.query; // Or req.params if you're routing that way
 
-  if (!userId) {
+  if (!email || !uniqueString) {
     return sendDataResponse(res, 400, {
-      message: 'Missing userId.',
-    });
-  }
-
-  if (!uniqueString) {
-    return sendDataResponse(res, 400, {
-      message: 'Unique user id string not provided.',
+      message: 'Missing email or verification string.',
     });
   }
 
   try {
-    const foundVerification = await findEmailVerificationById(userId);
+    const foundVerification = await findEmailVerificationByEmail(email)
 
     if (!foundVerification) {
-      const missingVerification = new NotFoundEvent(
-        userId,
-        EVENT_MESSAGES.verificationNotFound
-      );
-      myEmitterErrors.emit('error', missingVerification);
-      return sendMessageResponse(
-        res,
-        404,
-        EVENT_MESSAGES.verificationNotFoundReturn
-      );
+      return sendMessageResponse(res, 404, EVENT_MESSAGES.verificationNotFoundReturn);
     }
 
-    const { expiresAt } = foundVerification;
-
-    // TODO: whats this all about?
-    if (new Date(expiresAt).getTime() < Date.now()) {
-      await dbClient.userVerificationEmail.delete({ where: { userId } });
-      // await dbClient.user.delete({ where: { userId } });
+    if (new Date(foundVerification.expiresAt).getTime() < Date.now()) {
+      await dbClient.userVerificationEmail.delete({
+        where: { id: foundVerification.id },
+      });
       return sendMessageResponse(res, 401, EVENT_MESSAGES.expiredLinkMessage);
     }
 
@@ -243,9 +227,8 @@ export const verifyUserEmailAddressHandler = async (req, res) => {
       return sendMessageResponse(res, 401, EVENT_MESSAGES.invalidVerification);
     }
 
-    // Set user to is verifed
     const updatedUser = await dbClient.user.update({
-      where: { id: userId },
+      where: { id: foundVerification.userId },
       data: { isVerified: true },
     });
 
@@ -255,22 +238,21 @@ export const verifyUserEmailAddressHandler = async (req, res) => {
 
     const token = createAccessToken(updatedUser.id);
 
-    await dbClient.userVerificationEmail.delete({ where: { userId } });
+    await dbClient.userVerificationEmail.delete({
+      where: { id: foundVerification.id },
+    });
 
     myEmitterUsers.emit('verified-email', updatedUser);
 
-    // Returns token and user to verify page that redirects to logged in user or home page
-    sendDataResponse(res, 200, { token: token, user: updatedUser });
+    return sendDataResponse(res, 200, { token, user: updatedUser });
   } catch (err) {
-    // Create error instance
-    const serverError = new RegistrationServerErrorEvent(
-      `Verify New User Server error`
-    );
+    const serverError = new RegistrationServerErrorEvent('Verify New User Server error');
     myEmitterErrors.emit('error', serverError);
     sendMessageResponse(res, serverError.code, serverError.message);
     throw err;
   }
 };
+
 
 export const resendVerificationEmailHandler = async (req, res) => {
   const { email } = req.body;

@@ -29,11 +29,18 @@ export const createNewUser = (email, password) =>
 
 // Find user email verification in db
 export const findEmailVerificationById = (userId) =>
-  dbClient.emailVerification.findUnique({ where: { userId } });
+  dbClient.userVerificationEmail.findUnique({ where: { userId } });
+
+export const findEmailVerificationByEmail = (email) =>
+  dbClient.userVerificationEmail.findUnique({
+    where: {
+      email,
+    },
+  });
 
 // Update verifcation string
 export const updateEmailVerificationById = (userId, newHashedString) =>
-  dbClient.emailVerification.findUnique({
+  dbClient.userVerificationEmail.findUnique({
     where: { userId },
     data: {
       uniqueString: newHashedString,
