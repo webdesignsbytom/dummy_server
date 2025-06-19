@@ -160,6 +160,7 @@ export const registerNewUserHandler = async (req, res) => {
       `${BusinessName}: Verify email address`,
       'userVerifcationEmail',
       {
+        title: `${BusinessName}: Verify email address`,
         email: createdUser.email,
         uniqueString: uniqueString,
         expiryTime: newVerification.expiresAt,
