@@ -116,7 +116,7 @@ model NewsletterPublication {
   id        String    @id @default(uuid())
   title     String    @default("")
   content   String    @default("")
-  sentAt    DateTime?
+  publishedAt    DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime? @updatedAt
 }
