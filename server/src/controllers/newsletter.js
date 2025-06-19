@@ -18,6 +18,7 @@ import {
   NotFoundEvent,
   ServerErrorEvent,
 } from '../event/utils/errorUtils.js';
+import { sendNewsletterEmail } from '../services/email/emailHandler.js';
 import {
   EVENT_MESSAGES,
   sendDataResponse,
@@ -424,6 +425,66 @@ export const deleteNewsletterHandler = async (req, res) => {
     const serverError = new ServerErrorEvent(
       req.user,
       'Delete newsletter failed'
+    );
+    myEmitterErrors.emit('error', serverError);
+    sendMessageResponse(res, serverError.code, serverError.message);
+    throw err;
+  }
+};
+
+export const sendBulkNewsletterEmail = async (req, res) => {
+  const { newsletterId } = req.body;
+
+  try {
+    if (!newsletterId) {
+      return sendDataResponse(res, 409, {
+        message: `Newsletter publication ID is missing.`,
+      });
+    }
+
+    const foundSubscribers = await findAllNewsletterSubscribers();
+    console.log('found subscribers:', foundSubscribers);
+
+    if (!foundSubscribers) {
+      const notFound = new NotFoundEvent(
+        req.user,
+        EVENT_MESSAGES.notFound,
+        EVENT_MESSAGES.newsletterSubscribersNotFound
+      );
+      myEmitterErrors.emit('error', notFound);
+      return sendMessageResponse(res, notFound.code, notFound.message);
+    }
+
+    console.log('Sending newsletter to all subscribers...');
+    const results = await Promise.allSettled(
+      foundSubscribers.map(async (subscriber) => {
+        const unsubscribeLink = `${process.env.URL}/subscriber/unsubscribe?id=${subscriber.id}&email=${subscriber.email}`;
+        const personalizedContext = {
+          ...context,
+          unsubscribeLink,
+          name: subscriber.name || '', // Optional name
+        };
+
+        // ✅ Send to each subscriber using your single-email function
+        return await sendNewsletterEmail(
+          subscriber.email,
+          subject,
+          template,
+          personalizedContext
+        );
+      })
+    );
+
+    console.log('✅ All newsletter emails processed');
+    
+    return sendDataResponse(res, 200, {
+      message: 'Success',
+      results: results,
+    });
+  } catch (err) {
+    const serverError = new ServerErrorEvent(
+      req.user,
+      'Send mass email to newsletter subscribers failed'
     );
     myEmitterErrors.emit('error', serverError);
     sendMessageResponse(res, serverError.code, serverError.message);

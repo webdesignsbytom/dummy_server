@@ -1,11 +1,14 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import dbClient from '../utils/dbClient.js';
-// Components
+// Email handlers
+import {
+  sendUserVerificationEmail,
+} from '../services/email/emailHandler.js';
 import {
   createVerificationEmailHandler,
   createPasswordResetEmailHandler,
-} from '../services/email/emailHandler.js';
+} from './email.js';
 // Emitters
 import { myEmitterUsers } from '../event/userEvents.js';
 import { myEmitterErrors } from '../event/errorEvents.js';
@@ -36,8 +39,6 @@ import {
   ServerConflictError,
   BadRequestEvent,
 } from '../event/utils/errorUtils.js';
-// Email handlers
-import { sendUserVerificationEmail } from '../utils/email/emailHandler.js';
 // Randon
 import { v4 as uuid } from 'uuid';
 import { BusinessName, BusinessUrl } from '../utils/constants.js';

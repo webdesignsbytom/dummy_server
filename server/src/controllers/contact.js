@@ -16,7 +16,7 @@ import {
   NotFoundEvent,
   ServerErrorEvent,
 } from '../event/utils/errorUtils.js';
-import { sendContactEmail } from '../utils/email/emailHandler.js';
+import { sendContactEmail } from '../services/email/emailHandler.js';
 import {
   EVENT_MESSAGES,
   sendDataResponse,

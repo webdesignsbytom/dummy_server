@@ -36,7 +36,7 @@ import {
   NotFoundEvent,
   ServerErrorEvent,
 } from '../event/utils/errorUtils.js';
-import { sendBookingEmail } from '../utils/email/emailHandler.js';
+import { sendBookingEmail } from '../services/email/emailHandler.js';
 import { v4 as uuid } from 'uuid';
 
 export const getAllBookingsHandler = async (req, res) => {

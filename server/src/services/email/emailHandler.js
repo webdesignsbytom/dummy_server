@@ -3,7 +3,7 @@ import nodemailer from 'nodemailer';
 import hbs from 'nodemailer-express-handlebars';
 import path from 'path';
 // Constants
-import { BusinessName } from '../constants.js';
+import { BusinessName } from '../../utils/constants.js';
 // File system
 import { fileURLToPath } from 'url';
 
@@ -176,7 +176,7 @@ export const sendUserEmail = async (
 
   try {
     const info = await userAdminTransporter.sendMail(mailOptions);
-    console.log(`✅ User admin Email Sent: ${info.recipient}`);
+    console.log(`✅ User admin Email Sent: ${recipient}`);
     return true;
   } catch (err) {
     console.error('❌ Error sending email:', err);
@@ -201,7 +201,7 @@ export const sendUserVerificationEmail = async (
 
   try {
     const info = await userVerificationTransporter.sendMail(mailOptions);
-    console.log(`✅ User admin Email Sent: ${info.recipient}`);
+    console.log(`✅ User admin Email Sent: ${recipient}`);
     return true;
   } catch (err) {
     console.error('❌ Error sending email:', err);
@@ -226,7 +226,7 @@ export const sendUserPasswordResetEmail = async (
 
   try {
     const info = await userPasswordResetTransporter.sendMail(mailOptions);
-    console.log(`✅ User admin Email Sent: ${info.recipient}`);
+    console.log(`✅ User admin Email Sent: ${recipient}`);
     return true;
   } catch (err) {
     console.error('❌ Error sending email:', err);
@@ -252,7 +252,7 @@ export const sendBookingEmail = async (
 
   try {
     const info = await bookingTransporter.sendMail(mailOptions);
-    console.log(`✅ Booking Confirmation Email Sent: ${info.recipient}`);
+    console.log(`✅ Booking Confirmation Email Sent: ${recipient}`);
     return true;
   } catch (err) {
     console.error('❌ Error sending email:', err);
@@ -278,7 +278,7 @@ export const sendContactEmail = async (
 
   try {
     const info = await contactTransporter.sendMail(mailOptions);
-    console.log(`✅ Contact Confirmation Email Sent: ${info.recipient}`);
+    console.log(`✅ Contact Confirmation Email Sent: ${recipient}`);
     return true;
   } catch (err) {
     console.error('❌ Error sending email:', err);
@@ -304,7 +304,7 @@ export const sendNewsletterEmail = async (
 
   try {
     const info = await newsletterTransporter.sendMail(mailOptions);
-    console.log(`✅ Newsletter Confirmation Email Sent: ${info.recipient}`);
+console.log(`✅ Newsletter Confirmation Email Sent: ${recipient}`);
     return true;
   } catch (err) {
     console.error('❌ Error sending email:', err);
