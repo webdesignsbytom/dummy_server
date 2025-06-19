@@ -24,6 +24,11 @@ export const verifyNewsletterSubscriber = (id) =>
     data: { verified: true, uniqueStringUnsubscribe: uniqueStringUnsubscribe },
   });
 
+export const setAllSubscribersToUnverified = async () =>
+  dbClient.newsletterSubscriber.updateMany({
+    data: { isVerified: false },
+  });
+
 export const findNewsletterSubscriberByEmail = (email) =>
   dbClient.newsletterSubscriber.findUnique({ where: { email } });
 

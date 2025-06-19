@@ -3,26 +3,38 @@ import {
   validateAuthentication,
   validateDeveloperRole,
 } from '../middleware/auth.js';
+
 import {
-  deleteAllNewsletterSubscribersHandler,
-  deleteNewsletterSubscriberByEmailHandler,
-  deleteNewsletterSubscriberByIdHandler,
-  getAllNewsletterSubscribersHandler,
+  // Subscriber handlers
   subscribeToNewsletterHandler,
-  createNewsletterDraftHandler,
-  publishNewsletterHandler,
-  saveNewsletterDraftHandler,
-  getNewsletterByDateHandler,
-  getNewsletterByIdHandler,
-  deleteNewsletterHandler,
-  unsubscribeNewsletterLinkHandler,
   confirmEmailAddressHandler,
+  unsubscribeNewsletterLinkHandler,
+  getAllNewsletterSubscribersHandler,
+  deleteNewsletterSubscriberByIdHandler,
+  deleteNewsletterSubscriberByEmailHandler,
+  deleteAllNewsletterSubscribersHandler,
+  setAllUsersUnverifiedHandler,
+
+  // Newsletter (admin) handlers
+  createNewsletterDraftHandler,
+  saveNewsletterDraftHandler,
+  publishNewsletterHandler,
+  getNewsletterByIdHandler,
+  getNewsletterByDateHandler,
+  deleteNewsletterHandler,
+
+  // Verification token admin
   getAllNewsletterVerificationTokensHandler,
+  sendBulkNewsletterEmailHandler,
+  resendNewsletterVerificationEmailHandler,
+  manuallyVerifySubscriberHandler,
 } from '../controllers/newsletter.js';
 
 const router = Router();
 
-// Subscribers
+/* ------------------------------ Public Routes ------------------------------ */
+
+// Subscribe and Confirm
 router.post('/subscribe-to-newsletter', subscribeToNewsletterHandler);
 router.patch(
   '/confirm-email/:userId/:verificationId/:uniqueString',
@@ -32,18 +44,14 @@ router.delete(
   '/unsubscribe/:userId/:uniqueString',
   unsubscribeNewsletterLinkHandler
 );
+router.post('/resend-verification-email/:userId', resendNewsletterVerificationEmailHandler);
 
-// Admin
+
+/* ------------------------------ Admin Routes ------------------------------ */
+
+// Subscribers
 router.get('/get-subscriber-list', getAllNewsletterSubscribersHandler);
-router.get('/get-verification-token-list', getAllNewsletterVerificationTokensHandler);
-router.get('/get-newsletter-by-id/:newsletterId', getNewsletterByIdHandler);
-router.get(
-  '/get-newsletter-by-date/:publicationDate',
-  getNewsletterByDateHandler
-);
-router.post('/create-new', createNewsletterDraftHandler);
-router.patch('/save-draft', saveNewsletterDraftHandler);
-router.patch('/publish/:newsletterId', publishNewsletterHandler);
+router.patch('/force-verify-subscriber/:userId', manuallyVerifySubscriberHandler);
 router.delete(
   '/delete-subscriber-by-id/:id',
   deleteNewsletterSubscriberByIdHandler
@@ -53,6 +61,28 @@ router.delete(
   deleteNewsletterSubscriberByEmailHandler
 );
 router.delete('/delete-all-subscribers', deleteAllNewsletterSubscribersHandler);
+router.patch('/set-all-users-to-unverified', setAllUsersUnverifiedHandler);
+
+// Verification Tokens
+router.get(
+  '/get-verification-token-list',
+  getAllNewsletterVerificationTokensHandler
+);
+router.post('/send-bulk-newsletter', sendBulkNewsletterEmailHandler);
+
+/* --------------------------- Newsletter Management -------------------------- */
+
+// Drafts & Publishing
+router.post('/create-new', createNewsletterDraftHandler);
+router.patch('/save-draft', saveNewsletterDraftHandler);
+router.patch('/publish/:newsletterId', publishNewsletterHandler);
+
+// Newsletter Data
+router.get('/get-newsletter-by-id/:newsletterId', getNewsletterByIdHandler);
+router.get(
+  '/get-newsletter-by-date/:publicationDate',
+  getNewsletterByDateHandler
+);
 router.delete('/delete-newsletter/:newsletterId', deleteNewsletterHandler);
 
 export default router;
