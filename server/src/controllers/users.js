@@ -5,7 +5,7 @@ import dbClient from '../utils/dbClient.js';
 import {
   createVerificationEmailHandler,
   createPasswordResetEmailHandler,
-} from './utils.js';
+} from '../services/email/emailHandler.js';
 // Emitters
 import { myEmitterUsers } from '../event/userEvents.js';
 import { myEmitterErrors } from '../event/errorEvents.js';

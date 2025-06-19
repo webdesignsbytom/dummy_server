@@ -5,7 +5,7 @@ import { sendDataResponse, sendMessageResponse } from '../utils/responses.js';
 import {
   ServerErrorEvent,
 } from '../event/utils/errorUtils.js';
-import { sendTestEmail } from '../utils/email/emailHandler.js';
+import { sendTestEmail } from '../services/email/emailHandler.js';
 
 export const testError2025Handler = async (req, res, next) => { 
   try {
