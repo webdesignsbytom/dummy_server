@@ -24,15 +24,24 @@ export const deleteNewsletterSubscriberByEmail = (email) =>
 export const deleteAllSubscribers = () =>
   dbClient.newsletterSubscriber.deleteMany({});
 
-export const saveNewsletterVerificationToken = async (subscriberId, uniqueString, expiresAt) => {
+export const deleteNewsletterVerifcationToken = (id) =>
+  dbClient.newsletterVerificationToken.delete({
+      where: { subscriberId: id },
+    });
+
+export const saveNewsletterVerificationToken = async (
+  subscriberId,
+  uniqueString,
+  expiresAt
+) => {
   try {
     // Delete any existing token for this subscriber
-    await prisma.newsletterVerificationToken.deleteMany({
+    await dbClient.newsletterVerificationToken.deleteMany({
       where: { subscriberId },
     });
 
     // Create a new token
-    const token = await prisma.newsletterVerificationToken.create({
+    const token = await dbClient.newsletterVerificationToken.create({
       data: {
         subscriberId,
         uniqueString,

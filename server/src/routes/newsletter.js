@@ -15,13 +15,25 @@ import {
   getNewsletterByDateHandler,
   getNewsletterByIdHandler,
   deleteNewsletterHandler,
+  unsubscribeNewsletterLinkHandler,
 } from '../controllers/newsletter.js';
 
 const router = Router();
 
 // Subscribers
-router.get('/get-subscriber-list', getAllNewsletterSubscribersHandler);
 router.post('/subscribe-to-newsletter', subscribeToNewsletterHandler);
+router.delete('/unsubscribe/:userId/:uniqueString', unsubscribeNewsletterLinkHandler);
+
+// Admin
+router.get('/get-subscriber-list', getAllNewsletterSubscribersHandler);
+router.get('/get-newsletter-by-id/:newsletterId', getNewsletterByIdHandler);
+router.get(
+  '/get-newsletter-by-date/:publicationDate',
+  getNewsletterByDateHandler
+);
+router.post('/create-new', createNewsletterDraftHandler);
+router.patch('/save-draft', saveNewsletterDraftHandler);
+router.patch('/publish/:newsletterId', publishNewsletterHandler);
 router.delete(
   '/delete-subscriber-by-id/:id',
   deleteNewsletterSubscriberByIdHandler
@@ -31,16 +43,6 @@ router.delete(
   deleteNewsletterSubscriberByEmailHandler
 );
 router.delete('/delete-all-subscribers', deleteAllNewsletterSubscribersHandler);
-
-// Publication Admin
-router.get('/get-newsletter-by-id/:newsletterId', getNewsletterByIdHandler);
-router.get(
-  '/get-newsletter-by-date/:publicationDate',
-  getNewsletterByDateHandler
-);
-router.post('/create-new', createNewsletterDraftHandler);
-router.patch('/save-draft', saveNewsletterDraftHandler);
-router.patch('/publish/:newsletterId', publishNewsletterHandler);
 router.delete('/delete-newsletter/:newsletterId', deleteNewsletterHandler);
 
 export default router;
