@@ -14,7 +14,6 @@ import {
   findNewsletterSubscriberByEmail,
   findNewsletterSubscriberById,
   findNewsletterTokenById,
-  findNewsletterTokenWithUser,
   saveNewsletterVerificationToken,
   verifyNewsletterSubscriber,
 } from '../domain/newsletter.js';
@@ -639,7 +638,7 @@ export const confirmEmailAddressHandler = async (req, res) => {
 
   try {
     // Get token record
-    const token = await findNewsletterTokenWithUser(verificationId);
+    const token = await findNewsletterTokenById(verificationId);
     console.log('token', token);
     if (!token || token.subscriberId !== userId) {
       const notFound = new NotFoundEvent(
@@ -656,9 +655,7 @@ export const confirmEmailAddressHandler = async (req, res) => {
 
     // Check if expired
     if (new Date(token.expiresAt).getTime() < Date.now()) {
-      await prisma.newsletterVerificationToken.delete({
-        where: { id: verificationId },
-      });
+      await deleteNewsletterVerifcationToken(verificationId);
       return sendMessageResponse(res, 410, 'Verification link has expired.');
     }
 
@@ -670,12 +667,15 @@ export const confirmEmailAddressHandler = async (req, res) => {
     }
 
     console.log('AAAAA');
+    // Optional: Add verification step logic (UUID, token, etc.)
+    const uniqueStringUnsubscribe = crypto.randomUUID(); // or another token generator
+
     // Mark subscriber as verified
-    await verifyNewsletterSubscriber(userId);
+    await verifyNewsletterSubscriber(userId, uniqueStringUnsubscribe);
     console.log('BBB');
 
     // Delete verification token
-    await verifyNewsletterSubscriber(userId);
+    await deleteNewsletterVerifcationToken(verificationId);
     console.log('XXXX');
 
     return sendDataResponse(res, 200, {
