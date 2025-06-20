@@ -1,35 +1,48 @@
-<html lang="en">
+<html lang='en'>
   <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset='UTF-8' />
+    <meta http-equiv='X-UA-Compatible' content='IE=edge' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
     <title>{{title}}</title>
   </head>
-  <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4; color: #333;">
-    <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 20px; border-radius: 8px;">
+  <body
+    style='margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4; color: #333;'
+  >
+    <div
+      style='max-width: 600px; margin: auto; background-color: #ffffff; padding: 20px; border-radius: 8px;'
+    >
 
-      <header style="text-align: center; border-bottom: 1px solid #ddd; padding-bottom: 20px;">
-        <h1 style="margin: 0;">{{title}}</h1>
+      <header
+        style='text-align: center; border-bottom: 1px solid #ddd; padding-bottom: 20px;'
+      >
+        <h1 style='margin: 0;'>{{title}}</h1>
       </header>
 
-      <main style="padding: 20px 0;">
-        <p style="font-size: 16px; line-height: 1.5;">Hello {{name}},</p>
+      <main style='padding: 20px 0;'>
+        <p style='font-size: 16px; line-height: 1.5;'>Hello {{name}},</p>
 
-        <div style="font-size: 16px; line-height: 1.6;">
+        <div style='font-size: 16px; line-height: 1.6;'>
           {{{content}}}
         </div>
       </main>
 
-      <div style="margin-top: 30px; font-size: 14px; color: #777;">
-        <p>If you no longer wish to receive these emails, you can <a href="{{unsubscribeLink}}" style="color: #007BFF;">unsubscribe here</a>.</p>
+      <div style='margin-top: 30px; font-size: 14px; color: #777; text-align: center'>
+        <p>If you no longer wish to receive these emails, you can
+          <a href='{{unsubscribeLink}}' style='color: #007BFF;'>unsubscribe here</a>.</p>
       </div>
 
-      <footer style="border-top: 1px solid #ddd; padding-top: 20px; text-align: center; font-size: 14px; color: #999;">
+      <footer
+        style='border-top: 1px solid #ddd; padding-top: 20px; text-align: center; font-size: 14px; color: #999;'
+      >
         <p><strong>{{businessName}}</strong></p>
-        <p><a href="{{businessUrl}}" target="_blank" style="color: #007BFF;">{{businessUrl}}</a></p>
+        <p><a
+            href='{{businessUrl}}'
+            target='_blank'
+            style='color: #007BFF;'
+          >{{businessUrl}}</a></p>
         <p>&copy; {{year}} {{businessName}}. All rights reserved.</p>
       </footer>
-      
+
     </div>
   </body>
 </html>
