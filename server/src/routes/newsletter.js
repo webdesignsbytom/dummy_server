@@ -17,7 +17,6 @@ import {
 
   // Newsletter (admin) handlers
   createNewsletterDraftHandler,
-  saveNewsletterDraftHandler,
   getNewsletterByIdHandler,
   getNewsletterByDateHandler,
   deleteNewsletterHandler,
