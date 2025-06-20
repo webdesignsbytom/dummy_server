@@ -194,10 +194,43 @@ const reviews = [
 ];
 
 const newsletterSubs = [
-  { email: 'subscriber1@example.com', name: 'Timmy' },
+  {
+    email: 'subscriber1@example.com',
+    name: 'Timmy',
+    uniqueStringUnsubscribe: '123',
+    verified: true,
+  },
   { email: 'subscriber2@example.com', name: 'Sam' },
-  { email: 'subscriber3@example.com', name: 'Karol' },
+  {
+    email: 'subscriber3@example.com',
+    name: 'Karol',
+    uniqueStringUnsubscribe: '123',
+    verified: true,
+  },
 ];
+
+const newsletterPublications = [
+  {
+    title: '📰 Newsletter Draft Jan',
+    content: '<p>This is a draft version with <strong>bold</strong> text.</p>',
+  },
+  {
+    title: '🎉 Welcome to our Newsletter!',
+    content: '<p>Thanks for subscribing to updates.</p>',
+    publishedAt: new Date('2025-01-15T09:00:00Z'),
+  },
+  {
+    title: '🚀 April Launch Update',
+    content: '<p>We launched our new feature set this month.</p>',
+    publishedAt: new Date('2025-04-01T10:30:00Z'),
+  },
+];
+
+for (const pub of newsletterPublications) {
+  await dbClient.newsletterPublication.create({
+    data: pub,
+  });
+}
 
 async function seed() {
   try {
@@ -263,6 +296,13 @@ async function seed() {
     for (const sub of newsletterSubs) {
       await dbClient.newsletterSubscriber.create({
         data: sub,
+      });
+    }
+
+    // Create newsletter publications
+    for (const pub of newsletterPublications) {
+      await dbClient.newsletterPublication.create({
+        data: pub,
       });
     }
 

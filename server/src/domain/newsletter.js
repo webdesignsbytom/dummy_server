@@ -85,3 +85,25 @@ export const findNewsletterPublicationByDate = (date) =>
 
 export const deleteNewsletterById = (id) =>
   dbClient.newsletterPublication.delete({ where: { id } });
+
+export const findAllNewsletterDrafts = () =>
+  dbClient.newsletterPublication.findMany({
+    where: { isPublished: false },
+    orderBy: { createdAt: 'desc' },
+  });
+export const findVerifiedNewsletterSubscribers = () =>
+  dbClient.newsletterSubscriber.findMany({
+    where: {
+      verified: true,
+    },
+  });
+export const findNewsletterDraftById = (id) =>
+  dbClient.newsletterPublication.findUnique({
+    where: { id },
+  });
+
+export const updateNewsletterDraft = (id, title, content) =>
+  dbClient.newsletterPublication.update({
+    where: { id },
+    data: { title, content },
+  });

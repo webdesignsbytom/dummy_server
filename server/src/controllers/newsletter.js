@@ -6,16 +6,20 @@ import {
   deleteNewsletterSubscriberByEmail,
   deleteNewsletterSubscriberById,
   deleteNewsletterVerifcationToken,
+  findAllNewsletterDrafts,
   findAllNewsletterSubscribers,
   findAllVerificationTokens,
   findNewletterSubscriberByEmail,
+  findNewsletterDraftById,
   findNewsletterPublicationByDate,
   findNewsletterPublicationById,
   findNewsletterSubscriberByEmail,
   findNewsletterSubscriberById,
   findNewsletterTokenById,
+  findVerifiedNewsletterSubscribers,
   saveNewsletterVerificationToken,
   setAllSubscribersToUnverified,
+  updateNewsletterDraft,
   verifyNewsletterSubscriber,
 } from '../domain/newsletter.js';
 import { myEmitterErrors } from '../event/errorEvents.js';
@@ -102,7 +106,7 @@ export const subscribeToNewsletterHandler = async (req, res) => {
       uniqueString,
       expiryTime
     );
-console.log('verificationToken', verificationToken);
+    console.log('verificationToken', verificationToken);
     if (!verificationToken) {
       const badRequest = new BadRequestEvent(
         req.user,
@@ -460,49 +464,6 @@ export const createNewsletterDraftHandler = async (req, res) => {
   }
 };
 
-export const publishNewsletterHandler = async (req, res) => {
-  const { newsletterId } = req.params;
-
-  if (!newsletterId) {
-    return sendDataResponse(res, 409, {
-      message: `Newsletter publication ID is missing.`,
-    });
-  }
-
-  try {
-    const foundNewsletterPublication = await findNewsletterPublicationById(
-      newsletterId
-    );
-    console.log('found pub:', foundNewsletterPublication);
-
-    if (!foundNewsletterPublication) {
-      const notFound = new NotFoundEvent(
-        req.user,
-        EVENT_MESSAGES.notFound,
-        EVENT_MESSAGES.newsletterPublicatonNotFound
-      );
-      myEmitterErrors.emit('error', notFound);
-      return sendMessageResponse(res, notFound.code, notFound.message);
-    }
-
-    // List of subs and name
-    // Send each an email with name on the top
-    // Try to disconnect and send to not have to keep connection alive
-
-    return sendDataResponse(res, 200, {
-      status: 'Success - Newsletter was published',
-    });
-  } catch (err) {
-    const serverError = new ServerErrorEvent(
-      req.user,
-      'Get all subscribers failed'
-    );
-    myEmitterErrors.emit('error', serverError);
-    sendMessageResponse(res, serverError.code, serverError.message);
-    throw err;
-  }
-};
-
 export const saveNewsletterDraftHandler = async (req, res) => {
   try {
     const foundSubscribers = await findAllNewsletterSubscribers();
@@ -584,6 +545,7 @@ export const deleteNewsletterHandler = async (req, res) => {
 
 export const sendBulkNewsletterEmailHandler = async (req, res) => {
   const { newsletterId } = req.body;
+  console.log('newsletterId', newsletterId);
 
   try {
     if (!newsletterId) {
@@ -607,7 +569,7 @@ export const sendBulkNewsletterEmailHandler = async (req, res) => {
       return sendMessageResponse(res, notFound.code, notFound.message);
     }
 
-    const foundSubscribers = await findAllNewsletterSubscribers();
+    const foundSubscribers = await findVerifiedNewsletterSubscribers();
     console.log('found subscribers:', foundSubscribers);
 
     if (!foundSubscribers) {
@@ -621,6 +583,7 @@ export const sendBulkNewsletterEmailHandler = async (req, res) => {
     }
 
     console.log('Sending newsletter to all subscribers...');
+
     const results = await Promise.allSettled(
       foundSubscribers.map(async (subscriber) => {
         const unsubscribeLink = `${process.env.URL}/unsubscribe?id=${subscriber.id}&uninqeString=${subscriber.uniqueStringUnsubscribe}`;
@@ -629,7 +592,7 @@ export const sendBulkNewsletterEmailHandler = async (req, res) => {
         return await sendNewsletterEmail(
           subscriber.email,
           `Newsletter: ${foundNewsletterPublication.title}`,
-          'newsletterConfirmationEmail',
+          'newsletterEmail',
           {
             name: subscriber.name || '',
             email: subscriber.email,
@@ -879,6 +842,74 @@ export const deleteAllNewsletterSubscribersHandler = async (req, res) => {
       req.user,
       'Delete newsletter subscriber by email failed'
     );
+    myEmitterErrors.emit('error', serverError);
+    sendMessageResponse(res, serverError.code, serverError.message);
+    throw err;
+  }
+};
+
+// Draft
+export const getAllNewsletterDraftsHandler = async (req, res) => {
+  try {
+    const drafts = await findAllNewsletterDrafts();
+    return sendDataResponse(res, 200, { drafts });
+  } catch (err) {
+    const serverError = new ServerErrorEvent(req.user, 'Fetch drafts failed');
+    myEmitterErrors.emit('error', serverError);
+    sendMessageResponse(res, serverError.code, serverError.message);
+    throw err;
+  }
+};
+
+export const getNewsletterDraftByIdHandler = async (req, res) => {
+  const { newsletterId } = req.params;
+
+  try {
+    const draft = await findNewsletterDraftById(newsletterId);
+    if (!draft || draft.publishedAt) {
+      const notFound = new NotFoundEvent(
+        req.user,
+        EVENT_MESSAGES.notFound,
+        'Draft not found.'
+      );
+      myEmitterErrors.emit('error', notFound);
+      return sendMessageResponse(res, notFound.code, notFound.message);
+    }
+
+    return sendDataResponse(res, 200, { draft });
+  } catch (err) {
+    const serverError = new ServerErrorEvent(
+      req.user,
+      'Fetch draft by ID failed'
+    );
+    myEmitterErrors.emit('error', serverError);
+    sendMessageResponse(res, serverError.code, serverError.message);
+    throw err;
+  }
+};
+
+export const updateNewsletterDraftHandler = async (req, res) => {
+  const { newsletterId } = req.params;
+  const { title, content } = req.body;
+
+  try {
+    const updated = await updateNewsletterDraft(newsletterId, title, content);
+    if (!updated) {
+      const badRequest = new BadRequestEvent(
+        req.user,
+        EVENT_MESSAGES.badRequest,
+        'Update failed.'
+      );
+      myEmitterErrors.emit('error', badRequest);
+      return sendMessageResponse(res, badRequest.code, badRequest.message);
+    }
+
+    return sendDataResponse(res, 200, {
+      message: 'Draft updated successfully',
+      draft: updated,
+    });
+  } catch (err) {
+    const serverError = new ServerErrorEvent(req.user, 'Draft update failed');
     myEmitterErrors.emit('error', serverError);
     sendMessageResponse(res, serverError.code, serverError.message);
     throw err;

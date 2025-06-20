@@ -18,7 +18,6 @@ import {
   // Newsletter (admin) handlers
   createNewsletterDraftHandler,
   saveNewsletterDraftHandler,
-  publishNewsletterHandler,
   getNewsletterByIdHandler,
   getNewsletterByDateHandler,
   deleteNewsletterHandler,
@@ -28,6 +27,9 @@ import {
   sendBulkNewsletterEmailHandler,
   resendNewsletterVerificationEmailHandler,
   manuallyVerifySubscriberHandler,
+  getAllNewsletterDraftsHandler,
+  getNewsletterDraftByIdHandler,
+  updateNewsletterDraftHandler,
 } from '../controllers/newsletter.js';
 
 const router = Router();
@@ -72,10 +74,13 @@ router.get(
 /* --------------------------- Newsletter Management -------------------------- */
 
 // Drafts & Publishing
-router.post('/send-bulk-newsletter', sendBulkNewsletterEmailHandler);
 router.post('/create-new', createNewsletterDraftHandler);
 router.patch('/save-draft', saveNewsletterDraftHandler);
-router.patch('/publish/:newsletterId', publishNewsletterHandler);
+router.post('/send-bulk-newsletter', sendBulkNewsletterEmailHandler);
+// Newsletter Drafts
+router.get('/get-all-newsletter-drafts', getAllNewsletterDraftsHandler);
+router.get('/get-draft-by-id/:newsletterId', getNewsletterDraftByIdHandler);
+router.patch('/update-draft/:newsletterId', updateNewsletterDraftHandler);
 
 // Newsletter Data
 router.get('/get-newsletter-by-id/:newsletterId', getNewsletterByIdHandler);

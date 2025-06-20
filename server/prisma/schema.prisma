@@ -113,12 +113,13 @@ model NewsletterVerificationToken {
 }
 
 model NewsletterPublication {
-  id        String    @id @default(uuid())
-  title     String    @default("")
-  content   String    @default("")
-  publishedAt    DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime? @updatedAt
+  id          String    @id @default(uuid())
+  title       String    @default("")
+  content     String // save HTML or Markdown string
+  isPublished Boolean   @default(false)
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime? @updatedAt
 }
 
 // Reviews
