@@ -68,11 +68,11 @@ router.get(
   '/get-verification-token-list',
   getAllNewsletterVerificationTokensHandler
 );
-router.post('/send-bulk-newsletter', sendBulkNewsletterEmailHandler);
 
 /* --------------------------- Newsletter Management -------------------------- */
 
 // Drafts & Publishing
+router.post('/send-bulk-newsletter', sendBulkNewsletterEmailHandler);
 router.post('/create-new', createNewsletterDraftHandler);
 router.patch('/save-draft', saveNewsletterDraftHandler);
 router.patch('/publish/:newsletterId', publishNewsletterHandler);

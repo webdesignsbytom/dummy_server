@@ -18,7 +18,7 @@ export const findNewsletterTokenById = (id) =>
 export const deleteNewsletterSubscriberById = (id) =>
   dbClient.newsletterSubscriber.delete({ where: { id } });
 
-export const verifyNewsletterSubscriber = (id) =>
+export const verifyNewsletterSubscriber = (id, uniqueStringUnsubscribe) =>
   dbClient.newsletterSubscriber.update({
     where: { id },
     data: { verified: true, uniqueStringUnsubscribe: uniqueStringUnsubscribe },

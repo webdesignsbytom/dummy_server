@@ -62,7 +62,8 @@ export const getAllNewsletterSubscribersHandler = async (req, res) => {
 
 export const subscribeToNewsletterHandler = async (req, res) => {
   const { email, name } = req.body;
-
+  console.log('email', email);
+  console.log('name', name);
   try {
     if (!email) {
       return sendMessageResponse(res, 400, 'Email is required');
@@ -79,6 +80,7 @@ export const subscribeToNewsletterHandler = async (req, res) => {
 
     const newSubscriber = await createNewsletterSubscriber(email, name);
     console.log('newSubscriber', newSubscriber);
+
     if (!newSubscriber) {
       const badRequest = new BadRequestEvent(
         req.user,
@@ -92,6 +94,7 @@ export const subscribeToNewsletterHandler = async (req, res) => {
     // Optional: Add verification step logic (UUID, token, etc.)
     const uniqueString = crypto.randomUUID(); // or another token generator
     const expiryTime = new Date(Date.now() + 1000 * 60 * 60 * 24); // 24 hours from now
+    console.log('uniqueString', uniqueString);
 
     // If you're saving verification tokens to DB, you'd do that here:
     const verificationToken = await saveNewsletterVerificationToken(
@@ -99,7 +102,7 @@ export const subscribeToNewsletterHandler = async (req, res) => {
       uniqueString,
       expiryTime
     );
-
+console.log('verificationToken', verificationToken);
     if (!verificationToken) {
       const badRequest = new BadRequestEvent(
         req.user,
@@ -125,7 +128,7 @@ export const subscribeToNewsletterHandler = async (req, res) => {
       }
     );
 
-    console.log('verificationEmailSent');
+    console.log('verificationEmailSent', verificationEmailSent);
 
     if (!verificationEmailSent) {
       const badRequest = new BadRequestEvent(
@@ -328,7 +331,7 @@ export const resendNewsletterVerificationEmailHandler = async (req, res) => {
       const badRequest = new BadRequestEvent(
         req.user,
         EVENT_MESSAGES.badRequest,
-        EVENT_MESSAGES.failedToSendNewsletterVerificationEmail,
+        EVENT_MESSAGES.failedToSendNewsletterVerificationEmail
       );
       myEmitterErrors.emit('error', badRequest);
       return sendMessageResponse(res, badRequest.code, emailFail.message);
