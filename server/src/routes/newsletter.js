@@ -55,11 +55,11 @@ router.post('/resend-verification-email/:userId', resendNewsletterVerificationEm
 router.get('/get-subscriber-list', getAllNewsletterSubscribersHandler);
 router.patch('/force-verify-subscriber/:userId', manuallyVerifySubscriberHandler);
 router.delete(
-  '/delete-subscriber-by-id/:id',
+  '/delete-subscriber-by-id',
   deleteNewsletterSubscriberByIdHandler
 );
 router.delete(
-  '/delete-subscriber-by-email/:email',
+  '/delete-subscriber-by-email',
   deleteNewsletterSubscriberByEmailHandler
 );
 router.delete('/delete-all-subscribers', deleteAllNewsletterSubscribersHandler);
@@ -77,10 +77,11 @@ router.get(
 router.post('/create-new', createNewsletterDraftHandler);
 router.patch('/save-draft', saveNewsletterDraftHandler);
 router.post('/send-bulk-newsletter', sendBulkNewsletterEmailHandler);
+
 // Newsletter Drafts
 router.get('/get-all-newsletter-drafts', getAllNewsletterDraftsHandler);
 router.get('/get-draft-by-id/:newsletterId', getNewsletterDraftByIdHandler);
-router.patch('/update-draft/:newsletterId', updateNewsletterDraftHandler);
+router.patch('/update-draft', updateNewsletterDraftHandler);
 
 // Newsletter Data
 router.get('/get-newsletter-by-id/:newsletterId', getNewsletterByIdHandler);

@@ -732,9 +732,10 @@ export const setAllUsersUnverifiedHandler = async (req, res) => {
     throw err;
   }
 };
+
 // Subscriber admin
 export const deleteNewsletterSubscriberByIdHandler = async (req, res) => {
-  const { id } = req.params;
+  const { id } = req.body;
 
   try {
     if (!id) {
@@ -777,7 +778,7 @@ export const deleteNewsletterSubscriberByIdHandler = async (req, res) => {
 };
 
 export const deleteNewsletterSubscriberByEmailHandler = async (req, res) => {
-  const { email } = req.params;
+  const { email } = req.body;
 
   try {
     if (!email) {
@@ -851,10 +852,24 @@ export const deleteAllNewsletterSubscribersHandler = async (req, res) => {
 // Draft
 export const getAllNewsletterDraftsHandler = async (req, res) => {
   try {
-    const drafts = await findAllNewsletterDrafts();
-    return sendDataResponse(res, 200, { drafts });
+    const foundDrafts = await findAllNewsletterDrafts();
+
+    if (!foundDrafts) {
+      const notFound = new NotFoundEvent(
+        req.user,
+        EVENT_MESSAGES.notFound,
+        EVENT_MESSAGES.failedToFindNewsletterDrafts
+      );
+      myEmitterErrors.emit('error', notFound);
+      return sendMessageResponse(res, notFound.code, notFound.message);
+    }
+
+    return sendDataResponse(res, 200, { drafts: foundDrafts });
   } catch (err) {
-    const serverError = new ServerErrorEvent(req.user, 'Fetch drafts failed');
+    const serverError = new ServerErrorEvent(
+      req.user,
+      'Find all newsletter drafts failed'
+    );
     myEmitterErrors.emit('error', serverError);
     sendMessageResponse(res, serverError.code, serverError.message);
     throw err;
@@ -863,20 +878,21 @@ export const getAllNewsletterDraftsHandler = async (req, res) => {
 
 export const getNewsletterDraftByIdHandler = async (req, res) => {
   const { newsletterId } = req.params;
+  console.log('newsletterId', newsletterId);
 
   try {
-    const draft = await findNewsletterDraftById(newsletterId);
-    if (!draft || draft.publishedAt) {
+    const foundDraft = await findNewsletterDraftById(newsletterId);
+    if (!foundDraft) {
       const notFound = new NotFoundEvent(
         req.user,
         EVENT_MESSAGES.notFound,
-        'Draft not found.'
+        EVENT_MESSAGES.failedToFindNewsletterDrafts
       );
       myEmitterErrors.emit('error', notFound);
       return sendMessageResponse(res, notFound.code, notFound.message);
     }
 
-    return sendDataResponse(res, 200, { draft });
+    return sendDataResponse(res, 200, { draft: foundDraft });
   } catch (err) {
     const serverError = new ServerErrorEvent(
       req.user,
@@ -889,24 +905,29 @@ export const getNewsletterDraftByIdHandler = async (req, res) => {
 };
 
 export const updateNewsletterDraftHandler = async (req, res) => {
-  const { newsletterId } = req.params;
-  const { title, content } = req.body;
-
+  const { id, title, content } = req.body;
+  console.log('id', id);
+  console.log('title', title);
+  console.log('content', content);
   try {
-    const updated = await updateNewsletterDraft(newsletterId, title, content);
-    if (!updated) {
+    const updatedDraft = await updateNewsletterDraft(
+      id,
+      title,
+      content
+    );
+    console.log('updatedDraft', updatedDraft);
+    if (!updatedDraft) {
       const badRequest = new BadRequestEvent(
         req.user,
         EVENT_MESSAGES.badRequest,
-        'Update failed.'
+        EVENT_MESSAGES.failedToUpdateNewsletterDraft,
       );
       myEmitterErrors.emit('error', badRequest);
       return sendMessageResponse(res, badRequest.code, badRequest.message);
     }
 
     return sendDataResponse(res, 200, {
-      message: 'Draft updated successfully',
-      draft: updated,
+      updatedDraft: updatedDraft,
     });
   } catch (err) {
     const serverError = new ServerErrorEvent(req.user, 'Draft update failed');

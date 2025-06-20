@@ -21,7 +21,7 @@ export const deleteNewsletterSubscriberById = (id) =>
 export const verifyNewsletterSubscriber = (id, uniqueStringUnsubscribe) =>
   dbClient.newsletterSubscriber.update({
     where: { id },
-    data: { verified: true, uniqueStringUnsubscribe: uniqueStringUnsubscribe },
+    data: { isVerified: true, uniqueStringUnsubscribe: uniqueStringUnsubscribe },
   });
 
 export const setAllSubscribersToUnverified = async () =>
@@ -91,12 +91,14 @@ export const findAllNewsletterDrafts = () =>
     where: { isPublished: false },
     orderBy: { createdAt: 'desc' },
   });
+
 export const findVerifiedNewsletterSubscribers = () =>
   dbClient.newsletterSubscriber.findMany({
     where: {
-      verified: true,
+      isVerified: true,
     },
   });
+
 export const findNewsletterDraftById = (id) =>
   dbClient.newsletterPublication.findUnique({
     where: { id },

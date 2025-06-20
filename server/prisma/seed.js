@@ -198,14 +198,14 @@ const newsletterSubs = [
     email: 'subscriber1@example.com',
     name: 'Timmy',
     uniqueStringUnsubscribe: '123',
-    verified: true,
+    isVerified: true,
   },
   { email: 'subscriber2@example.com', name: 'Sam' },
   {
     email: 'subscriber3@example.com',
     name: 'Karol',
     uniqueStringUnsubscribe: '123',
-    verified: true,
+    isVerified: true,
   },
 ];
 
