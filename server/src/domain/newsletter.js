@@ -21,7 +21,10 @@ export const deleteNewsletterSubscriberById = (id) =>
 export const verifyNewsletterSubscriber = (id, uniqueStringUnsubscribe) =>
   dbClient.newsletterSubscriber.update({
     where: { id },
-    data: { isVerified: true, uniqueStringUnsubscribe: uniqueStringUnsubscribe },
+    data: {
+      isVerified: true,
+      uniqueStringUnsubscribe: uniqueStringUnsubscribe,
+    },
   });
 
 export const setAllSubscribersToUnverified = async () =>
@@ -75,7 +78,7 @@ export const saveNewsletterVerificationToken = async (
 
 // Admin
 export const createNewNewsletter = () =>
-  dbClient.newsletterPublication.create({ data: {} });
+  dbClient.newsletterPublication.create({ data: { title: '', content: '' } });
 
 export const findNewsletterPublicationById = (id) =>
   dbClient.newsletterPublication.findUnique({ where: { id } });
@@ -108,4 +111,14 @@ export const updateNewsletterDraft = (id, title, content) =>
   dbClient.newsletterPublication.update({
     where: { id },
     data: { title, content },
+  });
+
+export const findAllPublishedNewsletters = () =>
+  dbClient.newsletterPublication.findMany({
+    where: {
+      isPublished: true,
+    },
+    orderBy: {
+      publishedAt: 'desc',
+    },
   });

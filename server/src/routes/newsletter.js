@@ -30,6 +30,7 @@ import {
   getAllNewsletterDraftsHandler,
   getNewsletterDraftByIdHandler,
   updateNewsletterDraftHandler,
+  getAllPublishedNewslettersHandler,
 } from '../controllers/newsletter.js';
 
 const router = Router();
@@ -75,7 +76,6 @@ router.get(
 
 // Drafts & Publishing
 router.post('/create-new', createNewsletterDraftHandler);
-router.patch('/save-draft', saveNewsletterDraftHandler);
 router.post('/send-bulk-newsletter', sendBulkNewsletterEmailHandler);
 
 // Newsletter Drafts
@@ -84,6 +84,7 @@ router.get('/get-draft-by-id/:newsletterId', getNewsletterDraftByIdHandler);
 router.patch('/update-draft', updateNewsletterDraftHandler);
 
 // Newsletter Data
+router.get('/get-all-published-newsletters', getAllPublishedNewslettersHandler);
 router.get('/get-newsletter-by-id/:newsletterId', getNewsletterByIdHandler);
 router.get(
   '/get-newsletter-by-date/:publicationDate',

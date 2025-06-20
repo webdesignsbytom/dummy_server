@@ -8,6 +8,7 @@ import {
   deleteNewsletterVerifcationToken,
   findAllNewsletterDrafts,
   findAllNewsletterSubscribers,
+  findAllPublishedNewsletters,
   findAllVerificationTokens,
   findNewletterSubscriberByEmail,
   findNewsletterDraftById,
@@ -934,5 +935,30 @@ export const updateNewsletterDraftHandler = async (req, res) => {
     myEmitterErrors.emit('error', serverError);
     sendMessageResponse(res, serverError.code, serverError.message);
     throw err;
+  }
+};
+
+export const getAllPublishedNewslettersHandler = async (req, res) => {
+  try {
+    const publishedNewsletters = await findAllPublishedNewsletters();
+
+    if (!publishedNewsletters || publishedNewsletters.length === 0) {
+      const notFound = new NotFoundEvent(
+        req.user,
+        EVENT_MESSAGES.notFound,
+        'No published newsletters found.'
+      );
+      myEmitterErrors.emit('error', notFound);
+      return sendMessageResponse(res, notFound.code, notFound.message);
+    }
+
+    return sendDataResponse(res, 200, { newsletters: publishedNewsletters });
+  } catch (err) {
+    const serverError = new ServerErrorEvent(
+      req.user,
+      `Fetching published newsletters failed: ${err.message}`
+    );
+    myEmitterErrors.emit('error', serverError);
+    return sendMessageResponse(res, serverError.code, serverError.message);
   }
 };
