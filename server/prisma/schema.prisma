@@ -96,7 +96,7 @@ model NewsletterSubscriber {
   email                   String   @unique
   name                    String   @default("")
   uniqueStringUnsubscribe String   @default("")
-  isVerified                Boolean  @default(false)
+  isVerified              Boolean  @default(false)
   createdAt               DateTime @default(now())
 
   verificationToken NewsletterVerificationToken?
