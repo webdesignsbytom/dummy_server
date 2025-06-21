@@ -1,4 +1,5 @@
 import {
+  createAndSaveNewNewsletter,
   createNewNewsletter,
   createNewsletterSubscriber,
   deleteAllSubscribers,
@@ -470,6 +471,35 @@ export const createNewsletterDraftHandler = async (req, res) => {
   }
 };
 
+export const createAndSaveNewsletterDraftHandler = async (req, res) => {
+  const { title, content } = req.body
+console.log('title', content);
+  try {
+    const createdNewsletter = await createAndSaveNewNewsletter(title, content);
+    console.log('createdNewsletter:', createdNewsletter);
+
+    if (!createdNewsletter) {
+      const badRequest = new BadRequestEvent(
+        req.user,
+        EVENT_MESSAGES.badRequest,
+        EVENT_MESSAGES.createNewsletterFail
+      );
+      myEmitterErrors.emit('error', badRequest);
+      return sendMessageResponse(res, badRequest.code, badRequest.message);
+    }
+
+    return sendDataResponse(res, 200, { newsletter: createdNewsletter });
+  } catch (err) {
+    const serverError = new ServerErrorEvent(
+      req.user,
+      'Create new newsletter failed'
+    );
+    myEmitterErrors.emit('error', serverError);
+    sendMessageResponse(res, serverError.code, serverError.message);
+    throw err;
+  }
+};
+
 export const deleteNewsletterHandler = async (req, res) => {
   const { newsletterId } = req.params;
 
@@ -886,7 +916,7 @@ export const getNewsletterDraftByIdHandler = async (req, res) => {
 
 export const updateNewsletterDraftHandler = async (req, res) => {
   const { id, title, content } = req.body;
-  
+
   console.log('id', id);
   console.log('title', title);
   console.log('content', content);

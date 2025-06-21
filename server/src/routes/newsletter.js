@@ -30,6 +30,7 @@ import {
   getNewsletterDraftByIdHandler,
   updateNewsletterDraftHandler,
   getAllPublishedNewslettersHandler,
+  createAndSaveNewsletterDraftHandler,
 } from '../controllers/newsletter.js';
 
 const router = Router();
@@ -46,14 +47,19 @@ router.delete(
   '/unsubscribe/:userId/:uniqueString',
   unsubscribeNewsletterLinkHandler
 );
-router.post('/resend-verification-email/:userId', resendNewsletterVerificationEmailHandler);
-
+router.post(
+  '/resend-verification-email/:userId',
+  resendNewsletterVerificationEmailHandler
+);
 
 /* ------------------------------ Admin Routes ------------------------------ */
 
 // Subscribers
 router.get('/get-subscriber-list', getAllNewsletterSubscribersHandler);
-router.patch('/force-verify-subscriber/:userId', manuallyVerifySubscriberHandler);
+router.patch(
+  '/force-verify-subscriber/:userId',
+  manuallyVerifySubscriberHandler
+);
 router.delete(
   '/delete-subscriber-by-id/:id',
   deleteNewsletterSubscriberByIdHandler
@@ -75,6 +81,7 @@ router.get(
 
 // Drafts & Publishing
 router.post('/create-new', createNewsletterDraftHandler);
+router.post('/create-new-and-save', createAndSaveNewsletterDraftHandler);
 router.patch('/publish-and-send-bulk-email', sendBulkNewsletterEmailHandler);
 
 // Newsletter Drafts

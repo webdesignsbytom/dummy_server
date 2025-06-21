@@ -80,6 +80,9 @@ export const saveNewsletterVerificationToken = async (
 export const createNewNewsletter = () =>
   dbClient.newsletterPublication.create({ data: { title: '', content: '' } });
 
+export const createAndSaveNewNewsletter = (title, content) =>
+  dbClient.newsletterPublication.create({ data: { title, content } });
+
 export const findNewsletterPublicationById = (id) =>
   dbClient.newsletterPublication.findUnique({ where: { id } });
 
