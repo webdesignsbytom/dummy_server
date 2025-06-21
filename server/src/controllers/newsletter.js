@@ -472,8 +472,19 @@ export const createNewsletterDraftHandler = async (req, res) => {
 };
 
 export const createAndSaveNewsletterDraftHandler = async (req, res) => {
-  const { title, content } = req.body
-console.log('title', content);
+  const { title, content } = req.body;
+  console.log('title', content);
+
+  if (!title || !content) {
+    const notFound = new NotFoundEvent(
+      req.user,
+      EVENT_MESSAGES.notFound,
+      EVENT_MESSAGES.missingFields
+    );
+    myEmitterErrors.emit('error', notFound);
+    return sendMessageResponse(res, notFound.code, notFound.message);
+  }
+
   try {
     const createdNewsletter = await createAndSaveNewNewsletter(title, content);
     console.log('createdNewsletter:', createdNewsletter);
@@ -948,7 +959,7 @@ export const getAllPublishedNewslettersHandler = async (req, res) => {
   try {
     const publishedNewsletters = await findAllPublishedNewsletters();
     console.log('publishedNewsletters', publishedNewsletters);
-    
+
     if (!publishedNewsletters) {
       const notFound = new NotFoundEvent(
         req.user,
