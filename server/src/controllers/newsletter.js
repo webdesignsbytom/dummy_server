@@ -757,6 +757,7 @@ export const setAllUsersUnverifiedHandler = async (req, res) => {
 export const deleteNewsletterSubscriberByIdHandler = async (req, res) => {
   const { id } = req.params;
   console.log('XXXXXX id', id);
+  
   try {
     if (!id) {
       return sendMessageResponse(res, 400, 'Subscriber ID is required');

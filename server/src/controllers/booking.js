@@ -53,7 +53,7 @@ export const getAllBookingsHandler = async (req, res) => {
     }
 
     const foundOpeningTimes = await findOpeningTimesAsObject();
-    console.log('foundOpeningTimes', foundOpeningTimes);
+
     if (!foundOpeningTimes) {
       const notFound = new NotFoundEvent(
         req.user,
@@ -310,7 +310,7 @@ export const createNewBookingHandler = async (req, res) => {
 
     // Example usage:
     const formattedDate = formatDate(date);
-    console.log(formattedDate); // Output: 15/04/25
+    // console.log(formattedDate); // Output: 15/04/25
 
     const approveUrl = `${process.env.BOOKING_API_APPROVE}/${uniqueString}/${createdBooking.id}`;
     const rejectUrl = `${process.env.BOOKING_API_REJECT}/${uniqueString}/${createdBooking.id}`;

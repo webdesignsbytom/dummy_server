@@ -26,7 +26,6 @@ import {
 export const getAllContactFormsHandler = async (req, res) => {
   try {
     const foundContactForms = await findAllContactForms();
-    console.log('found foundContactForms:', foundContactForms);
 
     if (!foundContactForms) {
       const notFound = new NotFoundEvent(
@@ -52,10 +51,8 @@ export const getAllContactFormsHandler = async (req, res) => {
 };
 
 export const getAllCallbackFormsHandler = async (req, res) => {
-  console.log('AAAAAAAAAA');
   try {
     const foundCallbackForms = await findAllCallbackForms();
-    console.log('found foundCallbackForms:', foundCallbackForms);
 
     if (!foundCallbackForms) {
       const notFound = new NotFoundEvent(
