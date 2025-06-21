@@ -108,6 +108,7 @@ export const subscribeToNewsletterHandler = async (req, res) => {
       expiryTime
     );
     console.log('verificationToken', verificationToken);
+
     if (!verificationToken) {
       const badRequest = new BadRequestEvent(
         req.user,
@@ -127,7 +128,7 @@ export const subscribeToNewsletterHandler = async (req, res) => {
         name: newSubscriber.name,
         uniqueString: uniqueString,
         expiryTime: verificationToken.expiresAt,
-        verificationUrl: `${process.env.NEWSLETTER_CONFIRM_EMAIL_URL}/subscribe/${newSubscriber.id}/${verificationToken.uniqueString}/${verificationToken.id}`,
+        verificationUrl: `${process.env.NEWSLETTER_CONFIRM_EMAIL_URL}/${newSubscriber.id}/${verificationToken.uniqueString}/${verificationToken.id}`,
         businessUrl: `${BusinessUrl}`,
         businessName: `${BusinessName}`,
       }
@@ -298,6 +299,10 @@ export const resendNewsletterVerificationEmailHandler = async (req, res) => {
       return sendMessageResponse(res, notFound.code, notFound.message);
     }
 
+    if (subscriber.isVerified) {
+      return sendMessageResponse(res, 400, 'User is already verified.');
+    }
+
     const uniqueString = crypto.randomUUID();
     const expiryTime = new Date(Date.now() + 1000 * 60 * 60 * 24); // 24 hrs
 
@@ -311,7 +316,7 @@ export const resendNewsletterVerificationEmailHandler = async (req, res) => {
       const badRequest = new BadRequestEvent(
         req.user,
         EVENT_MESSAGES.badRequest,
-        'Failed to create verification token.'
+        EVENT_MESSAGES.failedToCreateVerificationToken
       );
       myEmitterErrors.emit('error', badRequest);
       return sendMessageResponse(res, badRequest.code, badRequest.message);
@@ -319,14 +324,14 @@ export const resendNewsletterVerificationEmailHandler = async (req, res) => {
 
     const emailSent = await sendNewsletterEmail(
       subscriber.email,
-      'Newsletter: Verify email address',
-      'newsletterVerificationEmail',
+      'Newsletter: Verify email address', // Title
+      'newsletterVerificationEmail', // Email template
       {
         email: subscriber.email,
         name: subscriber.name,
         uniqueString: uniqueString,
         expiryTime: verificationToken.expiresAt,
-        verificationUrl: `${process.env.NEWSLETTER_CONFIRM_EMAIL_URL}/subscribe/${subscriber.id}/${verificationToken.uniqueString}/${verificationToken.id}`,
+        verificationUrl: `${process.env.NEWSLETTER_CONFIRM_EMAIL_URL}/${subscriber.id}/${verificationToken.uniqueString}/${verificationToken.id}`,
         businessUrl: `${BusinessUrl}`,
         businessName: `${BusinessName}`,
       }
@@ -709,16 +714,16 @@ export const setAllUsersUnverifiedHandler = async (req, res) => {
 
 // Subscriber admin
 export const deleteNewsletterSubscriberByIdHandler = async (req, res) => {
-  const { id } = req.body;
-
+  const { id } = req.params;
+  console.log('XXXXXX id', id);
   try {
     if (!id) {
       return sendMessageResponse(res, 400, 'Subscriber ID is required');
     }
 
-    const existing = await findNewsletterSubscriberById(id);
-
-    if (!existing) {
+    const existingSubscriber = await findNewsletterSubscriberById(id);
+    console.log('existingSubscriber', existingSubscriber);
+    if (!existingSubscriber) {
       const notFound = new NotFoundEvent(
         req.user,
         EVENT_MESSAGES.notFound,
@@ -738,6 +743,7 @@ export const deleteNewsletterSubscriberByIdHandler = async (req, res) => {
       myEmitterErrors.emit('error', badRequest);
       return sendMessageResponse(res, badRequest.code, badRequest.message);
     }
+    console.log('deletedSub', deletedSub);
 
     return sendMessageResponse(res, 200, 'Subscriber deleted successfully');
   } catch (err) {
@@ -752,7 +758,7 @@ export const deleteNewsletterSubscriberByIdHandler = async (req, res) => {
 };
 
 export const deleteNewsletterSubscriberByEmailHandler = async (req, res) => {
-  const { email } = req.body;
+  const { email } = req.params;
 
   try {
     if (!email) {

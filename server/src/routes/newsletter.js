@@ -55,11 +55,11 @@ router.post('/resend-verification-email/:userId', resendNewsletterVerificationEm
 router.get('/get-subscriber-list', getAllNewsletterSubscribersHandler);
 router.patch('/force-verify-subscriber/:userId', manuallyVerifySubscriberHandler);
 router.delete(
-  '/delete-subscriber-by-id',
+  '/delete-subscriber-by-id/:id',
   deleteNewsletterSubscriberByIdHandler
 );
 router.delete(
-  '/delete-subscriber-by-email',
+  '/delete-subscriber-by-email/:email',
   deleteNewsletterSubscriberByEmailHandler
 );
 router.delete('/delete-all-subscribers', deleteAllNewsletterSubscribersHandler);
