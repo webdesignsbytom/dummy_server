@@ -75,7 +75,7 @@ router.get(
 
 // Drafts & Publishing
 router.post('/create-new', createNewsletterDraftHandler);
-router.post('/send-bulk-newsletter', sendBulkNewsletterEmailHandler);
+router.patch('/publish-and-send-bulk-email', sendBulkNewsletterEmailHandler);
 
 // Newsletter Drafts
 router.get('/get-all-newsletter-drafts', getAllNewsletterDraftsHandler);

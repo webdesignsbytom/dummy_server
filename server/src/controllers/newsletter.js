@@ -886,6 +886,7 @@ export const getNewsletterDraftByIdHandler = async (req, res) => {
 
 export const updateNewsletterDraftHandler = async (req, res) => {
   const { id, title, content } = req.body;
+  
   console.log('id', id);
   console.log('title', title);
   console.log('content', content);
