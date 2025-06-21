@@ -215,22 +215,24 @@ const newsletterPublications = [
     content: '<p>This is a draft version with <strong>bold</strong> text.</p>',
   },
   {
-    title: '🎉 Welcome to our Newsletter!',
+    title:
+      '📰 Newsletter Newsletter Newsletter Newsletter Newsletter Newsletter Newsletter Draft Newsletter Newsletter Jan',
+    content: '<p>This is a draft version with <strong>bold</strong> text.</p>',
+  },
+  {
+    title:
+      '🎉 Welcome to our Newsletter! Newsletter Newsletter Newsletter Newsletter Newsletter Newsletter Newsletter',
     content: '<p>Thanks for subscribing to updates.</p>',
     publishedAt: new Date('2025-01-15T09:00:00Z'),
+    isPublished: true,
   },
   {
     title: '🚀 April Launch Update',
     content: '<p>We launched our new feature set this month.</p>',
     publishedAt: new Date('2025-04-01T10:30:00Z'),
+    isPublished: true,
   },
 ];
-
-for (const pub of newsletterPublications) {
-  await dbClient.newsletterPublication.create({
-    data: pub,
-  });
-}
 
 async function seed() {
   try {

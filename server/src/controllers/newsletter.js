@@ -833,7 +833,7 @@ export const deleteAllNewsletterSubscribersHandler = async (req, res) => {
 export const getAllNewsletterDraftsHandler = async (req, res) => {
   try {
     const foundDrafts = await findAllNewsletterDrafts();
-
+    console.log('foundDrafts', foundDrafts);
     if (!foundDrafts) {
       const notFound = new NotFoundEvent(
         req.user,
@@ -916,8 +916,9 @@ export const updateNewsletterDraftHandler = async (req, res) => {
 export const getAllPublishedNewslettersHandler = async (req, res) => {
   try {
     const publishedNewsletters = await findAllPublishedNewsletters();
-
-    if (!publishedNewsletters || publishedNewsletters.length === 0) {
+    console.log('publishedNewsletters', publishedNewsletters);
+    
+    if (!publishedNewsletters) {
       const notFound = new NotFoundEvent(
         req.user,
         EVENT_MESSAGES.notFound,
