@@ -194,20 +194,28 @@ const reviews = [
 ];
 
 const newsletterSubs = [
-  {
-    email: 'subscriber1@example.com',
-    name: 'Timmy',
-    uniqueStringUnsubscribe: '123',
-    isVerified: true,
-  },
+  { email: 'subscriber1@example.com', name: 'Timmy', uniqueStringUnsubscribe: 'abc123', isVerified: true },
   { email: 'subscriber2@example.com', name: 'Sam' },
-  {
-    email: 'subscriber3@example.com',
-    name: 'Karol',
-    uniqueStringUnsubscribe: '123',
-    isVerified: true,
-  },
+  { email: 'subscriber3@example.com', name: 'Karol', uniqueStringUnsubscribe: 'def456', isVerified: true },
+  { email: 'subscriber4@example.com', name: 'Alice', uniqueStringUnsubscribe: 'ghi789', isVerified: true },
+  { email: 'subscriber5@example.com', name: 'Bob' },
+  { email: 'subscriber6@example.com', name: 'Lena', uniqueStringUnsubscribe: 'jkl012', isVerified: true },
+  { email: 'subscriber7@example.com', name: 'Mark' },
+  { email: 'subscriber8@example.com', name: 'Nina', uniqueStringUnsubscribe: 'mno345', isVerified: true },
+  { email: 'subscriber9@example.com', name: 'Jake' },
+  { email: 'subscriber10@example.com', name: 'Daisy', uniqueStringUnsubscribe: 'pqr678', isVerified: true },
+  { email: 'subscriber11@example.com', name: 'Tara' },
+  { email: 'subscriber12@example.com', name: 'Leo', uniqueStringUnsubscribe: 'stu901', isVerified: true },
+  { email: 'subscriber13@example.com', name: 'Mia' },
+  { email: 'subscriber14@example.com', name: 'Noah', uniqueStringUnsubscribe: 'vwx234', isVerified: true },
+  { email: 'subscriber15@example.com', name: 'Olivia' },
+  { email: 'subscriber16@example.com', name: 'Lucas', uniqueStringUnsubscribe: 'yz1234', isVerified: true },
+  { email: 'subscriber17@example.com', name: 'Ella' },
+  { email: 'subscriber18@example.com', name: 'Max', uniqueStringUnsubscribe: 'abc567', isVerified: true },
+  { email: 'subscriber19@example.com', name: 'Zoe' },
+  { email: 'subscriber20@example.com', name: 'Finn', uniqueStringUnsubscribe: 'def890', isVerified: true },
 ];
+
 
 const newsletterPublications = [
   // Drafts (Unpublished)
