@@ -216,7 +216,6 @@ const newsletterSubs = [
   { email: 'subscriber20@example.com', name: 'Finn', uniqueStringUnsubscribe: 'def890', isVerified: true },
 ];
 
-
 const newsletterPublications = [
   // Drafts (Unpublished)
   {
