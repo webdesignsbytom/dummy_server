@@ -19,6 +19,7 @@ import {
   findNewsletterSubscriberById,
   findNewsletterTokenById,
   findVerifiedNewsletterSubscribers,
+  saveAsPublished,
   saveNewsletterVerificationToken,
   setAllSubscribersToUnverified,
   updateNewsletterDraft,
@@ -629,6 +630,7 @@ export const sendBulkNewsletterEmailHandler = async (req, res) => {
     const publishedResult = await saveAsPublished(
       foundNewsletterPublication.id
     );
+    
     if (!publishedResult) {
       const badRequest = new BadRequestEvent(
         req.user,
