@@ -92,6 +92,12 @@ export const findNewsletterPublicationByDate = (date) =>
 export const deleteNewsletterById = (id) =>
   dbClient.newsletterPublication.delete({ where: { id } });
 
+export const saveAsPublished = (id) =>
+  dbClient.newsletterPublication.update({
+    where: { id },
+    data: { isPublished: true, publishedAt: new Date() },
+  });
+
 export const findAllNewsletterDrafts = () =>
   dbClient.newsletterPublication.findMany({
     where: { isPublished: false },

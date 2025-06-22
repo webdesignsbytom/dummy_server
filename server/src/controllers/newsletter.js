@@ -626,6 +626,18 @@ export const sendBulkNewsletterEmailHandler = async (req, res) => {
       })
     );
 
+    const publishedResult = await saveAsPublished(
+      foundNewsletterPublication.id
+    );
+    if (!publishedResult) {
+      const badRequest = new BadRequestEvent(
+        req.user,
+        EVENT_MESSAGES.badRequest,
+        EVENT_MESSAGES.failedToSetNewsletterPublished
+      );
+      myEmitterErrors.emit('error', badRequest);
+      return sendMessageResponse(res, badRequest.code, badRequest.message);
+    }
     console.log('✅ All newsletter emails processed');
 
     return sendDataResponse(res, 200, {
@@ -757,7 +769,7 @@ export const setAllUsersUnverifiedHandler = async (req, res) => {
 export const deleteNewsletterSubscriberByIdHandler = async (req, res) => {
   const { id } = req.params;
   console.log('XXXXXX id', id);
-  
+
   try {
     if (!id) {
       return sendMessageResponse(res, 400, 'Subscriber ID is required');
