@@ -38,6 +38,8 @@ import {
   sendDataResponse,
   sendMessageResponse,
 } from '../utils/responses.js';
+import { Client } from '@upstash/qstash';
+import chunkArray from '../utils/chunkArray.js'; // helper to split into batches
 
 // Subscribers
 export const getAllNewsletterSubscribersHandler = async (req, res) => {
@@ -593,7 +595,7 @@ export const sendBulkNewsletterEmailHandler = async (req, res) => {
     const foundSubscribers = await findVerifiedNewsletterSubscribers();
     console.log('found subscribers:', foundSubscribers);
 
-    if (!foundSubscribers) {
+    if (!foundSubscribers || foundSubscribers.length === 0) {
       const notFound = new NotFoundEvent(
         req.user,
         EVENT_MESSAGES.notFound,
@@ -603,59 +605,204 @@ export const sendBulkNewsletterEmailHandler = async (req, res) => {
       return sendMessageResponse(res, notFound.code, notFound.message);
     }
 
-    console.log('Sending newsletter to all subscribers...');
+    console.log('Queueing newsletter in background...');
 
-    const results = await Promise.allSettled(
-      foundSubscribers.map(async (subscriber) => {
-        const unsubscribeLink = `${process.env.URL}/unsubscribe?id=${subscriber.id}&uninqeString=${subscriber.uniqueStringUnsubscribe}`;
+    const batches = chunkArray(foundSubscribers, 1); // 10 emails per batch
+    const client = new Client({ token: process.env.QSTASH_TOKEN });
 
-        // ✅ Send to each subscriber using your single-email function
-        return await sendNewsletterEmail(
-          subscriber.email,
-          `Newsletter: ${foundNewsletterPublication.title}`,
-          'newsletterEmail',
-          {
-            name: subscriber.name || '',
-            email: subscriber.email,
-            title: foundNewsletterPublication.title,
-            content: foundNewsletterPublication.content,
-            unsubscribeLink: unsubscribeLink,
-            businessUrl: `${BusinessUrl}`,
-            businessName: `${BusinessName}`,
-          }
-        );
+    const qstashResults = await Promise.allSettled(
+      batches.map((batch, i) => {
+        const payload = {
+          newsletterId,
+          batch: batch.map((s) => ({
+            id: s.id,
+            email: s.email,
+            name: s.name,
+            uniqueStringUnsubscribe: s.uniqueStringUnsubscribe,
+          })),
+        };
+        console.log('`${process.env.HTTP_URL}', `${process.env.HTTP_URL}`);
+        return client.publish({
+          url: `${process.env.HTTP_URL}/newsletter/process-batch`,
+          body: payload,
+          headers: { 'x-batch-index': i.toString() },
+        });
       })
     );
 
-    const publishedResult = await saveAsPublished(
-      foundNewsletterPublication.id
-    );
-    
-    if (!publishedResult) {
-      const badRequest = new BadRequestEvent(
-        req.user,
-        EVENT_MESSAGES.badRequest,
-        EVENT_MESSAGES.failedToSetNewsletterPublished
-      );
-      myEmitterErrors.emit('error', badRequest);
-      return sendMessageResponse(res, badRequest.code, badRequest.message);
-    }
-    console.log('✅ All newsletter emails processed');
+    console.log('✅ All newsletter batches queued');
 
     return sendDataResponse(res, 200, {
-      message: 'Success',
-      results: results,
+      message: 'Newsletter send has been queued successfully.',
+      qstashResults,
     });
   } catch (err) {
     const serverError = new ServerErrorEvent(
       req.user,
-      'Send mass email to newsletter subscribers failed'
+      'Queue mass newsletter emails failed'
     );
     myEmitterErrors.emit('error', serverError);
     sendMessageResponse(res, serverError.code, serverError.message);
     throw err;
   }
 };
+
+export const processNewsletterBatchHandler = async (req, res) => {
+  const { newsletterId, batch } = req.body;
+
+  console.log('🔁 Processing batch for newsletterId:', newsletterId);
+  console.log('📦 Batch size:', batch?.length);
+
+  try {
+    if (!newsletterId || !Array.isArray(batch) || batch.length === 0) {
+      const badRequest = new BadRequestEvent(
+        req.user,
+        EVENT_MESSAGES.badRequest,
+        'Missing newsletterId or batch data in request body.'
+      );
+      myEmitterErrors.emit('error', badRequest);
+      return sendMessageResponse(res, badRequest.code, badRequest.message);
+    }
+
+    const foundNewsletterPublication = await findNewsletterPublicationById(
+      newsletterId
+    );
+    if (!foundNewsletterPublication) {
+      const notFound = new NotFoundEvent(
+        req.user,
+        EVENT_MESSAGES.notFound,
+        EVENT_MESSAGES.newsletterPublicatonNotFound
+      );
+      myEmitterErrors.emit('error', notFound);
+      return sendMessageResponse(res, notFound.code, notFound.message);
+    }
+
+    for (const subscriber of batch) {
+      const unsubscribeLink = `${process.env.URL}/unsubscribe?id=${subscriber.id}&uninqeString=${subscriber.uniqueStringUnsubscribe}`;
+
+      await sendNewsletterEmail(
+        subscriber.email,
+        `Newsletter: ${foundNewsletterPublication.title}`,
+        'newsletterEmail',
+        {
+          name: subscriber.name || '',
+          email: subscriber.email,
+          title: foundNewsletterPublication.title,
+          content: foundNewsletterPublication.content,
+          unsubscribeLink: unsubscribeLink,
+          businessUrl: BusinessUrl,
+          businessName: BusinessName,
+        }
+      );
+    }
+
+    console.log(`✅ Finished processing batch of ${batch.length} emails.`);
+    return sendDataResponse(res, 200, {
+      message: 'Batch processed successfully.',
+    });
+  } catch (err) {
+    const serverError = new ServerErrorEvent(
+      req.user,
+      'Failed to process email batch for newsletter'
+    );
+    myEmitterErrors.emit('error', serverError);
+    sendMessageResponse(res, serverError.code, serverError.message);
+    throw err;
+  }
+};
+
+// export const sendBulkNewsletterEmailHandler = async (req, res) => {
+//   const { newsletterId } = req.body;
+//   console.log('newsletterId', newsletterId);
+
+//   try {
+//     if (!newsletterId) {
+//       return sendDataResponse(res, 409, {
+//         message: `Newsletter publication ID is missing.`,
+//       });
+//     }
+
+//     const foundNewsletterPublication = await findNewsletterPublicationById(
+//       newsletterId
+//     );
+//     console.log('found pub:', foundNewsletterPublication);
+
+//     if (!foundNewsletterPublication) {
+//       const notFound = new NotFoundEvent(
+//         req.user,
+//         EVENT_MESSAGES.notFound,
+//         EVENT_MESSAGES.newsletterPublicatonNotFound
+//       );
+//       myEmitterErrors.emit('error', notFound);
+//       return sendMessageResponse(res, notFound.code, notFound.message);
+//     }
+
+//     const foundSubscribers = await findVerifiedNewsletterSubscribers();
+//     console.log('found subscribers:', foundSubscribers);
+
+//     if (!foundSubscribers) {
+//       const notFound = new NotFoundEvent(
+//         req.user,
+//         EVENT_MESSAGES.notFound,
+//         EVENT_MESSAGES.newsletterSubscribersNotFound
+//       );
+//       myEmitterErrors.emit('error', notFound);
+//       return sendMessageResponse(res, notFound.code, notFound.message);
+//     }
+
+//     console.log('Sending newsletter to all subscribers...');
+
+//     const results = await Promise.allSettled(
+//       foundSubscribers.map(async (subscriber) => {
+//         const unsubscribeLink = `${process.env.URL}/unsubscribe?id=${subscriber.id}&uninqeString=${subscriber.uniqueStringUnsubscribe}`;
+
+//         // ✅ Send to each subscriber using your single-email function
+//         return await sendNewsletterEmail(
+//           subscriber.email,
+//           `Newsletter: ${foundNewsletterPublication.title}`,
+//           'newsletterEmail',
+//           {
+//             name: subscriber.name || '',
+//             email: subscriber.email,
+//             title: foundNewsletterPublication.title,
+//             content: foundNewsletterPublication.content,
+//             unsubscribeLink: unsubscribeLink,
+//             businessUrl: `${BusinessUrl}`,
+//             businessName: `${BusinessName}`,
+//           }
+//         );
+//       })
+//     );
+
+//     const publishedResult = await saveAsPublished(
+//       foundNewsletterPublication.id
+//     );
+
+//     if (!publishedResult) {
+//       const badRequest = new BadRequestEvent(
+//         req.user,
+//         EVENT_MESSAGES.badRequest,
+//         EVENT_MESSAGES.failedToSetNewsletterPublished
+//       );
+//       myEmitterErrors.emit('error', badRequest);
+//       return sendMessageResponse(res, badRequest.code, badRequest.message);
+//     }
+//     console.log('✅ All newsletter emails processed');
+
+//     return sendDataResponse(res, 200, {
+//       message: 'Success',
+//       results: results,
+//     });
+//   } catch (err) {
+//     const serverError = new ServerErrorEvent(
+//       req.user,
+//       'Send mass email to newsletter subscribers failed'
+//     );
+//     myEmitterErrors.emit('error', serverError);
+//     sendMessageResponse(res, serverError.code, serverError.message);
+//     throw err;
+//   }
+// };
 
 // Verification admin
 export const getAllNewsletterVerificationTokensHandler = async (req, res) => {

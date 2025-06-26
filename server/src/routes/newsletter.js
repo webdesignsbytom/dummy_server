@@ -31,6 +31,7 @@ import {
   updateNewsletterDraftHandler,
   getAllPublishedNewslettersHandler,
   createAndSaveNewsletterDraftHandler,
+  processNewsletterBatchHandler,
 } from '../controllers/newsletter.js';
 
 const router = Router();
@@ -83,6 +84,7 @@ router.get(
 router.post('/create-new', createNewsletterDraftHandler);
 router.post('/create-new-and-save', createAndSaveNewsletterDraftHandler);
 router.patch('/publish-and-send-bulk-email', sendBulkNewsletterEmailHandler);
+router.post('/process-batch', processNewsletterBatchHandler);
 
 // Newsletter Drafts
 router.get('/get-all-newsletter-drafts', getAllNewsletterDraftsHandler);
