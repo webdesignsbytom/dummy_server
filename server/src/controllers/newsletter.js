@@ -608,54 +608,57 @@ export const sendBulkNewsletterEmailHandler = async (req, res) => {
     console.log('Queueing newsletter in background...');
 
     const batches = chunkArray(foundSubscribers, 1); // 10 emails per batch
-    console.log('batches', batches);
+    console.log('');
+    console.log('BATCHES', batches);
     const client = new Client({ token: process.env.QSTASH_TOKEN });
 
-    await client.publish({
-      url: 'https://dummy-server-ruby.vercel.app/newsletter/process-batch',
-      body: JSON.stringify({
-        newsletterId: 'test-newsletter-id',
-        batch: [
-          {
-            id: 'sub1',
-            email: 'tom_brockington@yahoo.co.uk',
-            name: 'Test User',
-            uniqueStringUnsubscribe: '123456',
-          },
-        ],
-      }),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    // const qstashResults = await Promise.allSettled(
-    //   batches.map((batch, i) => {
-    //     const payload = {
-    //       newsletterId,
-    //       batch: batch.map((s) => ({
-    //         id: s.id,
-    //         email: s.email,
-    //         name: s.name,
-    //         uniqueStringUnsubscribe: s.uniqueStringUnsubscribe,
-    //       })),
-    //     };
-    //     console.log('`${process.env.SERVER_URL}', `${process.env.SERVER_URL}`);
-    //     return client.publish({
-    //       url: `${process.env.SERVER_URL}/newsletter/process-batch`,
-    //       body: JSON.stringify(payload), // 🔥 JSON.stringify the payload
-    //       headers: {
-    //         'Content-Type': 'application/json',
-    //         'x-batch-index': i.toString(),
+    // await client.publish({
+    //   url: 'https://dummy-server-ruby.vercel.app/newsletter/process-batch',
+    //   body: JSON.stringify({
+    //     newsletterId: 'test-newsletter-id',
+    //     batch: [
+    //       {
+    //         id: 'sub1',
+    //         email: 'tom_brockington@yahoo.co.uk',
+    //         name: 'Test User',
+    //         uniqueStringUnsubscribe: '123456',
     //       },
-    //     });
-    //   })
-    // );
+    //     ],
+    //   }),
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //   },
+    // });
+
+    const qstashResults = await Promise.allSettled(
+      batches.map((batch, i) => {
+        const payload = {
+          newsletterId,
+          batch: batch.map((s) => ({
+            id: s.id,
+            email: s.email,
+            name: s.name,
+            uniqueStringUnsubscribe: s.uniqueStringUnsubscribe,
+          })),
+        };
+        console.log('Sending payload:', JSON.stringify(payload, null, 2));
+
+        console.log('`${process.env.SERVER_URL}', `${process.env.SERVER_URL}`);
+        return client.publish({
+          url: `${process.env.SERVER_URL}/newsletter/process-batch`,
+          body: JSON.stringify(payload), // 🔥 JSON.stringify the payload
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+      })
+    );
 
     console.log('✅ All newsletter batches queued');
 
     return sendDataResponse(res, 200, {
       message: 'Newsletter send has been queued successfully.',
-      // qstashResults,
+      qstashResults,
     });
   } catch (err) {
     const serverError = new ServerErrorEvent(
