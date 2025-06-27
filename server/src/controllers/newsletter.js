@@ -649,6 +649,8 @@ export const sendBulkNewsletterEmailHandler = async (req, res) => {
 };
 
 export const processNewsletterBatchHandler = async (req, res) => {
+  console.log('🛠 Raw req.body:', req.body);
+
   const { newsletterId, batch } = req.body;
 
   console.log('🔁 Processing batch for newsletterId:', newsletterId);

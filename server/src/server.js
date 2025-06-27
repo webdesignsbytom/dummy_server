@@ -34,8 +34,8 @@ app.use(
 );
 
 app.use(morgan('dev'));
-app.use(express.json({ limit: '200kb' }));
-app.use(express.urlencoded({ extended: true, limit: '200kb' }));
+app.use(express.json({ limit: '2000kb' }));
+app.use(express.urlencoded({ extended: true, limit: '2000kb' }));
 
 // Use Helmet to apply security-related headers to all routes
 app.use(helmet());
