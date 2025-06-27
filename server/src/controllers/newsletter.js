@@ -612,24 +612,6 @@ export const sendBulkNewsletterEmailHandler = async (req, res) => {
     console.log('BATCHES', batches);
     const client = new Client({ token: process.env.QSTASH_TOKEN });
 
-    // await client.publish({
-    //   url: 'https://dummy-server-ruby.vercel.app/newsletter/process-batch',
-    //   body: JSON.stringify({
-    //     newsletterId: 'test-newsletter-id',
-    //     batch: [
-    //       {
-    //         id: 'sub1',
-    //         email: 'tom_brockington@yahoo.co.uk',
-    //         name: 'Test User',
-    //         uniqueStringUnsubscribe: '123456',
-    //       },
-    //     ],
-    //   }),
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //   },
-    // });
-
     const qstashResults = await Promise.allSettled(
       batches.map((batch, i) => {
         const payload = {
