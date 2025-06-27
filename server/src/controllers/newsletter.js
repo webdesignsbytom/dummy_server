@@ -625,8 +625,11 @@ export const sendBulkNewsletterEmailHandler = async (req, res) => {
         console.log('`${process.env.SERVER_URL}', `${process.env.SERVER_URL}`);
         return client.publish({
           url: `${process.env.SERVER_URL}/newsletter/process-batch`,
-          body: payload,
-          headers: { 'x-batch-index': i.toString() },
+          body: JSON.stringify(payload), // 🔥 JSON.stringify the payload
+          headers: {
+            'Content-Type': 'application/json',
+            'x-batch-index': i.toString(),
+          },
         });
       })
     );
