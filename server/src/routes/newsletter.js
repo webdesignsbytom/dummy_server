@@ -84,7 +84,7 @@ router.get(
 router.post('/create-new', createNewsletterDraftHandler);
 router.post('/create-new-and-save', createAndSaveNewsletterDraftHandler);
 router.patch('/publish-and-send-bulk-email', sendBulkNewsletterEmailHandler);
-router.post('/process-batch', processNewsletterBatchHandler);
+router.post('/process-batch', processNewsletterBatchHandler); // outside ref
 
 // Newsletter Drafts
 router.get('/get-all-newsletter-drafts', getAllNewsletterDraftsHandler);

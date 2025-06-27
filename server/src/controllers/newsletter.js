@@ -608,6 +608,7 @@ export const sendBulkNewsletterEmailHandler = async (req, res) => {
     console.log('Queueing newsletter in background...');
 
     const batches = chunkArray(foundSubscribers, 1); // 10 emails per batch
+    console.log('batches', batches);
     const client = new Client({ token: process.env.QSTASH_TOKEN });
 
     const qstashResults = await Promise.allSettled(
@@ -621,9 +622,9 @@ export const sendBulkNewsletterEmailHandler = async (req, res) => {
             uniqueStringUnsubscribe: s.uniqueStringUnsubscribe,
           })),
         };
-        console.log('`${process.env.HTTP_URL}', `${process.env.HTTP_URL}`);
+        console.log('`${process.env.SERVER_URL}', `${process.env.SERVER_URL}`);
         return client.publish({
-          url: `${process.env.HTTP_URL}/newsletter/process-batch`,
+          url: `${process.env.SERVER_URL}/newsletter/process-batch`,
           body: payload,
           headers: { 'x-batch-index': i.toString() },
         });
@@ -676,6 +677,8 @@ export const processNewsletterBatchHandler = async (req, res) => {
       myEmitterErrors.emit('error', notFound);
       return sendMessageResponse(res, notFound.code, notFound.message);
     }
+
+    console.log('foundNewsletterPublication', foundNewsletterPublication);
 
     for (const subscriber of batch) {
       const unsubscribeLink = `${process.env.URL}/unsubscribe?id=${subscriber.id}&uninqeString=${subscriber.uniqueStringUnsubscribe}`;
