@@ -655,7 +655,7 @@ export const sendBulkNewsletterEmailHandler = async (req, res) => {
 
     return sendDataResponse(res, 200, {
       message: 'Newsletter send has been queued successfully.',
-      qstashResults,
+      // qstashResults,
     });
   } catch (err) {
     const serverError = new ServerErrorEvent(
