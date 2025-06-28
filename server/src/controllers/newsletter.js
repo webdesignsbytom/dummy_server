@@ -688,7 +688,7 @@ export const processNewsletterBatchHandler = async (req, res) => {
     console.log('foundNewsletterPublication', foundNewsletterPublication);
 
     for (const subscriber of batch) {
-      const unsubscribeLink = `${process.env.URL}/unsubscribe?id=${subscriber.id}&uninqeString=${subscriber.uniqueStringUnsubscribe}`;
+      const unsubscribeLink = `${process.env.NEWSLETTER_UNSUBSCRIBE_URL}/${subscriber.id}${subscriber.uniqueStringUnsubscribe}`;
 
       await sendNewsletterEmail(
         subscriber.email,
