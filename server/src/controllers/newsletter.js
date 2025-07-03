@@ -640,6 +640,7 @@ export const sendBulkNewsletterEmailHandler = async (req, res) => {
 
     return sendDataResponse(res, 200, {
       message: 'Newsletter send has been queued successfully.',
+      newsletter: foundNewsletterPublication,
       qstashResults,
     });
   } catch (err) {
