@@ -314,7 +314,9 @@ export const createNewBookingHandler = async (req, res) => {
 
     const approveUrl = `${process.env.BOOKING_API_APPROVE}/${uniqueString}/${createdBooking.id}`;
     const rejectUrl = `${process.env.BOOKING_API_REJECT}/${uniqueString}/${createdBooking.id}`;
-
+    console.log('approveUrl', approveUrl);
+    console.log('rejectUrl', rejectUrl);
+    
     const notificationSent = await sendBookingEmail(
       process.env.BOOKING_ADMIN_RECIEVER_EMAIL,
       'New Booking Notification',
@@ -374,24 +376,35 @@ export const createNewBookingHandler = async (req, res) => {
 };
 
 export const confirmNewBookingHandler = async (req, res) => {
+  console.log('🔔 confirmNewBookingHandler CALLED');
+
   const { bookingId } = req.params;
   const { uniqueString } = req.body;
 
+  console.log('📥 Incoming params:', { bookingId });
+  console.log('📥 Incoming body:', { uniqueString });
+
   if (!bookingId) {
+    console.log('❗ Missing bookingId');
     return sendDataResponse(res, 409, {
       message: `Booking ID is missing.`,
     });
   }
+
   if (!uniqueString) {
+    console.log('❗ Missing uniqueString');
     return sendDataResponse(res, 409, {
       message: `Unique string is missing.`,
     });
   }
 
   try {
+    console.log('🔎 Searching for booking by ID:', bookingId);
     const foundBooking = await findBookingById(bookingId);
+    console.log('📄 Found booking:', foundBooking);
 
     if (!foundBooking) {
+      console.log('❗ Booking not found');
       const notFound = new BadRequestEvent(
         EVENT_MESSAGES.notFound,
         EVENT_MESSAGES.bookingNotFound
@@ -401,17 +414,22 @@ export const confirmNewBookingHandler = async (req, res) => {
     }
 
     if (!foundBooking.uniqueString) {
+      console.log('❗ Booking found but missing confirmation string in DB');
       return sendMessageResponse(res, 401, 'Missing confirmation string');
     }
 
+    console.log(
+      '🔑 Comparing provided unique string with hashed string in booking...'
+    );
     const isValid = await bcrypt.compare(
       uniqueString,
       foundBooking.uniqueString
     );
 
-    console.log('IS VALID', isValid);
+    console.log('✅ Unique string comparison result:', isValid);
 
     if (!isValid) {
+      console.log('❗ Provided unique string is invalid or expired');
       return sendMessageResponse(
         res,
         401,
@@ -419,9 +437,12 @@ export const confirmNewBookingHandler = async (req, res) => {
       );
     }
 
+    console.log('📝 Confirming booking...');
     const confirmedBooking = await confirmBooking(bookingId);
-    console.log('confirmedBooking', confirmedBooking);
+    console.log('✅ Booking confirmed:', confirmedBooking);
+
     if (!confirmedBooking) {
+      console.log('❗ Booking confirmation failed');
       const notCreated = new BadRequestEvent(
         EVENT_MESSAGES.badRequest,
         EVENT_MESSAGES.confirmBookingFail
@@ -430,8 +451,9 @@ export const confirmNewBookingHandler = async (req, res) => {
       return sendMessageResponse(res, notCreated.code, notCreated.message);
     }
 
+    console.log('📧 Sending owner confirmation email...');
     const ownerConfirmationEmailSent = await sendBookingEmail(
-      process.env.BOOKING_ADMIN_RECIEVER_EMAIL, // Owner's email here
+      process.env.BOOKING_ADMIN_RECIEVER_EMAIL,
       'New Booking Approved',
       'bookingApprovedOwner',
       {
@@ -444,15 +466,22 @@ export const confirmNewBookingHandler = async (req, res) => {
       }
     );
 
-    // Failed to send confirmation to owner
+    console.log(
+      '📤 Owner confirmation email sent:',
+      ownerConfirmationEmailSent
+    );
+
     if (!ownerConfirmationEmailSent) {
+      console.log(
+        '❗ Owner confirmation email failed to send, sending failure notification...'
+      );
       const notCreated = new BadRequestEvent(
         EVENT_MESSAGES.badRequest,
         EVENT_MESSAGES.recievedBookingSendingFail
       );
 
       const ownerConfirmationEmailFailedToSend = await sendBookingEmail(
-        process.env.BOOKING_ADMIN_RECIEVER_EMAIL, // Owner's email here
+        process.env.BOOKING_ADMIN_RECIEVER_EMAIL,
         'New Booking Approval Failed',
         'sendBookingConfirmationFailed',
         {
@@ -465,7 +494,13 @@ export const confirmNewBookingHandler = async (req, res) => {
         }
       );
 
+      console.log(
+        '📤 Owner failure notification email sent:',
+        ownerConfirmationEmailFailedToSend
+      );
+
       if (!ownerConfirmationEmailFailedToSend) {
+        console.log('❗ Failed to send owner failure notification email');
         const notCreated = new BadRequestEvent(
           EVENT_MESSAGES.badRequest,
           EVENT_MESSAGES.confirmBookingFail
@@ -478,9 +513,9 @@ export const confirmNewBookingHandler = async (req, res) => {
       return sendMessageResponse(res, notCreated.code, notCreated.message);
     }
 
-    // Send confirmation to customer
+    console.log('📧 Sending customer confirmation email...');
     const customerConfirmationEmailSent = await sendBookingEmail(
-      confirmedBooking.email, // Customers's email here
+      confirmedBooking.email,
       'Booking Confirmed',
       'bookingApprovedCustomer',
       {
@@ -493,15 +528,22 @@ export const confirmNewBookingHandler = async (req, res) => {
       }
     );
 
-    // Failed to send confirmation to owner
+    console.log(
+      '📤 Customer confirmation email sent:',
+      customerConfirmationEmailSent
+    );
+
     if (!customerConfirmationEmailSent) {
+      console.log(
+        '❗ Customer confirmation email failed, sending owner alert...'
+      );
       const notCreated = new BadRequestEvent(
         EVENT_MESSAGES.badRequest,
         EVENT_MESSAGES.recievedBookingSendingFail
       );
 
       const ownerConfirmationEmailFailedToSend = await sendBookingEmail(
-        process.env.BOOKING_ADMIN_RECIEVER_EMAIL, // Owner's email here
+        process.env.BOOKING_ADMIN_RECIEVER_EMAIL,
         'New Booking Approval Confirmation Email Failed',
         'bookingApprovedCustomerFailed',
         {
@@ -514,7 +556,15 @@ export const confirmNewBookingHandler = async (req, res) => {
         }
       );
 
+      console.log(
+        '📤 Owner alert for failed customer confirmation email sent:',
+        ownerConfirmationEmailFailedToSend
+      );
+
       if (!ownerConfirmationEmailFailedToSend) {
+        console.log(
+          '❗ Failed to send owner alert for customer confirmation failure'
+        );
         const notCreated = new BadRequestEvent(
           EVENT_MESSAGES.badRequest,
           EVENT_MESSAGES.confirmBookingFail
@@ -527,11 +577,12 @@ export const confirmNewBookingHandler = async (req, res) => {
       return sendMessageResponse(res, notCreated.code, notCreated.message);
     }
 
+    console.log('✅ Booking confirmation process completed successfully');
     return sendDataResponse(res, 200, {
       message: 'Success: Booking confirmed',
     });
   } catch (err) {
-    //
+    console.log('🔥 Error during booking confirmation:', err);
     const serverError = new ServerErrorEvent(req.user, `Delete booking failed`);
     myEmitterErrors.emit('error', serverError);
     sendMessageResponse(res, serverError.code, serverError.message);
