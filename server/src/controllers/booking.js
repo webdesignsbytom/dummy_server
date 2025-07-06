@@ -378,8 +378,8 @@ export const createNewBookingHandler = async (req, res) => {
 export const confirmNewBookingHandler = async (req, res) => {
   console.log('🔔 confirmNewBookingHandler CALLED');
 
-  const { bookingId } = req.params;
-  const { uniqueString } = req.body;
+  const { uniqueString, bookingId } = req.params;
+
 
   console.log('📥 Incoming params:', { bookingId });
   console.log('📥 Incoming body:', { uniqueString });
@@ -591,8 +591,8 @@ export const confirmNewBookingHandler = async (req, res) => {
 };
 
 export const denyNewBookingHandler = async (req, res) => {
-  const { bookingId } = req.params;
-  const { uniqueString } = req.body;
+  const { uniqueString, bookingId } = req.params;
+
 
   if (!bookingId) {
     return sendDataResponse(res, 409, {
