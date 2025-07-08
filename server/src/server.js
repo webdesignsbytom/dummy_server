@@ -29,7 +29,7 @@ app.use(
   cors({
     origin: ['http://localhost:3000', 'https://dummy.bytetoast-studio.co.uk'],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true,
+    credentials: false,
   })
 );
 
