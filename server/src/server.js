@@ -28,8 +28,9 @@ app.disable('x-powered-by');
 app.use(
   cors({
     origin: ['http://localhost:3000', 'https://dummy.bytetoast-studio.co.uk'],
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
     credentials: false,
+    allowedHeaders: ['Content-Type', 'Authorization'],
   })
 );
 
