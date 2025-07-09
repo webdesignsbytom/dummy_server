@@ -73,7 +73,12 @@ app.get('/', (req, res) => {
 });
 
 app.get('/test-bond', (req, res) => {
-  res.status(200).send('Congratulations Mr Bond you found my server lair.');
+  res.status(200).send('Congratulations Mr Bond you found my server lair.')
+});
+
+app.post('/iphone-test', (req, res) => {
+  console.log('✅ iPhone test POST received');
+  res.status(200).json({ message: 'iPhone test passed' });
 });
 
 // For all unknown requests 404 page returns
