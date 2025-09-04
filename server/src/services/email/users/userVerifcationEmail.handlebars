@@ -6,77 +6,119 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{{ title }}</title>
   <style>
+    /* basic resets for email clients */
+    body, table, td, a { -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%; }
+    table, td { mso-table-lspace:0pt; mso-table-rspace:0pt; border-collapse:collapse !important; }
+    img { -ms-interpolation-mode:bicubic; border:0; outline:none; text-decoration:none; display:block; }
     body {
-      margin: 0;
-      padding: 0;
-      background-color: #f4f4f4;
-      font-family: 'Poppins', sans-serif;
-      color: #333;
-      text-align: center;
+      margin:0;
+      padding:0;
+      width:100% !important;
+      background-color:#f4f4f4; /* same as before */
+      font-family:'Poppins', Arial, sans-serif;
+      color:#333;
     }
+    .preheader {
+      display:none !important; visibility:hidden; opacity:0; color:transparent;
+      height:0; width:0; mso-hide:all; overflow:hidden;
+    }
+    .wrapper { width:100%; background-color:#f4f4f4; padding:24px 12px; }
     .container {
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 20px;
-      background-color: #ffffff;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      max-width:640px;
+      margin:0 auto;
+      background-color:#ffffff;
+      border-radius:12px;            /* softer corners */
+      box-shadow:0 4px 14px rgba(0,0,0,0.08);
+      padding:32px 28px;             /* more breathing room */
+      text-align:center;
     }
+    .logo { margin-bottom:16px; }
+    .logo img { max-width:160px; height:auto; }
     h1 {
-      font-size: 24px;
-      color: #4CAF50;
+      font-size:28px;                /* larger, clearer */
+      line-height:1.25;
+      margin:0 0 8px 0;
+      color:#333;
+      font-weight:700;
+    }
+    h2 {
+      font-size:18px;
+      line-height:1.4;
+      margin:0 0 18px 0;
+      color:#333;
+      font-weight:500;
     }
     p {
-      font-size: 16px;
-      line-height: 1.6;
+      font-size:16px;
+      line-height:1.6;
+      margin:12px 0;
+      color:#333;
     }
-    a {
-      color: #4CAF50;
-      text-decoration: none;
-      font-weight: 600;
+    a { color:#4CAF50; text-decoration:underline; font-weight:600; }
+    /* button */
+    .btn {
+      display:inline-block;
+      padding:14px 28px;
+      background-color:#4CAF50;
+      color:#ffffff !important;
+      text-decoration:none;
+      border-radius:8px;
+      font-weight:700;
+      font-size:16px;
+      line-height:1.2;
+      margin:12px 0 4px 0;
     }
-    .button {
-      display: inline-block;
-      padding: 12px 24px;
-      background-color: #4CAF50;
-      color: #ffffff;
-      text-decoration: none;
-      border-radius: 4px;
-      font-weight: bold;
+    .url {
+      word-break:break-all;
+      font-size:14px;
     }
     footer {
-      margin-top: 30px;
-      font-size: 14px;
-      color: #999;
+      max-width:640px;
+      margin:14px auto 0 auto;
+      text-align:center;
+      font-size:14px;
+      color:#999;
     }
-    footer h2 {
-      margin: 0;
-      font-size: 16px;
-      color: #4CAF50;
-    }
+    footer a { color:#4CAF50; text-decoration:underline; }
   </style>
 </head>
 <body>
-  <div class="container">
-
-    <h1>Welcome {{email}}</h1>
-    <h2>Thank you for signing up with {{businessName}}</h2>
-
-    <p>Please verify your email address to complete the signup process and log in to your account.</p>
-    <p><b>This link expires in {{expiryTime}}.</b></p>
-
-    <p>
-      <a href="{{confirmationUrl}}" class="button">Verify Email Address</a>
-    </p>
-
-    <p>If the button doesn't work, copy and paste this URL into your browser:</p>
-    <p><a target="_blank" rel="noreferrer" href="{{confirmationUrl}}">{{confirmationUrl}}</a></p>
+  <!-- short preview line in inbox -->
+  <div class="preheader">
+    Verify your email to activate your {{businessName}} account.
   </div>
 
-  <footer>
-    <h2>{{businessUrl}}</h2>
-    <a target="_blank" rel="noreferrer" href="{{businessUrl}}">{{businessUrl}}</a>
-    <p>&copy; {{year}} {{businessName}}. All rights reserved.</p>
-  </footer>
+  <div class="wrapper">
+    <div class="container">
+      <!-- optional logo (use a full https URL) -->
+      <!-- remove this whole div if you don't want a logo -->
+      <div class="logo">
+        <img src="{{logoUrl}}" alt="{{businessName}} logo" />
+      </div>
+
+      <h1>Welcome, {{email}}</h1>
+      <h2>Thanks for joining {{businessName}}.</h2>
+
+      <p>Please verify your email address to complete your signup and access your account.</p>
+      <p><strong>Link expires on {{expiryTime}}.</strong></p>
+
+      <!-- primary CTA -->
+      <p>
+        <a class="btn" href="{{confirmationUrl}}" target="_blank" rel="noreferrer">Verify Email Address</a>
+      </p>
+
+      <p class="url">
+        If the button doesn’t work, copy and paste this link into your browser:<br />
+        <a href="{{confirmationUrl}}" target="_blank" rel="noreferrer">{{confirmationUrl}}</a>
+      </p>
+    </div>
+
+    <footer>
+      <p>
+        <a href="{{businessUrl}}" target="_blank" rel="noreferrer">{{businessUrl}}</a><br />
+        &copy; {{year}} {{businessName}}. All rights reserved.
+      </p>
+    </footer>
+  </div>
 </body>
 </html>
