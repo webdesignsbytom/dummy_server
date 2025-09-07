@@ -202,20 +202,11 @@ CREATE TABLE "BlogPost" (
 );
 
 -- CreateTable
-CREATE TABLE "Tag" (
+CREATE TABLE "BlogTag" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
-    "slug" TEXT,
 
-    CONSTRAINT "Tag_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "BlogPostTag" (
-    "blogPostId" TEXT NOT NULL,
-    "tagId" INTEGER NOT NULL,
-
-    CONSTRAINT "BlogPostTag_pkey" PRIMARY KEY ("blogPostId","tagId")
+    CONSTRAINT "BlogTag_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -232,6 +223,14 @@ CREATE TABLE "Event" (
     "updatedAt" TIMESTAMP(3),
 
     CONSTRAINT "Event_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "_BlogPostToBlogTag" (
+    "A" TEXT NOT NULL,
+    "B" INTEGER NOT NULL,
+
+    CONSTRAINT "_BlogPostToBlogTag_AB_pkey" PRIMARY KEY ("A","B")
 );
 
 -- CreateIndex
@@ -271,13 +270,10 @@ CREATE INDEX "BlogPost_isPublished_publishedAt_idx" ON "BlogPost"("isPublished",
 CREATE INDEX "BlogPost_publishedAt_idx" ON "BlogPost"("publishedAt");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Tag_name_key" ON "Tag"("name");
+CREATE UNIQUE INDEX "BlogTag_name_key" ON "BlogTag"("name");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Tag_slug_key" ON "Tag"("slug");
-
--- CreateIndex
-CREATE INDEX "BlogPostTag_tagId_idx" ON "BlogPostTag"("tagId");
+CREATE INDEX "_BlogPostToBlogTag_B_index" ON "_BlogPostToBlogTag"("B");
 
 -- AddForeignKey
 ALTER TABLE "AccountStatus" ADD CONSTRAINT "AccountStatus_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -295,13 +291,13 @@ ALTER TABLE "UserPermission" ADD CONSTRAINT "UserPermission_permissionId_fkey" F
 ALTER TABLE "NewsletterVerificationToken" ADD CONSTRAINT "NewsletterVerificationToken_subscriberId_fkey" FOREIGN KEY ("subscriberId") REFERENCES "NewsletterSubscriber"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "BlogPostTag" ADD CONSTRAINT "BlogPostTag_blogPostId_fkey" FOREIGN KEY ("blogPostId") REFERENCES "BlogPost"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "BlogPostTag" ADD CONSTRAINT "BlogPostTag_tagId_fkey" FOREIGN KEY ("tagId") REFERENCES "Tag"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "Event" ADD CONSTRAINT "Event_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Event" ADD CONSTRAINT "Event_receivedById_fkey" FOREIGN KEY ("receivedById") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "_BlogPostToBlogTag" ADD CONSTRAINT "_BlogPostToBlogTag_A_fkey" FOREIGN KEY ("A") REFERENCES "BlogPost"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "_BlogPostToBlogTag" ADD CONSTRAINT "_BlogPostToBlogTag_B_fkey" FOREIGN KEY ("B") REFERENCES "BlogTag"("id") ON DELETE CASCADE ON UPDATE CASCADE;

@@ -11,13 +11,20 @@ import {
   newsletterSubsSeedArray,
 } from './seed/newsletter.js';
 import { callbackFormsSeedArray } from './seed/callback.js';
+import { tempBlogPostSeedArray } from './seed/blog.js';
 
 async function seed() {
   try {
     // Required envs only (no defaults)
-    const requiredEnv = ['SALT_ROUNDS', 'SEED_PASSWORD', 'SEED_PASSWORD_ADMIN', 'SEED_PASSWORD_DEV'];
+    const requiredEnv = [
+      'SALT_ROUNDS',
+      'SEED_PASSWORD',
+      'SEED_PASSWORD_ADMIN',
+      'SEED_PASSWORD_DEV',
+    ];
     for (const key of requiredEnv) {
-      if (!process.env[key]) throw new Error(`Environment variable ${key} is required`);
+      if (!process.env[key])
+        throw new Error(`Environment variable ${key} is required`);
     }
 
     const saltRounds = Number(process.env.SALT_ROUNDS);
@@ -44,7 +51,10 @@ async function seed() {
     async function grantAllPermissionsToUser(userId) {
       if (!allPermissionIds.length) return;
       await dbClient.userPermission.createMany({
-        data: allPermissionIds.map((permissionId) => ({ userId, permissionId })),
+        data: allPermissionIds.map((permissionId) => ({
+          userId,
+          permissionId,
+        })),
         skipDuplicates: true,
       });
     }
@@ -144,6 +154,30 @@ async function seed() {
         create: { date, reason: 'Scheduled Day Off' },
       });
       console.log(`✅ Day closed seeded: ${date.toDateString()}`);
+    }
+
+    for (const post of tempBlogPostSeedArray) {
+      const {
+        id: _ignore, // array has an incrementing id; model uses uuid -> ignore it
+        tags = [], // string[] of tag names
+        publishedAt,
+        ...rest
+      } = post;
+
+      const created = await dbClient.blogPost.create({
+        data: {
+          ...rest,
+          ...(publishedAt ? { publishedAt: new Date(publishedAt) } : {}),
+          tags: tags.length
+            ? { connect: tags.map((name) => ({ name })) } // connect by unique BlogTag.name
+            : undefined,
+        },
+        include: { tags: true },
+      });
+
+      console.log(
+        `✅ Blog seeded: ${created.title} (${created.slug}) with ${created.tags.length} tag(s)`
+      );
     }
 
     console.log('🌱 All seeds completed.');

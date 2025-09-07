@@ -1,15 +1,8 @@
-import dbClient from '../utils/dbClient.js';
-
-// Get all blog posts (ordered newest first)
 export const findAllBlogPosts = () =>
   dbClient.blogPost.findMany({
     orderBy: { createdAt: 'desc' },
     include: {
-      tags: {
-        include: {
-          tag: true,
-        },
-      },
+      tags: true, // implicit M2M: get BlogTag[] directly
     },
   });
 
@@ -25,12 +18,12 @@ export const findBlogPostSummaries = () =>
     },
   });
 
-// Get posts by tag (via tag slug)
+// Get single post by slug
 export const findBlogPostBySlug = (slug) =>
   dbClient.blogPost.findUnique({
     where: { slug },
     include: {
-      tags: { include: { tag: true } },
+      tags: true, // BlogTag[]
     },
   });
 
@@ -39,26 +32,25 @@ export const findBlogPostById = (id) =>
   dbClient.blogPost.findUnique({
     where: { id },
     include: {
-      tags: { include: { tag: true } },
+      tags: true, // BlogTag[]
     },
   });
 
+// Get posts by tag (via tag slug)
 export const findBlogPostsByTag = (tagSlug) =>
   dbClient.blogPost.findMany({
     orderBy: { createdAt: 'desc' },
     where: {
       tags: {
         some: {
-          tag: {
-            slug: tagSlug,
-          },
+          slug: tagSlug, // direct check on BlogTag.slug
         },
       },
     },
-    include: { tags: { include: { tag: true } } },
+    include: { tags: true }, // BlogTag[]
   });
 
-  
+// Create a new blog post (connect tags by ID)
 export const createBlogPost = async (
   title,
   slug,
@@ -75,14 +67,11 @@ export const createBlogPost = async (
       authorId,
       authorName,
       isPublished: false,
-      tags: Array.isArray(tagIds) && tagIds.length
-        ? {
-            create: tagIds.map((tagId) => ({
-              tag: { connect: { id: tagId } },
-            })),
-          }
-        : undefined,
+      // implicit M2M connect
+      ...(Array.isArray(tagIds) && tagIds.length
+        ? { tags: { connect: tagIds.map((id) => ({ id })) } }
+        : {}),
     },
-    include: { tags: { include: { tag: true } } },
+    include: { tags: true },
   });
 };
