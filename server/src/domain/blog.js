@@ -1,3 +1,5 @@
+import dbClient from '../utils/dbClient.js';
+
 export const findAllBlogPosts = () =>
   dbClient.blogPost.findMany({
     orderBy: { createdAt: 'desc' },

@@ -1,6 +1,6 @@
 export const tempBlogPostSeedArray = [
   {
-    id: blogId++, 
+    id: '1', 
     title: 'Introducing Byte Toast Studio!',
     subTitle: 'Creating websites, mobile apps, and custom circuits.',
     subject: 'Launch Announcement',
@@ -15,7 +15,7 @@ export const tempBlogPostSeedArray = [
         type: 'image',
         imageTitle: 'Byte Toast Studio',
         description: 'At Byte Toast Studio, we push the boundaries of digital and hardware solutions to create seamless user experiences.',
-        imageUrl: TestImage,
+        imageUrl: 'xx',
       },
       {
         type: 'video',
@@ -26,8 +26,8 @@ export const tempBlogPostSeedArray = [
     ],
     authorId: 1, 
     authorName: 'Tom Brockington',
-    featuredImage: TestImage, 
-    thumbnailImage: TestImage,
+    featuredImage: 'sdafd', 
+    thumbnailImage: 'sdafd',
     isPublished: true,
     publishedAt: '2025-01-01T02:02:59.030Z',
     viewCount: 0,

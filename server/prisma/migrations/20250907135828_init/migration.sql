@@ -203,7 +203,7 @@ CREATE TABLE "BlogPost" (
 
 -- CreateTable
 CREATE TABLE "BlogTag" (
-    "id" SERIAL NOT NULL,
+    "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
 
     CONSTRAINT "BlogTag_pkey" PRIMARY KEY ("id")
@@ -228,7 +228,7 @@ CREATE TABLE "Event" (
 -- CreateTable
 CREATE TABLE "_BlogPostToBlogTag" (
     "A" TEXT NOT NULL,
-    "B" INTEGER NOT NULL,
+    "B" TEXT NOT NULL,
 
     CONSTRAINT "_BlogPostToBlogTag_AB_pkey" PRIMARY KEY ("A","B")
 );
