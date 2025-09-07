@@ -24,6 +24,10 @@ export const EVENT_MESSAGES = {
   eventTag: `Event database.`,
   eventNotFound: `Failed to find event.`,
   createEventFail: `Failed to create event.`,
+  // Blogs
+  blogTag: `Blog database.`,
+  blogNotFound: `Failed to find blog post(s).`,
+  createBlogFail: `Failed to create blog post.`,
   // Bookings
   bookingTag: `Booking database.`,
   bookingNotFound: `Failed to find booking/s.`,
@@ -112,4 +116,3 @@ export function sendMessageResponse(res, statusCode, message) {
     message,
   });
 }
- 

@@ -15,6 +15,8 @@ import reviewRouter from './routes/reviews.js';
 import newsletterRouter from './routes/newsletter.js';
 import contactRouter from './routes/contact.js';
 import testRouter from './routes/tests.js';
+import blogRouter from './routes/blog.js';
+
 // Responses
 import { sendDataResponse } from './utils/responses.js';
 // Middleware
@@ -75,6 +77,7 @@ app.use('/users', userRouter);
 app.use('/reviews', reviewRouter);
 app.use('/newsletter', newsletterRouter);
 app.use('/contact', contactRouter);
+app.use('/blog', blogRouter);
 app.use('/bookings', bookingRouter);
 app.use('/tests', testRouter);
 

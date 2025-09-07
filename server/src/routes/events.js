@@ -8,7 +8,7 @@ import { validateAuthentication, validateDeveloperRole } from '../middleware/aut
 
 const router = Router();
 
-router.get('/', validateAuthentication, validateDeveloperRole, getAllEvents);
+router.get('/get-all-events', getAllEvents);
 router.delete(
   '/delete-event/:eventId',
   validateAuthentication,

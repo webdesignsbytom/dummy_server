@@ -180,6 +180,45 @@ CREATE TABLE "Review" (
 );
 
 -- CreateTable
+CREATE TABLE "BlogPost" (
+    "id" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "subTitle" TEXT,
+    "subject" TEXT,
+    "location" TEXT,
+    "slug" TEXT NOT NULL,
+    "content" JSONB NOT NULL,
+    "authorId" INTEGER,
+    "authorName" TEXT,
+    "featuredImage" TEXT,
+    "thumbnailImage" TEXT,
+    "isPublished" BOOLEAN NOT NULL DEFAULT false,
+    "publishedAt" TIMESTAMP(3),
+    "viewCount" INTEGER NOT NULL DEFAULT 0,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "BlogPost_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Tag" (
+    "id" SERIAL NOT NULL,
+    "name" TEXT NOT NULL,
+    "slug" TEXT,
+
+    CONSTRAINT "Tag_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "BlogPostTag" (
+    "blogPostId" TEXT NOT NULL,
+    "tagId" INTEGER NOT NULL,
+
+    CONSTRAINT "BlogPostTag_pkey" PRIMARY KEY ("blogPostId","tagId")
+);
+
+-- CreateTable
 CREATE TABLE "Event" (
     "id" TEXT NOT NULL,
     "type" "EventType" NOT NULL,
@@ -222,6 +261,24 @@ CREATE UNIQUE INDEX "NewsletterSubscriber_email_key" ON "NewsletterSubscriber"("
 -- CreateIndex
 CREATE UNIQUE INDEX "NewsletterVerificationToken_subscriberId_key" ON "NewsletterVerificationToken"("subscriberId");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "BlogPost_slug_key" ON "BlogPost"("slug");
+
+-- CreateIndex
+CREATE INDEX "BlogPost_isPublished_publishedAt_idx" ON "BlogPost"("isPublished", "publishedAt");
+
+-- CreateIndex
+CREATE INDEX "BlogPost_publishedAt_idx" ON "BlogPost"("publishedAt");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Tag_name_key" ON "Tag"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Tag_slug_key" ON "Tag"("slug");
+
+-- CreateIndex
+CREATE INDEX "BlogPostTag_tagId_idx" ON "BlogPostTag"("tagId");
+
 -- AddForeignKey
 ALTER TABLE "AccountStatus" ADD CONSTRAINT "AccountStatus_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
@@ -236,6 +293,12 @@ ALTER TABLE "UserPermission" ADD CONSTRAINT "UserPermission_permissionId_fkey" F
 
 -- AddForeignKey
 ALTER TABLE "NewsletterVerificationToken" ADD CONSTRAINT "NewsletterVerificationToken_subscriberId_fkey" FOREIGN KEY ("subscriberId") REFERENCES "NewsletterSubscriber"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "BlogPostTag" ADD CONSTRAINT "BlogPostTag_blogPostId_fkey" FOREIGN KEY ("blogPostId") REFERENCES "BlogPost"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "BlogPostTag" ADD CONSTRAINT "BlogPostTag_tagId_fkey" FOREIGN KEY ("tagId") REFERENCES "Tag"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Event" ADD CONSTRAINT "Event_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
