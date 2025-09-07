@@ -156,3 +156,39 @@ export const findBlogPostsByTag = (tag) =>
     },
   });
 }
+
+export const findBlogPostsPaged = async (limit = 10, page = 1) => {
+  const take = Math.max(1, Math.min(Number(limit) || 10, 50));
+  const currentPage = Math.max(1, Number(page) || 1);
+  const skip = (currentPage - 1) * take;
+
+  const [items, total] = await Promise.all([
+    dbClient.blogPost.findMany({
+      skip,
+      take,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        tags: true,
+        // keep list payload small
+        mediaLinks: {
+          where: { role: { in: ['FEATURED', 'THUMBNAIL'] } },
+          include: { media: true },
+          orderBy: [{ role: 'asc' }, { position: 'asc' }],
+        },
+      },
+    }),
+    dbClient.blogPost.count(),
+  ]);
+
+  const totalPages = Math.max(1, Math.ceil(total / take));
+  const hasNextPage = skip + items.length < total;
+
+  return {
+    items,
+    total,
+    limit: take,
+    page: currentPage,
+    totalPages,
+    hasNextPage,
+  };
+};

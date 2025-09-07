@@ -9,6 +9,7 @@ import {
   findBlogPostBySlug,
   findBlogPostsByTag,
   createBlogPost,
+  findBlogPostsPaged,
 } from '../domain/blog.js';
 // Response helpers/messages
 import { EVENT_MESSAGES } from '../utils/responses.js';
@@ -46,6 +47,43 @@ export const getAllBlogPostsHandler = async (req, res) => {
       req.user,
       'Get all blog posts failed'
     );
+    myEmitterErrors.emit('error', serverError);
+    return sendMessageResponse(res, serverError.code, serverError.message);
+  }
+};
+
+export const getAllBlogPostsPagedHandler = async (req, res) => {
+  try {
+    const rawLimit = Number(req.query.limit);
+    const rawPage = Number(req.query.page);
+
+    // clamp limit to a sane range
+    const limit = Number.isFinite(rawLimit) ? Math.max(1, Math.min(rawLimit, 50)) : 10;
+    const page = Number.isFinite(rawPage) && rawPage > 0 ? Math.floor(rawPage) : 1;
+
+    const result = await findBlogPostsPaged(limit, page);
+
+    if (!result.items || result.items.length === 0) {
+      const notFound = new NotFoundEvent(req.user, EVENT_MESSAGES.blogNotFound, EVENT_MESSAGES.blogTag);
+      myEmitterErrors.emit('error', notFound);
+      return sendMessageResponse(res, notFound.code, notFound.message);
+    }
+
+    myEmitterEvents.emit('get-all-blogs', req.user);
+
+    return sendDataResponse(res, 200, {
+      posts: result.items,
+      pagination: {
+        page: result.page,
+        limit: result.limit,
+        total: result.total,
+        totalPages: result.totalPages,
+        hasNextPage: result.hasNextPage,
+        hasPrevPage: result.page > 1,
+      },
+    });
+  } catch (err) {
+    const serverError = new ServerErrorEvent(req.user, 'Get paged blog posts failed');
     myEmitterErrors.emit('error', serverError);
     return sendMessageResponse(res, serverError.code, serverError.message);
   }

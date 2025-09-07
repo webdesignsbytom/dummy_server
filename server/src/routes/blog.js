@@ -7,6 +7,7 @@ import {
 import {
   createBlogPostHandler,
   getAllBlogPostsHandler,
+  getAllBlogPostsPagedHandler,
   getBlogPostByIdHandler,
   getBlogPostBySlugHandler,
   getBlogPostsByTagHandler,
@@ -17,6 +18,12 @@ const router = Router();
 
 // match your events router style: auth + dev gate on reads
 router.get('/get-all-blog-posts', getAllBlogPostsHandler);
+router.get(
+  '/get-paged-blog-posts',
+  validateAuthentication,
+  validateDeveloperRole,
+  getAllBlogPostsPagedHandler
+);
 router.get('/get-blog-summaries', getBlogPostSummariesHandler);
 router.get('/get-blog-posts-by-tag/:tag', getBlogPostsByTagHandler);
 router.get('/get-blog-post-by-slug/:slug', getBlogPostBySlugHandler);
