@@ -172,6 +172,23 @@ model Review {
   updatedAt DateTime? @updatedAt
 }
 
+// Media
+model Media {
+  id            String   @id @default(uuid())
+  key           String   @unique         // s3 object key
+  contentType   String?
+  bytes         Int?
+  width         Int?
+  height        Int?
+  durationSec   Int?
+  uploadedById  Int?
+  createdAt     DateTime @default(now())
+
+  // backrefs
+  blogLinks     BlogMedia[]
+}
+
+
 // Blog
 model BlogPost {
   id             String    @id @default(uuid())
@@ -186,6 +203,7 @@ model BlogPost {
   authorId       Int?
   authorName     String?
 
+  // (optional) keep these for backwards compat for now; can be removed later
   featuredImage  String?
   thumbnailImage String?
 
@@ -193,6 +211,9 @@ model BlogPost {
   publishedAt    DateTime?
   viewCount      Int       @default(0)
   tags           BlogTag[]
+
+  // NEW: links to Media via join table
+  mediaLinks     BlogMedia[]
 
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
@@ -202,10 +223,33 @@ model BlogPost {
 }
 
 model BlogTag {
-  id    String        @id @default(uuid())
+  id    String     @id @default(uuid())
   name  String     @unique
-
   posts BlogPost[]
+}
+
+enum MediaRole {
+  FEATURED
+  THUMBNAIL
+  GALLERY
+  EMBED
+}
+
+model BlogMedia {
+  blogPostId  String
+  mediaId     String
+  role        MediaRole @default(GALLERY)
+  position    Int       @default(0)
+  alt         String?
+  caption     String?
+
+  post  BlogPost @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
+  media Media    @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+
+  @@id([blogPostId, mediaId, role])
+  @@index([blogPostId])
+  @@index([mediaId])
+  @@index([blogPostId, role])
 }
 
 // EVENTS

@@ -13,6 +13,7 @@ import userRouter from './routes/users.js';
 import bookingRouter from './routes/booking.js';
 import reviewRouter from './routes/reviews.js';
 import newsletterRouter from './routes/newsletter.js';
+import mediaRouter from './routes/mediaGeneric.js';
 import contactRouter from './routes/contact.js';
 import testRouter from './routes/tests.js';
 import blogRouter from './routes/blog.js';
@@ -79,6 +80,7 @@ app.use('/newsletter', newsletterRouter);
 app.use('/contact', contactRouter);
 app.use('/blog', blogRouter);
 app.use('/bookings', bookingRouter);
+app.use('/media-services', mediaRouter);
 app.use('/tests', testRouter);
 
 // Server interface page
