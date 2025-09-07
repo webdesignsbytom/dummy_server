@@ -15,7 +15,8 @@ import { EVENT_MESSAGES } from '../utils/responses.js';
 import { sendDataResponse, sendMessageResponse } from '../utils/responses.js';
 
 // Error utils
-import { NotFoundEvent, ServerErrorEvent } from '../event/utils/errorUtils.js';
+import { ConflictEvent, NotFoundEvent, ServerErrorEvent } from '../event/utils/errorUtils.js';
+import { myEmitterBlogs } from '../event/blogEvents.js';
 
 // GET /blogs
 export const getAllBlogPostsHandler = async (req, res) => {
@@ -156,7 +157,6 @@ export const getBlogPostsByTagHandler = async (req, res) => {
     return sendMessageResponse(res, serverError.code, serverError.message);
   }
 };
-
 export const createBlogPostHandler = async (req, res) => {
   console.log('[createBlogPostHandler] called');
 
@@ -171,11 +171,14 @@ export const createBlogPostHandler = async (req, res) => {
       tags,
     });
 
-    // Required fields
     if (!title || !slug || !content) {
-      console.log('[createBlogPostHandler] missing required fields');
       return sendMessageResponse(res, 400, EVENT_MESSAGES.missingFields);
     }
+
+    // Normalize to tag NAMES (strings). If numbers are sent, we’ll stringify.
+    const tagNames = Array.isArray(tags)
+      ? tags.map((t) => String(t).trim()).filter(Boolean)
+      : [];
 
     console.log('[createBlogPostHandler] calling domain createBlogPost');
     const post = await createBlogPost(
@@ -184,13 +187,10 @@ export const createBlogPostHandler = async (req, res) => {
       content,
       authorId,
       authorName,
-      Array.isArray(tags) ? tags : []
+      tagNames
     );
-    console.log('[createBlogPostHandler] domain returned:', post);
 
-    // Explicit "not created" guard
     if (!post) {
-      console.log('[createBlogPostHandler] post not created');
       const notFound = new NotFoundEvent(
         req.user,
         EVENT_MESSAGES.blogNotFound,
@@ -200,13 +200,24 @@ export const createBlogPostHandler = async (req, res) => {
       return sendMessageResponse(res, notFound.code, notFound.message);
     }
 
-    console.log('[createBlogPostHandler] emitting create-blog event');
     myEmitterBlogs.emit('create-blog', req.user);
-
-    console.log('[createBlogPostHandler] success → sending 201');
     return sendDataResponse(res, 201, { post });
   } catch (err) {
     console.error('[createBlogPostHandler] error:', err);
+    if (
+      err?.code === 'P2002' &&
+      Array.isArray(err?.meta?.target) &&
+      err.meta.target.includes('slug')
+    ) {
+      const conflict = new ConflictEvent(
+        req.user,
+        'Blog slug already in use.',
+        EVENT_MESSAGES.blogTag
+      );
+      myEmitterErrors.emit('error', conflict);
+      return sendMessageResponse(res, conflict.code, conflict.message); // 409
+    }
+
     const serverError = new ServerErrorEvent(
       req.user,
       EVENT_MESSAGES.createBlogFail

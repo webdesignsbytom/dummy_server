@@ -115,6 +115,9 @@ app.use((error, req, res, next) => {
   if (error.code === 'P1003') {
     return sendDataResponse(res, 404, 'Database does not exist');
   }
+  if (error.code === 'P2002') {
+    return sendDataResponse(res, 404, 'Unique constraint failed');
+  }
   if (error.code === 'P2025') {
     return sendDataResponse(res, 404, 'Record does not exist');
   }

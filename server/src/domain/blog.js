@@ -52,14 +52,14 @@ export const findBlogPostsByTag = (tagSlug) =>
     include: { tags: true }, // BlogTag[]
   });
 
-// Create a new blog post (connect tags by ID)
+  
 export const createBlogPost = async (
   title,
   slug,
   content,
   authorId,
   authorName,
-  tagIds = []
+  tagNames = []
 ) => {
   return dbClient.blogPost.create({
     data: {
@@ -69,9 +69,15 @@ export const createBlogPost = async (
       authorId,
       authorName,
       isPublished: false,
-      // implicit M2M connect
-      ...(Array.isArray(tagIds) && tagIds.length
-        ? { tags: { connect: tagIds.map((id) => ({ id })) } }
+      ...(Array.isArray(tagNames) && tagNames.length
+        ? {
+            tags: {
+              connectOrCreate: tagNames.map((name) => ({
+                where: { name },         // BlogTag.name is UNIQUE
+                create: { name },        // create if not found
+              })),
+            },
+          }
         : {}),
     },
     include: { tags: true },

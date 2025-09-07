@@ -101,8 +101,8 @@ async function seed() {
     // Events
     for (const event of eventsSeedArray) {
       await dbClient.event.create({ data: event });
-      console.log(`✅ Event seeded: ${event.title || event.id}`);
     }
+    console.log(`✅ Events seeded`);
 
     // Booking
     await dbClient.bookingItem.create({ data: bookingSeedItem });
@@ -115,32 +115,32 @@ async function seed() {
         update: {},
         create: time,
       });
-      console.log(`✅ Opening time seeded: ${time.dayOfWeek}`);
     }
+    console.log(`✅ Opening times seeded`);
 
     // Contact forms
     for (const contact of contactFormsSeedArray) {
       await dbClient.contactForm.create({ data: contact });
-      console.log(`✅ Contact form seeded: ${contact.email || contact.id}`);
     }
+    console.log(`✅ Contact forms seeded`);
 
     // Newsletter subscribers
     for (const sub of newsletterSubsSeedArray) {
       await dbClient.newsletterSubscriber.create({ data: sub });
-      console.log(`✅ Newsletter subscriber seeded: ${sub.email}`);
     }
+    console.log(`✅ Newsletter subscribers seeded`);
 
     // Newsletter publications
     for (const pub of newsletterPublicationsSeedArray) {
       await dbClient.newsletterPublication.create({ data: pub });
-      console.log(`✅ Newsletter publication seeded: ${pub.title || pub.id}`);
     }
+    console.log(`✅ Newsletter publications seeded`);
 
     // Callback forms
     for (const callback of callbackFormsSeedArray) {
       await dbClient.callbackForm.create({ data: callback });
-      console.log(`✅ Callback form seeded: ${callback.phone || callback.id}`);
     }
+    console.log(`✅ Callback forms seeded`);
 
     // Random day offs
     const currentYear = 2025;
@@ -153,23 +153,23 @@ async function seed() {
         update: {},
         create: { date, reason: 'Scheduled Day Off' },
       });
-      console.log(`✅ Day closed seeded: ${date.toDateString()}`);
     }
+    console.log(`✅ Days closed seeded`);
 
     for (const post of tempBlogPostSeedArray) {
-      const {
-        id: _ignore, // array has an incrementing id; model uses uuid -> ignore it
-        tags = [], // string[] of tag names
-        publishedAt,
-        ...rest
-      } = post;
+      const { id: _ignore, tags = [], publishedAt, ...rest } = post;
 
       const created = await dbClient.blogPost.create({
         data: {
           ...rest,
           ...(publishedAt ? { publishedAt: new Date(publishedAt) } : {}),
           tags: tags.length
-            ? { connect: tags.map((name) => ({ name })) } // connect by unique BlogTag.name
+            ? {
+                connectOrCreate: tags.map((name) => ({
+                  where: { name }, // connect by unique name
+                  create: { name }, // create if missing
+                })),
+              }
             : undefined,
         },
         include: { tags: true },

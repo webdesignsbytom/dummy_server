@@ -5,14 +5,22 @@ import {
   createGetBlogByIdEvent,
   createGetBlogBySlugEvent,
   createGetBlogsByTagEvent,
+  createCreateBlogEvent,
 } from './utils/blogUtils.js';
 
 export const myEmitterBlogs = myEmitter;
 
-// Event listeners for blog events
-myEmitterBlogs.on('get-all-blogs', async (user) => createGetAllBlogsEvent(user));
-myEmitterBlogs.on('get-blog-summaries', async (user) => createGetBlogSummariesEvent(user));
-myEmitterBlogs.on('get-blog-by-id', async (user) => createGetBlogByIdEvent(user));
-myEmitterBlogs.on('get-blog-by-slug', async (user) => createGetBlogBySlugEvent(user));
-myEmitterBlogs.on('get-blogs-by-tag', async (user) => createGetBlogsByTagEvent(user));
-myEmitterBlogs.on('create-blog', async (user) => createCreateBlogEvent(user));
+const safe = (fn) => async (user) => {
+  try {
+    await fn(user);
+  } catch (e) {
+    console.error('[myEmitterBlogs] listener error:', e);
+  }
+};
+
+myEmitterBlogs.on('get-all-blogs', safe(createGetAllBlogsEvent));
+myEmitterBlogs.on('get-blog-summaries', safe(createGetBlogSummariesEvent));
+myEmitterBlogs.on('get-blog-by-id', safe(createGetBlogByIdEvent));
+myEmitterBlogs.on('get-blog-by-slug', safe(createGetBlogBySlugEvent));
+myEmitterBlogs.on('get-blogs-by-tag', safe(createGetBlogsByTagEvent));
+myEmitterBlogs.on('create-blog', safe(createCreateBlogEvent));
