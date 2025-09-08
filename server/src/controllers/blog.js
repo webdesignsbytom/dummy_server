@@ -203,6 +203,107 @@ export const getBlogPostsByTagHandler = async (req, res) => {
   }
 };
 
+// export const createBlogPostHandler = async (req, res, next) => {
+//   console.log('[createBlogPostHandler] called');
+//   try {
+//     const {
+//       title,
+//       slug,
+//       content,
+//       authorId,
+//       authorName,
+//       tags,
+//       featuredImageKey,
+//       thumbnailImageKey,
+//       galleryKeys = [],
+//       embedKeys = [],
+//     } = req.body || {};
+
+//     if (!title || !slug || !content) {
+//       return sendMessageResponse(res, 400, EVENT_MESSAGES.missingFields);
+//     }
+
+//     if (featuredImageKey && !keyHasPrefix(featuredImageKey, 'blog')) {
+//       return sendMessageResponse(
+//         res,
+//         400,
+//         'featuredImageKey must be under blog/ prefix'
+//       );
+//     }
+//     if (thumbnailImageKey && !keyHasPrefix(thumbnailImageKey, 'blog')) {
+//       return sendMessageResponse(
+//         res,
+//         400,
+//         'thumbnailImageKey must be under blog/ prefix'
+//       );
+//     }
+//     // Optional: fast 409 if slug exists
+//     const existing = await dbClient.blogPost.findUnique({
+//       where: { slug },
+//       select: { id: true },
+//     });
+//     if (existing) {
+//       const conflict = new ConflictEvent(
+//         req.user,
+//         'Blog slug already in use.',
+//         EVENT_MESSAGES.blogTag
+//       );
+//       myEmitterErrors.emit('error', conflict);
+//       return sendMessageResponse(res, conflict.code, conflict.message); // 409
+//     }
+
+//     // Validate media keys (only if provided)
+//     if (featuredImageKey && !keyHasPrefix(featuredImageKey, 'blog')) {
+//       return sendMessageResponse(
+//         res,
+//         400,
+//         'featuredImageKey must be under blog/ prefix'
+//       );
+//     }
+//     if (thumbnailImageKey && !keyHasPrefix(thumbnailImageKey, 'blog')) {
+//       return sendMessageResponse(
+//         res,
+//         400,
+//         'thumbnailImageKey must be under blog/ prefix'
+//       );
+//     }
+
+//     const tagNames = Array.isArray(tags)
+//       ? tags.map(String).filter(Boolean)
+//       : [];
+//     const post = await createBlogPost(
+//       title,
+//       slug,
+//       content,
+//       authorId,
+//       authorName,
+//       tagNames,
+//       {
+//         featuredImageKey: featuredImageKey || null,
+//         thumbnailImageKey: thumbnailImageKey || null,
+//         galleryKeys: Array.isArray(galleryKeys) ? galleryKeys : [],
+//         embedKeys: Array.isArray(embedKeys) ? embedKeys : [],
+//       }
+//     );
+
+//     if (!post) {
+//       const notFound = new NotFoundEvent(
+//         req.user,
+//         EVENT_MESSAGES.blogNotFound,
+//         EVENT_MESSAGES.blogTag
+//       );
+//       myEmitterErrors.emit('error', notFound);
+//       return sendMessageResponse(res, notFound.code, notFound.message);
+//     }
+
+//     myEmitterBlogs.emit('create-blog', req.user);
+//     return sendDataResponse(res, 201, { post });
+//   } catch (err) {
+//     // Let your global error handler map Prisma codes (e.g., P2002 → 409)
+//     return next(err);
+//   }
+// };
+
 export const createBlogPostHandler = async (req, res, next) => {
   console.log('[createBlogPostHandler] called');
   try {
@@ -213,7 +314,6 @@ export const createBlogPostHandler = async (req, res, next) => {
       authorId,
       authorName,
       tags,
-      featuredImageKey,
       thumbnailImageKey,
       galleryKeys = [],
       embedKeys = [],
@@ -223,54 +323,21 @@ export const createBlogPostHandler = async (req, res, next) => {
       return sendMessageResponse(res, 400, EVENT_MESSAGES.missingFields);
     }
 
-    if (featuredImageKey && !keyHasPrefix(featuredImageKey, 'blog')) {
-      return sendMessageResponse(
-        res,
-        400,
-        'featuredImageKey must be under blog/ prefix'
-      );
-    }
     if (thumbnailImageKey && !keyHasPrefix(thumbnailImageKey, 'blog')) {
-      return sendMessageResponse(
-        res,
-        400,
-        'thumbnailImageKey must be under blog/ prefix'
-      );
+      return sendMessageResponse(res, 400, 'thumbnailImageKey must be under blog/ prefix');
     }
-    // Optional: fast 409 if slug exists
+
     const existing = await dbClient.blogPost.findUnique({
       where: { slug },
       select: { id: true },
     });
     if (existing) {
-      const conflict = new ConflictEvent(
-        req.user,
-        'Blog slug already in use.',
-        EVENT_MESSAGES.blogTag
-      );
+      const conflict = new ConflictEvent(req.user, 'Blog slug already in use.', EVENT_MESSAGES.blogTag);
       myEmitterErrors.emit('error', conflict);
       return sendMessageResponse(res, conflict.code, conflict.message); // 409
     }
 
-    // Validate media keys (only if provided)
-    if (featuredImageKey && !keyHasPrefix(featuredImageKey, 'blog')) {
-      return sendMessageResponse(
-        res,
-        400,
-        'featuredImageKey must be under blog/ prefix'
-      );
-    }
-    if (thumbnailImageKey && !keyHasPrefix(thumbnailImageKey, 'blog')) {
-      return sendMessageResponse(
-        res,
-        400,
-        'thumbnailImageKey must be under blog/ prefix'
-      );
-    }
-
-    const tagNames = Array.isArray(tags)
-      ? tags.map(String).filter(Boolean)
-      : [];
+    const tagNames = Array.isArray(tags) ? tags.map(String).filter(Boolean) : [];
     const post = await createBlogPost(
       title,
       slug,
@@ -279,7 +346,6 @@ export const createBlogPostHandler = async (req, res, next) => {
       authorName,
       tagNames,
       {
-        featuredImageKey: featuredImageKey || null,
         thumbnailImageKey: thumbnailImageKey || null,
         galleryKeys: Array.isArray(galleryKeys) ? galleryKeys : [],
         embedKeys: Array.isArray(embedKeys) ? embedKeys : [],
@@ -287,11 +353,7 @@ export const createBlogPostHandler = async (req, res, next) => {
     );
 
     if (!post) {
-      const notFound = new NotFoundEvent(
-        req.user,
-        EVENT_MESSAGES.blogNotFound,
-        EVENT_MESSAGES.blogTag
-      );
+      const notFound = new NotFoundEvent(req.user, EVENT_MESSAGES.blogNotFound, EVENT_MESSAGES.blogTag);
       myEmitterErrors.emit('error', notFound);
       return sendMessageResponse(res, notFound.code, notFound.message);
     }
@@ -299,7 +361,6 @@ export const createBlogPostHandler = async (req, res, next) => {
     myEmitterBlogs.emit('create-blog', req.user);
     return sendDataResponse(res, 201, { post });
   } catch (err) {
-    // Let your global error handler map Prisma codes (e.g., P2002 → 409)
     return next(err);
   }
 };

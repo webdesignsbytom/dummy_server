@@ -5,9 +5,8 @@ export const findAllBlogPosts = () =>
     orderBy: { createdAt: 'desc' },
     include: {
       tags: true,
-      // keep payload small: only featured + thumbnail
       mediaLinks: {
-        where: { role: { in: ['FEATURED', 'THUMBNAIL'] } },
+        where: { role: { in: ['THUMBNAIL', 'GALLERY'] } }, // <— was FEATURED,THUMBNAIL
         include: { media: true },
         orderBy: [{ role: 'asc' }, { position: 'asc' }],
       },
@@ -71,13 +70,13 @@ export const findBlogPostsByTag = (tag) =>
     },
   });
 
-  export async function createBlogPost(
+export async function createBlogPost(
   title, slug, content, authorId, authorName,
   tagNames = [],
-  { featuredImageKey = null, thumbnailImageKey = null, galleryKeys = [], embedKeys = [] } = {},
+  { thumbnailImageKey = null, galleryKeys = [], embedKeys = [] } = {},
   isPublished = false,
 ) {
-  // 1) create post
+  // create post (keep legacy thumbnailImage column in case you still read it on FE)
   const post = await dbClient.blogPost.create({
     data: {
       title, slug, content, authorId, authorName,
@@ -92,14 +91,11 @@ export const findBlogPostsByTag = (tag) =>
             },
           }
         : {}),
-      // keep legacy columns if you want
-      ...(featuredImageKey ? { featuredImage: featuredImageKey } : {}),
       ...(thumbnailImageKey ? { thumbnailImage: thumbnailImageKey } : {}),
     },
-    select: { id: true, slug: true }, // we just need id now
+    select: { id: true, slug: true },
   });
 
-  // helper to ensure Media rows exist (by unique key)
   const ensureMedia = async (key) =>
     dbClient.media.upsert({
       where: { key },
@@ -110,49 +106,35 @@ export const findBlogPostsByTag = (tag) =>
 
   const links = [];
 
-  if (featuredImageKey) {
-    const m = await ensureMedia(featuredImageKey);
-    links.push({
-      blogPostId: post.id, mediaId: m.id, role: 'FEATURED', position: 0,
-    });
-  }
-
+  // THUMBNAIL
   if (thumbnailImageKey) {
     const m = await ensureMedia(thumbnailImageKey);
-    links.push({
-      blogPostId: post.id, mediaId: m.id, role: 'THUMBNAIL', position: 0,
-    });
+    links.push({ blogPostId: post.id, mediaId: m.id, role: 'THUMBNAIL', position: 0 });
   }
 
+  // GALLERY
   let pos = 0;
   for (const key of galleryKeys) {
     const m = await ensureMedia(key);
-    links.push({
-      blogPostId: post.id, mediaId: m.id, role: 'GALLERY', position: pos++,
-    });
+    links.push({ blogPostId: post.id, mediaId: m.id, role: 'GALLERY', position: pos++ });
   }
 
+  // EMBED
   pos = 0;
   for (const key of embedKeys) {
     const m = await ensureMedia(key);
-    links.push({
-      blogPostId: post.id, mediaId: m.id, role: 'EMBED', position: pos++,
-    });
+    links.push({ blogPostId: post.id, mediaId: m.id, role: 'EMBED', position: pos++ });
   }
 
   if (links.length) {
     await dbClient.blogMedia.createMany({ data: links, skipDuplicates: true });
   }
 
-  // return the hydrated post with tags + media
   return dbClient.blogPost.findUnique({
     where: { id: post.id },
     include: {
       tags: true,
-      mediaLinks: {
-        include: { media: true },
-        orderBy: [{ role: 'asc' }, { position: 'asc' }],
-      },
+      mediaLinks: { include: { media: true }, orderBy: [{ role: 'asc' }, { position: 'asc' }] },
     },
   });
 }
@@ -169,9 +151,8 @@ export const findBlogPostsPaged = async (limit = 10, page = 1) => {
       orderBy: { createdAt: 'desc' },
       include: {
         tags: true,
-        // keep list payload small
         mediaLinks: {
-          where: { role: { in: ['FEATURED', 'THUMBNAIL'] } },
+          where: { role: { in: ['THUMBNAIL', 'GALLERY'] } }, // <— was FEATURED,THUMBNAIL
           include: { media: true },
           orderBy: [{ role: 'asc' }, { position: 'asc' }],
         },
@@ -183,23 +164,14 @@ export const findBlogPostsPaged = async (limit = 10, page = 1) => {
   const totalPages = Math.max(1, Math.ceil(total / take));
   const hasNextPage = skip + items.length < total;
 
-  return {
-    items,
-    total,
-    limit: take,
-    page: currentPage,
-    totalPages,
-    hasNextPage,
-  };
+  return { items, total, limit: take, page: currentPage, totalPages, hasNextPage };
 };
-
 
 export async function updateBlogPost(
   id,
   scalarFields = {},
   {
     replaceTagsWith,        // string[] | undefined (undefined = no change, [] = clear all)
-    featuredImageKey,       // string | null | undefined
     thumbnailImageKey,      // string | null | undefined
     galleryKeys,            // string[] | [] | undefined (replace set)
     embedKeys,              // string[] | [] | undefined (replace set)
@@ -211,7 +183,6 @@ export async function updateBlogPost(
     if (v !== undefined) data[k] = v;
   }
   // allow clearing legacy columns via null
-  if (featuredImageKey !== undefined) data.featuredImage = featuredImageKey;
   if (thumbnailImageKey !== undefined) data.thumbnailImage = thumbnailImageKey;
 
   await dbClient.blogPost.update({
@@ -272,21 +243,6 @@ export async function updateBlogPost(
         select: { id: true, key: true },
       });
       idByKey = new Map(mediaRows.map((m) => [m.key, m.id]));
-    }
-
-    // FEATURED (replace if provided; clear if null)
-    if (featuredImageKey !== undefined) {
-      await dbClient.blogMedia.deleteMany({ where: { blogPostId: id, role: 'FEATURED' } });
-      if (featuredImageKey) {
-        await dbClient.blogMedia.create({
-          data: {
-            blogPostId: id,
-            mediaId: idByKey.get(featuredImageKey),
-            role: 'FEATURED',
-            position: 0,
-          },
-        });
-      }
     }
 
     // THUMBNAIL
