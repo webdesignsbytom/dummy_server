@@ -193,6 +193,7 @@ export const findBlogPostsPaged = async (limit = 10, page = 1) => {
   };
 };
 
+
 export async function updateBlogPost(
   id,
   scalarFields = {},
@@ -200,124 +201,155 @@ export async function updateBlogPost(
     replaceTagsWith,        // string[] | undefined (undefined = no change, [] = clear all)
     featuredImageKey,       // string | null | undefined
     thumbnailImageKey,      // string | null | undefined
-    galleryKeys,            // string[] | [] | undefined
-    embedKeys,              // string[] | [] | undefined
+    galleryKeys,            // string[] | [] | undefined (replace set)
+    embedKeys,              // string[] | [] | undefined (replace set)
   } = {},
 ) {
-  // Build scalar update
+  // ---- 1) SCALARS -----------------------------------------------------
   const data = {};
   for (const [k, v] of Object.entries(scalarFields)) {
     if (v !== undefined) data[k] = v;
   }
-  // Allow clearing legacy columns via null
+  // allow clearing legacy columns via null
   if (featuredImageKey !== undefined) data.featuredImage = featuredImageKey;
   if (thumbnailImageKey !== undefined) data.thumbnailImage = thumbnailImageKey;
 
-  // Apply scalar + (optional) tags in a transaction-ish flow
-  return await dbClient.$transaction(async (tx) => {
-    // Update scalars first
-    await tx.blogPost.update({
+  await dbClient.blogPost.update({
+    where: { id },
+    data,
+    select: { id: true },
+  });
+
+  // ---- 2) TAGS (replace only if requested) ----------------------------
+  if (replaceTagsWith !== undefined) {
+    // clear all existing tags
+    await dbClient.blogPost.update({
       where: { id },
-      data,
-      select: { id: true },
+      data: { tags: { set: [] } },
     });
 
-    // Replace tags set if requested
-    if (replaceTagsWith !== undefined) {
-      // Clear all
-      await tx.blogPost.update({
+    if (Array.isArray(replaceTagsWith) && replaceTagsWith.length) {
+      await dbClient.blogPost.update({
         where: { id },
-        data: { tags: { set: [] } },
+        data: {
+          tags: {
+            connectOrCreate: replaceTagsWith.map((name) => ({
+              where: { name },
+              create: { name },
+            })),
+          },
+        },
       });
-      if (Array.isArray(replaceTagsWith) && replaceTagsWith.length) {
-        await tx.blogPost.update({
-          where: { id },
+    }
+  }
+
+  // ---- 3) MEDIA (skip gracefully if models don't exist) ---------------
+  const canLinkMedia =
+    !!dbClient?.media?.createMany &&
+    !!dbClient?.media?.findMany &&
+    !!dbClient?.blogMedia?.createMany &&
+    !!dbClient?.blogMedia?.deleteMany &&
+    !!dbClient?.blogMedia?.create;
+
+  if (canLinkMedia) {
+    // Collect keys we might need to ensure
+    const keysToEnsure = [
+      ...(featuredImageKey ? [featuredImageKey] : []),
+      ...(thumbnailImageKey ? [thumbnailImageKey] : []),
+      ...(Array.isArray(galleryKeys) ? galleryKeys : []),
+      ...(Array.isArray(embedKeys) ? embedKeys : []),
+    ];
+
+    // Ensure Media rows exist (bulk then read back -> map key -> id)
+    let idByKey = new Map();
+    if (keysToEnsure.length) {
+      await dbClient.media.createMany({
+        data: keysToEnsure.map((key) => ({ key })),
+        skipDuplicates: true,
+      });
+      const mediaRows = await dbClient.media.findMany({
+        where: { key: { in: keysToEnsure } },
+        select: { id: true, key: true },
+      });
+      idByKey = new Map(mediaRows.map((m) => [m.key, m.id]));
+    }
+
+    // FEATURED (replace if provided; clear if null)
+    if (featuredImageKey !== undefined) {
+      await dbClient.blogMedia.deleteMany({ where: { blogPostId: id, role: 'FEATURED' } });
+      if (featuredImageKey) {
+        await dbClient.blogMedia.create({
           data: {
-            tags: {
-              connectOrCreate: replaceTagsWith.map((name) => ({
-                where: { name },
-                create: { name },
-              })),
-            },
+            blogPostId: id,
+            mediaId: idByKey.get(featuredImageKey),
+            role: 'FEATURED',
+            position: 0,
           },
         });
       }
     }
 
-    // Media linking only if tables exist
-    const canLinkMedia = !!tx?.media?.upsert && !!tx?.blogMedia?.createMany;
-
-    if (canLinkMedia) {
-      const ensureMedia = async (key) =>
-        tx.media.upsert({
-          where: { key },
-          update: {},
-          create: { key },
-          select: { id: true },
+    // THUMBNAIL
+    if (thumbnailImageKey !== undefined) {
+      await dbClient.blogMedia.deleteMany({ where: { blogPostId: id, role: 'THUMBNAIL' } });
+      if (thumbnailImageKey) {
+        await dbClient.blogMedia.create({
+          data: {
+            blogPostId: id,
+            mediaId: idByKey.get(thumbnailImageKey),
+            role: 'THUMBNAIL',
+            position: 0,
+          },
         });
-
-      // FEATURED
-      if (featuredImageKey !== undefined) {
-        // clear existing FEATURED
-        await tx.blogMedia.deleteMany({ where: { blogPostId: id, role: 'FEATURED' } });
-        if (featuredImageKey) {
-          const m = await ensureMedia(featuredImageKey);
-          await tx.blogMedia.create({
-            data: { blogPostId: id, mediaId: m.id, role: 'FEATURED', position: 0 },
-          });
-        }
-      }
-
-      // THUMBNAIL
-      if (thumbnailImageKey !== undefined) {
-        await tx.blogMedia.deleteMany({ where: { blogPostId: id, role: 'THUMBNAIL' } });
-        if (thumbnailImageKey) {
-          const m = await ensureMedia(thumbnailImageKey);
-          await tx.blogMedia.create({
-            data: { blogPostId: id, mediaId: m.id, role: 'THUMBNAIL', position: 0 },
-          });
-        }
-      }
-
-      // GALLERY (replace if provided)
-      if (galleryKeys !== undefined) {
-        await tx.blogMedia.deleteMany({ where: { blogPostId: id, role: 'GALLERY' } });
-        if (Array.isArray(galleryKeys) && galleryKeys.length) {
-          let pos = 0;
-          const ids = [];
-          for (const key of galleryKeys) {
-            const m = await ensureMedia(key);
-            ids.push({ blogPostId: id, mediaId: m.id, role: 'GALLERY', position: pos++ });
-          }
-          await tx.blogMedia.createMany({ data: ids, skipDuplicates: true });
-        }
-      }
-
-      // EMBED (replace if provided)
-      if (embedKeys !== undefined) {
-        await tx.blogMedia.deleteMany({ where: { blogPostId: id, role: 'EMBED' } });
-        if (Array.isArray(embedKeys) && embedKeys.length) {
-          let pos = 0;
-          const ids = [];
-          for (const key of embedKeys) {
-            const m = await ensureMedia(key);
-            ids.push({ blogPostId: id, mediaId: m.id, role: 'EMBED', position: pos++ });
-          }
-          await tx.blogMedia.createMany({ data: ids, skipDuplicates: true });
-        }
       }
     }
 
-    // Return hydrated post (full media set)
-    return tx.blogPost.findUnique({
-      where: { id },
-      include: {
-        tags: true,
-        mediaLinks: {
-          include: { media: true },
-          orderBy: [{ role: 'asc' }, { position: 'asc' }],
-        },
-      },
-    });
+    // GALLERY (replace if provided)
+    if (galleryKeys !== undefined) {
+      await dbClient.blogMedia.deleteMany({ where: { blogPostId: id, role: 'GALLERY' } });
+      if (Array.isArray(galleryKeys) && galleryKeys.length) {
+        await dbClient.blogMedia.createMany({
+          data: galleryKeys.map((key, i) => ({
+            blogPostId: id,
+            mediaId: idByKey.get(key),
+            role: 'GALLERY',
+            position: i,
+          })),
+          skipDuplicates: true,
+        });
+      }
+    }
+
+    // EMBED (replace if provided)
+    if (embedKeys !== undefined) {
+      await dbClient.blogMedia.deleteMany({ where: { blogPostId: id, role: 'EMBED' } });
+      if (Array.isArray(embedKeys) && embedKeys.length) {
+        await dbClient.blogMedia.createMany({
+          data: embedKeys.map((key, i) => ({
+            blogPostId: id,
+            mediaId: idByKey.get(key),
+            role: 'EMBED',
+            position: i,
+          })),
+          skipDuplicates: true,
+        });
+      }
+    }
+  }
+
+  // ---- 4) RETURN hydrated post ---------------------------------------
+  const include = {
+    tags: true,
+  };
+  if (canLinkMedia) {
+    include.mediaLinks = {
+      include: { media: true },
+      orderBy: [{ role: 'asc' }, { position: 'asc' }],
+    };
+  }
+
+  return dbClient.blogPost.findUnique({
+    where: { id },
+    include,
   });
 }
