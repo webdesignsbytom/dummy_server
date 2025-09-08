@@ -200,11 +200,9 @@ model BlogPost {
 
   content        Json
 
-  authorId       Int?
+  authorId       String?
   authorName     String?
 
-  // (optional) keep these for backwards compat for now; can be removed later
-  featuredImage  String?
   thumbnailImage String?
 
   isPublished    Boolean   @default(false)
