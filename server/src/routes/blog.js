@@ -12,6 +12,7 @@ import {
   getBlogPostBySlugHandler,
   getBlogPostsByTagHandler,
   getBlogPostSummariesHandler,
+  updateBlogPostHandler,
 } from '../controllers/blog.js';
 
 const router = Router();
@@ -29,5 +30,11 @@ router.get('/get-blog-posts-by-tag/:tag', getBlogPostsByTagHandler);
 router.get('/get-blog-post-by-slug/:slug', getBlogPostBySlugHandler);
 router.get('/get-blog-posts-by-id/:id', getBlogPostByIdHandler);
 router.post('/create-blog-post', validateAuthentication, validateAdminRole, createBlogPostHandler);
+router.patch(
+  '/update-blog-post/:id',
+  validateAuthentication,
+  validateAdminRole,
+  updateBlogPostHandler
+);
 
 export default router;

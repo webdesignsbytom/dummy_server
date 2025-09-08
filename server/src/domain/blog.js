@@ -192,3 +192,132 @@ export const findBlogPostsPaged = async (limit = 10, page = 1) => {
     hasNextPage,
   };
 };
+
+export async function updateBlogPost(
+  id,
+  scalarFields = {},
+  {
+    replaceTagsWith,        // string[] | undefined (undefined = no change, [] = clear all)
+    featuredImageKey,       // string | null | undefined
+    thumbnailImageKey,      // string | null | undefined
+    galleryKeys,            // string[] | [] | undefined
+    embedKeys,              // string[] | [] | undefined
+  } = {},
+) {
+  // Build scalar update
+  const data = {};
+  for (const [k, v] of Object.entries(scalarFields)) {
+    if (v !== undefined) data[k] = v;
+  }
+  // Allow clearing legacy columns via null
+  if (featuredImageKey !== undefined) data.featuredImage = featuredImageKey;
+  if (thumbnailImageKey !== undefined) data.thumbnailImage = thumbnailImageKey;
+
+  // Apply scalar + (optional) tags in a transaction-ish flow
+  return await dbClient.$transaction(async (tx) => {
+    // Update scalars first
+    await tx.blogPost.update({
+      where: { id },
+      data,
+      select: { id: true },
+    });
+
+    // Replace tags set if requested
+    if (replaceTagsWith !== undefined) {
+      // Clear all
+      await tx.blogPost.update({
+        where: { id },
+        data: { tags: { set: [] } },
+      });
+      if (Array.isArray(replaceTagsWith) && replaceTagsWith.length) {
+        await tx.blogPost.update({
+          where: { id },
+          data: {
+            tags: {
+              connectOrCreate: replaceTagsWith.map((name) => ({
+                where: { name },
+                create: { name },
+              })),
+            },
+          },
+        });
+      }
+    }
+
+    // Media linking only if tables exist
+    const canLinkMedia = !!tx?.media?.upsert && !!tx?.blogMedia?.createMany;
+
+    if (canLinkMedia) {
+      const ensureMedia = async (key) =>
+        tx.media.upsert({
+          where: { key },
+          update: {},
+          create: { key },
+          select: { id: true },
+        });
+
+      // FEATURED
+      if (featuredImageKey !== undefined) {
+        // clear existing FEATURED
+        await tx.blogMedia.deleteMany({ where: { blogPostId: id, role: 'FEATURED' } });
+        if (featuredImageKey) {
+          const m = await ensureMedia(featuredImageKey);
+          await tx.blogMedia.create({
+            data: { blogPostId: id, mediaId: m.id, role: 'FEATURED', position: 0 },
+          });
+        }
+      }
+
+      // THUMBNAIL
+      if (thumbnailImageKey !== undefined) {
+        await tx.blogMedia.deleteMany({ where: { blogPostId: id, role: 'THUMBNAIL' } });
+        if (thumbnailImageKey) {
+          const m = await ensureMedia(thumbnailImageKey);
+          await tx.blogMedia.create({
+            data: { blogPostId: id, mediaId: m.id, role: 'THUMBNAIL', position: 0 },
+          });
+        }
+      }
+
+      // GALLERY (replace if provided)
+      if (galleryKeys !== undefined) {
+        await tx.blogMedia.deleteMany({ where: { blogPostId: id, role: 'GALLERY' } });
+        if (Array.isArray(galleryKeys) && galleryKeys.length) {
+          let pos = 0;
+          const ids = [];
+          for (const key of galleryKeys) {
+            const m = await ensureMedia(key);
+            ids.push({ blogPostId: id, mediaId: m.id, role: 'GALLERY', position: pos++ });
+          }
+          await tx.blogMedia.createMany({ data: ids, skipDuplicates: true });
+        }
+      }
+
+      // EMBED (replace if provided)
+      if (embedKeys !== undefined) {
+        await tx.blogMedia.deleteMany({ where: { blogPostId: id, role: 'EMBED' } });
+        if (Array.isArray(embedKeys) && embedKeys.length) {
+          let pos = 0;
+          const ids = [];
+          for (const key of embedKeys) {
+            const m = await ensureMedia(key);
+            ids.push({ blogPostId: id, mediaId: m.id, role: 'EMBED', position: pos++ });
+          }
+          await tx.blogMedia.createMany({ data: ids, skipDuplicates: true });
+        }
+      }
+    }
+
+    // Return hydrated post (full media set)
+    return tx.blogPost.findUnique({
+      where: { id },
+      include: {
+        tags: true,
+        mediaLinks: {
+          include: { media: true },
+          orderBy: [{ role: 'asc' }, { position: 'asc' }],
+        },
+      },
+    });
+  });
+}

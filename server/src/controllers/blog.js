@@ -10,6 +10,7 @@ import {
   findBlogPostsByTag,
   createBlogPost,
   findBlogPostsPaged,
+  updateBlogPost,
 } from '../domain/blog.js';
 // Response helpers/messages
 import { EVENT_MESSAGES } from '../utils/responses.js';
@@ -299,6 +300,109 @@ export const createBlogPostHandler = async (req, res, next) => {
     return sendDataResponse(res, 201, { post });
   } catch (err) {
     // Let your global error handler map Prisma codes (e.g., P2002 → 409)
+    return next(err);
+  }
+};
+
+export const updateBlogPostHandler = async (req, res, next) => {
+  const { id } = req.params;
+
+  try {
+    // Does the post exist?
+    const existing = await dbClient.blogPost.findUnique({
+      where: { id },
+      select: { id: true, slug: true },
+    });
+    if (!existing) {
+      const notFound = new NotFoundEvent(req.user, EVENT_MESSAGES.blogNotFound, EVENT_MESSAGES.blogTag);
+      myEmitterErrors.emit('error', notFound);
+      return sendMessageResponse(res, notFound.code, notFound.message);
+    }
+
+    const {
+      // Scalars (all optional)
+      title,
+      subTitle,
+      subject,
+      location,
+      slug,
+      content,
+      authorId,
+      authorName,
+      isPublished,
+      publishedAt,
+
+      // Tags: replace entire set if provided
+      tags, // array of names
+
+      // Media controls
+      featuredImageKey,    // string to set, null to clear, undefined no-change
+      thumbnailImageKey,   // same
+      galleryKeys,         // array => replace; [] => clear; undefined => no-change
+      embedKeys,           // same
+    } = req.body || {};
+
+    // Optional fast 409 if slug is changing and already taken
+    if (typeof slug === 'string' && slug !== existing.slug) {
+      const clash = await dbClient.blogPost.findUnique({
+        where: { slug },
+        select: { id: true },
+      });
+      if (clash) {
+        const conflict = new ConflictEvent(req.user, 'Blog slug already in use.', EVENT_MESSAGES.blogTag);
+        myEmitterErrors.emit('error', conflict);
+        return sendMessageResponse(res, conflict.code, conflict.message); // 409
+      }
+    }
+
+    // Validate media key prefixes if provided
+    const checkKey = (k, which) => {
+      if (k && !keyHasPrefix(k, 'blog')) {
+        throw new Error(`${which} must be under blog/ prefix`);
+      }
+    };
+    try {
+      if (featuredImageKey !== undefined) checkKey(featuredImageKey, 'featuredImageKey');
+      if (thumbnailImageKey !== undefined) checkKey(thumbnailImageKey, 'thumbnailImageKey');
+      if (Array.isArray(galleryKeys)) for (const k of galleryKeys) checkKey(k, 'galleryKeys[]');
+      if (Array.isArray(embedKeys)) for (const k of embedKeys) checkKey(k, 'embedKeys[]');
+    } catch (e) {
+      return sendMessageResponse(res, 400, e.message);
+    }
+
+    const tagNames =
+      Array.isArray(tags) ? tags.map((t) => String(t).trim()).filter(Boolean) : undefined;
+
+    const updated = await updateBlogPost(
+      id,
+      {
+        title,
+        subTitle,
+        subject,
+        location,
+        slug,
+        content,
+        authorId,
+        authorName,
+        isPublished,
+        publishedAt,
+      },
+      {
+        replaceTagsWith: tagNames,      // undefined = no change
+        featuredImageKey,               // string | null | undefined
+        thumbnailImageKey,              // string | null | undefined
+        galleryKeys,                    // string[] | [] | undefined
+        embedKeys,                      // string[] | [] | undefined
+      }
+    );
+
+    myEmitterBlogs.emit('update-blog', req.user);
+
+    return sendDataResponse(res, 200, { post: updated });
+  } catch (err) {
+    // Prisma P2002 / P2025 etc handled by global error middleware
+    const serverError = new ServerErrorEvent(req.user, 'Update blog post failed');
+    myEmitterErrors.emit('error', serverError);
     return next(err);
   }
 };
