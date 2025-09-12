@@ -299,11 +299,7 @@ export const updateBlogPostHandler = async (req, res, next) => {
       select: { id: true, slug: true },
     });
     if (!existing) {
-      const notFound = new NotFoundEvent(
-        req.user,
-        EVENT_MESSAGES.blogNotFound,
-        EVENT_MESSAGES.blogTag
-      );
+      const notFound = new NotFoundEvent(req.user, EVENT_MESSAGES.blogNotFound, EVENT_MESSAGES.blogTag);
       myEmitterErrors.emit('error', notFound);
       return sendMessageResponse(res, notFound.code, notFound.message);
     }
@@ -321,28 +317,22 @@ export const updateBlogPostHandler = async (req, res, next) => {
       isPublished,
       publishedAt,
 
-      // Tags: replace entire set if provided
-      tags, // array of names
+      // Tags (client may send either `tags` or `replaceTagsWith`)
+      tags,
+      replaceTagsWith: tagsDirect,   // <— accept alias
 
       // Media controls
-      featuredImageKey, // string to set, null to clear, undefined no-change
-      thumbnailImageKey, // same
-      galleryKeys, // array => replace; [] => clear; undefined => no-change
-      embedKeys, // same
+      featuredImageKey,
+      thumbnailImageKey,
+      galleryKeys,
+      embedKeys,
     } = req.body || {};
 
     // Optional fast 409 if slug is changing and already taken
     if (typeof slug === 'string' && slug !== existing.slug) {
-      const clash = await dbClient.blogPost.findUnique({
-        where: { slug },
-        select: { id: true },
-      });
+      const clash = await dbClient.blogPost.findUnique({ where: { slug }, select: { id: true } });
       if (clash) {
-        const conflict = new ConflictEvent(
-          req.user,
-          'Blog slug already in use.',
-          EVENT_MESSAGES.blogTag
-        );
+        const conflict = new ConflictEvent(req.user, 'Blog slug already in use.', EVENT_MESSAGES.blogTag);
         myEmitterErrors.emit('error', conflict);
         return sendMessageResponse(res, conflict.code, conflict.message); // 409
       }
@@ -350,26 +340,24 @@ export const updateBlogPostHandler = async (req, res, next) => {
 
     // Validate media key prefixes if provided
     const checkKey = (k, which) => {
-      if (k && !keyHasPrefix(k, 'blog')) {
-        throw new Error(`${which} must be under blog/ prefix`);
-      }
+      if (k && !keyHasPrefix(k, 'blog')) throw new Error(`${which} must be under blog/ prefix`);
     };
     try {
-      if (featuredImageKey !== undefined)
-        checkKey(featuredImageKey, 'featuredImageKey');
-      if (thumbnailImageKey !== undefined)
-        checkKey(thumbnailImageKey, 'thumbnailImageKey');
-      if (Array.isArray(galleryKeys))
-        for (const k of galleryKeys) checkKey(k, 'galleryKeys[]');
-      if (Array.isArray(embedKeys))
-        for (const k of embedKeys) checkKey(k, 'embedKeys[]');
+      if (featuredImageKey !== undefined) checkKey(featuredImageKey, 'featuredImageKey');
+      if (thumbnailImageKey !== undefined) checkKey(thumbnailImageKey, 'thumbnailImageKey');
+      if (Array.isArray(galleryKeys)) for (const k of galleryKeys) checkKey(k, 'galleryKeys[]');
+      if (Array.isArray(embedKeys)) for (const k of embedKeys) checkKey(k, 'embedKeys[]');
     } catch (e) {
       return sendMessageResponse(res, 400, e.message);
     }
 
-    const tagNames = Array.isArray(tags)
-      ? tags.map((t) => String(t).trim()).filter(Boolean)
+    // --- NEW: normalize tags from either `tags` or `replaceTagsWith`
+    const tagSource = Array.isArray(tags)
+      ? tags
+      : Array.isArray(tagsDirect)
+      ? tagsDirect
       : undefined;
+    const tagNames = tagSource?.map((t) => String(t).trim()).filter(Boolean);
 
     const updated = await updateBlogPost(
       id,
@@ -386,23 +374,18 @@ export const updateBlogPostHandler = async (req, res, next) => {
         publishedAt,
       },
       {
-        replaceTagsWith: tagNames, // undefined = no change
-        featuredImageKey, // string | null | undefined
-        thumbnailImageKey, // string | null | undefined
-        galleryKeys, // string[] | [] | undefined
-        embedKeys, // string[] | [] | undefined
+        replaceTagsWith: tagNames,   // undefined = no change; [] = clear
+        featuredImageKey,
+        thumbnailImageKey,
+        galleryKeys,
+        embedKeys,
       }
     );
 
     myEmitterBlogs.emit('update-blog', req.user);
-
     return sendDataResponse(res, 200, { post: updated });
   } catch (err) {
-    // Prisma P2002 / P2025 etc handled by global error middleware
-    const serverError = new ServerErrorEvent(
-      req.user,
-      'Update blog post failed'
-    );
+    const serverError = new ServerErrorEvent(req.user, 'Update blog post failed');
     myEmitterErrors.emit('error', serverError);
     return next(err);
   }

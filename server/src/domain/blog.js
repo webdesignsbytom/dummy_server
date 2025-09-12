@@ -166,24 +166,26 @@ export const findBlogPostsPaged = async (limit = 10, page = 1) => {
 
   return { items, total, limit: take, page: currentPage, totalPages, hasNextPage };
 };
-
 export async function updateBlogPost(
   id,
+  // scalars: only fields you provide (not undefined) will be updated
   scalarFields = {},
   {
     replaceTagsWith,        // string[] | undefined (undefined = no change, [] = clear all)
+    featuredImageKey,       // string | null | undefined (undefined = no change, null = clear)
     thumbnailImageKey,      // string | null | undefined
-    galleryKeys,            // string[] | [] | undefined (replace set)
-    embedKeys,              // string[] | [] | undefined (replace set)
+    galleryKeys,            // string[] | [] | undefined (replace set if provided)
+    embedKeys,              // string[] | [] | undefined (replace set if provided)
   } = {},
 ) {
   // ---- 1) SCALARS -----------------------------------------------------
   const data = {};
   for (const [k, v] of Object.entries(scalarFields)) {
-    if (v !== undefined) data[k] = v;
+    if (v !== undefined) data[k] = v; // only set provided fields
   }
-  // allow clearing legacy columns via null
+  // keep legacy thumbnail column in sync if you still read it on FE
   if (thumbnailImageKey !== undefined) data.thumbnailImage = thumbnailImageKey;
+  // (No legacy 'featuredImage' column in your model, so nothing to mirror there)
 
   await dbClient.blogPost.update({
     where: { id },
@@ -193,7 +195,6 @@ export async function updateBlogPost(
 
   // ---- 2) TAGS (replace only if requested) ----------------------------
   if (replaceTagsWith !== undefined) {
-    // clear all existing tags
     await dbClient.blogPost.update({
       where: { id },
       data: { tags: { set: [] } },
@@ -223,7 +224,7 @@ export async function updateBlogPost(
     !!dbClient?.blogMedia?.create;
 
   if (canLinkMedia) {
-    // Collect keys we might need to ensure
+    // Collect keys we might need to ensure exist in Media table
     const keysToEnsure = [
       ...(featuredImageKey ? [featuredImageKey] : []),
       ...(thumbnailImageKey ? [thumbnailImageKey] : []),
@@ -231,7 +232,7 @@ export async function updateBlogPost(
       ...(Array.isArray(embedKeys) ? embedKeys : []),
     ];
 
-    // Ensure Media rows exist (bulk then read back -> map key -> id)
+    // Ensure Media rows exist (bulk insert then read back)
     let idByKey = new Map();
     if (keysToEnsure.length) {
       await dbClient.media.createMany({
@@ -245,9 +246,28 @@ export async function updateBlogPost(
       idByKey = new Map(mediaRows.map((m) => [m.key, m.id]));
     }
 
-    // THUMBNAIL
+    // FEATURED (replace if provided; clear if null)
+    if (featuredImageKey !== undefined) {
+      await dbClient.blogMedia.deleteMany({
+        where: { blogPostId: id, role: 'FEATURED' },
+      });
+      if (featuredImageKey) {
+        await dbClient.blogMedia.create({
+          data: {
+            blogPostId: id,
+            mediaId: idByKey.get(featuredImageKey),
+            role: 'FEATURED',
+            position: 0,
+          },
+        });
+      }
+    }
+
+    // THUMBNAIL (replace if provided; clear if null)
     if (thumbnailImageKey !== undefined) {
-      await dbClient.blogMedia.deleteMany({ where: { blogPostId: id, role: 'THUMBNAIL' } });
+      await dbClient.blogMedia.deleteMany({
+        where: { blogPostId: id, role: 'THUMBNAIL' },
+      });
       if (thumbnailImageKey) {
         await dbClient.blogMedia.create({
           data: {
@@ -262,7 +282,9 @@ export async function updateBlogPost(
 
     // GALLERY (replace if provided)
     if (galleryKeys !== undefined) {
-      await dbClient.blogMedia.deleteMany({ where: { blogPostId: id, role: 'GALLERY' } });
+      await dbClient.blogMedia.deleteMany({
+        where: { blogPostId: id, role: 'GALLERY' },
+      });
       if (Array.isArray(galleryKeys) && galleryKeys.length) {
         await dbClient.blogMedia.createMany({
           data: galleryKeys.map((key, i) => ({
@@ -278,7 +300,9 @@ export async function updateBlogPost(
 
     // EMBED (replace if provided)
     if (embedKeys !== undefined) {
-      await dbClient.blogMedia.deleteMany({ where: { blogPostId: id, role: 'EMBED' } });
+      await dbClient.blogMedia.deleteMany({
+        where: { blogPostId: id, role: 'EMBED' },
+      });
       if (Array.isArray(embedKeys) && embedKeys.length) {
         await dbClient.blogMedia.createMany({
           data: embedKeys.map((key, i) => ({
@@ -309,6 +333,7 @@ export async function updateBlogPost(
     include,
   });
 }
+
 
 export async function deleteBlogPostById(id) {
   const existing = await dbClient.blogPost.findUnique({
