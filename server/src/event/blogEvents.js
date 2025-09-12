@@ -7,6 +7,7 @@ import {
   createGetBlogsByTagEvent,
   createCreateBlogEvent,
   createUpdateBlogEvent,
+  deleteBlogEvent,
 } from './utils/blogUtils.js';
 
 export const myEmitterBlogs = myEmitter;
@@ -26,3 +27,4 @@ myEmitterBlogs.on('get-blog-by-slug', safe(createGetBlogBySlugEvent));
 myEmitterBlogs.on('get-blogs-by-tag', safe(createGetBlogsByTagEvent));
 myEmitterBlogs.on('create-blog', safe(createCreateBlogEvent));
 myEmitterBlogs.on('update-blog', safe(createUpdateBlogEvent));
+myEmitterBlogs.on('delete-blog', safe(deleteBlogEvent));

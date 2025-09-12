@@ -48,3 +48,8 @@ export const createUpdateBlogEvent = async (user = {}) => {
   const u = normalizeUser(user);
   await createEvent(u, u.role, 'Update Blog', `Blog updated by ${u.email}`, 200);
 };
+
+export const deleteBlogEvent = async (user = {}) => {
+  const u = normalizeUser(user);
+  await createEvent(u, u.role, 'Delete Blog', `Blog deleted by ${u.email}`, 200);
+};

@@ -309,3 +309,18 @@ export async function updateBlogPost(
     include,
   });
 }
+
+export async function deleteBlogPostById(id) {
+  const existing = await dbClient.blogPost.findUnique({
+    where: { id },
+    include: {
+      tags: true,
+      mediaLinks: { include: { media: true } },
+    },
+  });
+  if (!existing) return null;
+
+  await dbClient.blogPost.delete({ where: { id } });
+
+  return existing;
+}

@@ -6,6 +6,7 @@ import {
 } from '../middleware/auth.js';
 import {
   createBlogPostHandler,
+  deleteBlogPostByIdHandler,
   getAllBlogPostsHandler,
   getAllBlogPostsPagedHandler,
   getBlogPostByIdHandler,
@@ -36,5 +37,6 @@ router.patch(
   validateAdminRole,
   updateBlogPostHandler
 );
+router.delete('/delete-blog-post/:id', deleteBlogPostByIdHandler);
 
 export default router;
