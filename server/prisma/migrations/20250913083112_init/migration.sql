@@ -210,7 +210,7 @@ CREATE TABLE "BlogPost" (
     "authorName" TEXT,
     "thumbnailImage" TEXT,
     "isPublished" BOOLEAN NOT NULL DEFAULT false,
-    "publishedAt" TIMESTAMP(3),
+    "publishedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "viewCount" INTEGER NOT NULL DEFAULT 0,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,

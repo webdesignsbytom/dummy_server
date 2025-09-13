@@ -213,16 +213,23 @@ export const getBlogPostsByTagHandler = async (req, res) => {
     return sendMessageResponse(res, serverError.code, serverError.message);
   }
 };
-
 export const createBlogPostHandler = async (req, res, next) => {
   console.log('[createBlogPostHandler] called');
   try {
     const {
+      // required
       title,
       slug,
       content,
+
+      // optional scalars
       authorId,
       authorName,
+      subTitle,
+      subject,
+      location,
+
+      // tags + media
       tags,
       thumbnailImageKey,
       galleryKeys = [],
@@ -256,20 +263,26 @@ export const createBlogPostHandler = async (req, res, next) => {
     }
 
     const tagNames = Array.isArray(tags)
-      ? tags.map(String).filter(Boolean)
+      ? tags.map(String).map((t) => t.trim()).filter(Boolean)
       : [];
+
     const post = await createBlogPost(
       title,
       slug,
       content,
-      authorId,
-      authorName,
+      authorId ?? null,
+      authorName ?? null,
       tagNames,
       {
         thumbnailImageKey: thumbnailImageKey || null,
         galleryKeys: Array.isArray(galleryKeys) ? galleryKeys : [],
         embedKeys: Array.isArray(embedKeys) ? embedKeys : [],
+        // NEW: pass the extra scalars through
+        subTitle: subTitle ?? null,
+        subject: subject ?? null,
+        location: location ?? null,
       }
+      // isPublished stays default (false) unless you add it here
     );
 
     if (!post) {
@@ -285,9 +298,15 @@ export const createBlogPostHandler = async (req, res, next) => {
     myEmitterBlogs.emit('create-blog', req.user);
     return sendDataResponse(res, 201, { post });
   } catch (err) {
-    return next(err);
+    const serverError = new ServerErrorEvent(
+      req.user,
+      'Create blog post failed'
+    );
+    myEmitterErrors.emit('error', serverError);
+    return sendMessageResponse(res, serverError.code, serverError.message);
   }
 };
+
 
 export const updateBlogPostHandler = async (req, res, next) => {
   const { id } = req.params;

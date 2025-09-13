@@ -45,7 +45,7 @@ export const findBlogPostById = (id) =>
     include: {
       tags: true, // BlogTag[]
       mediaLinks: {
-        include: { media: true },        // pulls the Media row (has the S3 key)
+        include: { media: true }, // pulls the Media row (has the S3 key)
         orderBy: [{ role: 'asc' }, { position: 'asc' }], // FEATURED/THUMBNAIL/GALLERY/EMBED; gallery in order
       },
     },
@@ -69,18 +69,37 @@ export const findBlogPostsByTag = (tag) =>
       },
     },
   });
-
 export async function createBlogPost(
-  title, slug, content, authorId, authorName,
+  title,
+  slug,
+  content,
+  authorId,
+  authorName,
   tagNames = [],
-  { thumbnailImageKey = null, galleryKeys = [], embedKeys = [] } = {},
-  isPublished = false,
+  {
+    thumbnailImageKey = null,
+    galleryKeys = [],
+    embedKeys = [],
+    // NEW optional scalars
+    subTitle = null,
+    subject = null,
+    location = null,
+  } = {},
+  isPublished = true
 ) {
   // create post (keep legacy thumbnailImage column in case you still read it on FE)
   const post = await dbClient.blogPost.create({
     data: {
-      title, slug, content, authorId, authorName,
+      title,
+      slug,
+      content,
+      authorId,
+      authorName,
       isPublished,
+      // persist the optional fields (nulls are fine)
+      subTitle: subTitle ?? null,
+      subject: subject ?? null,
+      location: location ?? null,
       ...(Array.isArray(tagNames) && tagNames.length
         ? {
             tags: {
@@ -109,21 +128,36 @@ export async function createBlogPost(
   // THUMBNAIL
   if (thumbnailImageKey) {
     const m = await ensureMedia(thumbnailImageKey);
-    links.push({ blogPostId: post.id, mediaId: m.id, role: 'THUMBNAIL', position: 0 });
+    links.push({
+      blogPostId: post.id,
+      mediaId: m.id,
+      role: 'THUMBNAIL',
+      position: 0,
+    });
   }
 
   // GALLERY
   let pos = 0;
   for (const key of galleryKeys) {
     const m = await ensureMedia(key);
-    links.push({ blogPostId: post.id, mediaId: m.id, role: 'GALLERY', position: pos++ });
+    links.push({
+      blogPostId: post.id,
+      mediaId: m.id,
+      role: 'GALLERY',
+      position: pos++,
+    });
   }
 
   // EMBED
   pos = 0;
   for (const key of embedKeys) {
     const m = await ensureMedia(key);
-    links.push({ blogPostId: post.id, mediaId: m.id, role: 'EMBED', position: pos++ });
+    links.push({
+      blogPostId: post.id,
+      mediaId: m.id,
+      role: 'EMBED',
+      position: pos++,
+    });
   }
 
   if (links.length) {
@@ -134,7 +168,10 @@ export async function createBlogPost(
     where: { id: post.id },
     include: {
       tags: true,
-      mediaLinks: { include: { media: true }, orderBy: [{ role: 'asc' }, { position: 'asc' }] },
+      mediaLinks: {
+        include: { media: true },
+        orderBy: [{ role: 'asc' }, { position: 'asc' }],
+      },
     },
   });
 }
@@ -164,19 +201,26 @@ export const findBlogPostsPaged = async (limit = 10, page = 1) => {
   const totalPages = Math.max(1, Math.ceil(total / take));
   const hasNextPage = skip + items.length < total;
 
-  return { items, total, limit: take, page: currentPage, totalPages, hasNextPage };
+  return {
+    items,
+    total,
+    limit: take,
+    page: currentPage,
+    totalPages,
+    hasNextPage,
+  };
 };
 export async function updateBlogPost(
   id,
   // scalars: only fields you provide (not undefined) will be updated
   scalarFields = {},
   {
-    replaceTagsWith,        // string[] | undefined (undefined = no change, [] = clear all)
-    featuredImageKey,       // string | null | undefined (undefined = no change, null = clear)
-    thumbnailImageKey,      // string | null | undefined
-    galleryKeys,            // string[] | [] | undefined (replace set if provided)
-    embedKeys,              // string[] | [] | undefined (replace set if provided)
-  } = {},
+    replaceTagsWith, // string[] | undefined (undefined = no change, [] = clear all)
+    featuredImageKey, // string | null | undefined (undefined = no change, null = clear)
+    thumbnailImageKey, // string | null | undefined
+    galleryKeys, // string[] | [] | undefined (replace set if provided)
+    embedKeys, // string[] | [] | undefined (replace set if provided)
+  } = {}
 ) {
   // ---- 1) SCALARS -----------------------------------------------------
   const data = {};
@@ -333,7 +377,6 @@ export async function updateBlogPost(
     include,
   });
 }
-
 
 export async function deleteBlogPostById(id) {
   const existing = await dbClient.blogPost.findUnique({
