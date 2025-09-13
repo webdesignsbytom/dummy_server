@@ -9,14 +9,23 @@ import {
   findBlogPostBySlug,
   findBlogPostsByTag,
   createBlogPost,
+  findBlogPostsPaged,
+  updateBlogPost,
+  deleteBlogPostById,
 } from '../domain/blog.js';
 // Response helpers/messages
 import { EVENT_MESSAGES } from '../utils/responses.js';
 import { sendDataResponse, sendMessageResponse } from '../utils/responses.js';
 
 // Error utils
-import { ConflictEvent, NotFoundEvent, ServerErrorEvent } from '../event/utils/errorUtils.js';
+import {
+  ConflictEvent,
+  NotFoundEvent,
+  ServerErrorEvent,
+} from '../event/utils/errorUtils.js';
 import { myEmitterBlogs } from '../event/blogEvents.js';
+import dbClient from '../utils/dbClient.js';
+import { keyHasPrefix } from '../services/s3/mediaService.js';
 
 // GET /blogs
 export const getAllBlogPostsHandler = async (req, res) => {
@@ -39,6 +48,53 @@ export const getAllBlogPostsHandler = async (req, res) => {
     const serverError = new ServerErrorEvent(
       req.user,
       'Get all blog posts failed'
+    );
+    myEmitterErrors.emit('error', serverError);
+    return sendMessageResponse(res, serverError.code, serverError.message);
+  }
+};
+
+export const getAllBlogPostsPagedHandler = async (req, res) => {
+  try {
+    const rawLimit = Number(req.query.limit);
+    const rawPage = Number(req.query.page);
+
+    // clamp limit to a sane range
+    const limit = Number.isFinite(rawLimit)
+      ? Math.max(1, Math.min(rawLimit, 50))
+      : 10;
+    const page =
+      Number.isFinite(rawPage) && rawPage > 0 ? Math.floor(rawPage) : 1;
+
+    const result = await findBlogPostsPaged(limit, page);
+
+    if (!result.items || result.items.length === 0) {
+      const notFound = new NotFoundEvent(
+        req.user,
+        EVENT_MESSAGES.blogNotFound,
+        EVENT_MESSAGES.blogTag
+      );
+      myEmitterErrors.emit('error', notFound);
+      return sendMessageResponse(res, notFound.code, notFound.message);
+    }
+
+    myEmitterEvents.emit('get-all-blogs', req.user);
+
+    return sendDataResponse(res, 200, {
+      posts: result.items,
+      pagination: {
+        page: result.page,
+        limit: result.limit,
+        total: result.total,
+        totalPages: result.totalPages,
+        hasNextPage: result.hasNextPage,
+        hasPrevPage: result.page > 1,
+      },
+    });
+  } catch (err) {
+    const serverError = new ServerErrorEvent(
+      req.user,
+      'Get paged blog posts failed'
     );
     myEmitterErrors.emit('error', serverError);
     return sendMessageResponse(res, serverError.code, serverError.message);
@@ -157,37 +213,76 @@ export const getBlogPostsByTagHandler = async (req, res) => {
     return sendMessageResponse(res, serverError.code, serverError.message);
   }
 };
-export const createBlogPostHandler = async (req, res) => {
+export const createBlogPostHandler = async (req, res, next) => {
   console.log('[createBlogPostHandler] called');
-
   try {
-    const { title, slug, content, authorId, authorName, tags } = req.body;
-    console.log('[createBlogPostHandler] body:', {
+    const {
+      // required
       title,
       slug,
-      contentType: typeof content,
+      content,
+
+      // optional scalars
       authorId,
       authorName,
+      subTitle,
+      subject,
+      location,
+
+      // tags + media
       tags,
-    });
+      thumbnailImageKey,
+      galleryKeys = [],
+      embedKeys = [],
+    } = req.body || {};
 
     if (!title || !slug || !content) {
       return sendMessageResponse(res, 400, EVENT_MESSAGES.missingFields);
     }
 
-    // Normalize to tag NAMES (strings). If numbers are sent, we’ll stringify.
+    if (thumbnailImageKey && !keyHasPrefix(thumbnailImageKey, 'blog')) {
+      return sendMessageResponse(
+        res,
+        400,
+        'thumbnailImageKey must be under blog/ prefix'
+      );
+    }
+
+    const existing = await dbClient.blogPost.findUnique({
+      where: { slug },
+      select: { id: true },
+    });
+    if (existing) {
+      const conflict = new ConflictEvent(
+        req.user,
+        'Blog slug already in use.',
+        EVENT_MESSAGES.blogTag
+      );
+      myEmitterErrors.emit('error', conflict);
+      return sendMessageResponse(res, conflict.code, conflict.message); // 409
+    }
+
     const tagNames = Array.isArray(tags)
-      ? tags.map((t) => String(t).trim()).filter(Boolean)
+      ? tags.map(String).map((t) => t.trim()).filter(Boolean)
       : [];
 
-    console.log('[createBlogPostHandler] calling domain createBlogPost');
     const post = await createBlogPost(
       title,
       slug,
       content,
-      authorId,
-      authorName,
-      tagNames
+      authorId ?? null,
+      authorName ?? null,
+      tagNames,
+      {
+        thumbnailImageKey: thumbnailImageKey || null,
+        galleryKeys: Array.isArray(galleryKeys) ? galleryKeys : [],
+        embedKeys: Array.isArray(embedKeys) ? embedKeys : [],
+        // NEW: pass the extra scalars through
+        subTitle: subTitle ?? null,
+        subject: subject ?? null,
+        location: location ?? null,
+      }
+      // isPublished stays default (false) unless you add it here
     );
 
     if (!post) {
@@ -203,24 +298,142 @@ export const createBlogPostHandler = async (req, res) => {
     myEmitterBlogs.emit('create-blog', req.user);
     return sendDataResponse(res, 201, { post });
   } catch (err) {
-    console.error('[createBlogPostHandler] error:', err);
-    if (
-      err?.code === 'P2002' &&
-      Array.isArray(err?.meta?.target) &&
-      err.meta.target.includes('slug')
-    ) {
-      const conflict = new ConflictEvent(
-        req.user,
-        'Blog slug already in use.',
-        EVENT_MESSAGES.blogTag
-      );
-      myEmitterErrors.emit('error', conflict);
-      return sendMessageResponse(res, conflict.code, conflict.message); // 409
-    }
-
     const serverError = new ServerErrorEvent(
       req.user,
-      EVENT_MESSAGES.createBlogFail
+      'Create blog post failed'
+    );
+    myEmitterErrors.emit('error', serverError);
+    return sendMessageResponse(res, serverError.code, serverError.message);
+  }
+};
+
+
+export const updateBlogPostHandler = async (req, res, next) => {
+  const { id } = req.params;
+
+  try {
+    // Does the post exist?
+    const existing = await dbClient.blogPost.findUnique({
+      where: { id },
+      select: { id: true, slug: true },
+    });
+    if (!existing) {
+      const notFound = new NotFoundEvent(req.user, EVENT_MESSAGES.blogNotFound, EVENT_MESSAGES.blogTag);
+      myEmitterErrors.emit('error', notFound);
+      return sendMessageResponse(res, notFound.code, notFound.message);
+    }
+
+    const {
+      // Scalars (all optional)
+      title,
+      subTitle,
+      subject,
+      location,
+      slug,
+      content,
+      authorId,
+      authorName,
+      isPublished,
+      publishedAt,
+
+      // Tags (client may send either `tags` or `replaceTagsWith`)
+      tags,
+      replaceTagsWith: tagsDirect,   // <— accept alias
+
+      // Media controls
+      featuredImageKey,
+      thumbnailImageKey,
+      galleryKeys,
+      embedKeys,
+    } = req.body || {};
+
+    // Optional fast 409 if slug is changing and already taken
+    if (typeof slug === 'string' && slug !== existing.slug) {
+      const clash = await dbClient.blogPost.findUnique({ where: { slug }, select: { id: true } });
+      if (clash) {
+        const conflict = new ConflictEvent(req.user, 'Blog slug already in use.', EVENT_MESSAGES.blogTag);
+        myEmitterErrors.emit('error', conflict);
+        return sendMessageResponse(res, conflict.code, conflict.message); // 409
+      }
+    }
+
+    // Validate media key prefixes if provided
+    const checkKey = (k, which) => {
+      if (k && !keyHasPrefix(k, 'blog')) throw new Error(`${which} must be under blog/ prefix`);
+    };
+    try {
+      if (featuredImageKey !== undefined) checkKey(featuredImageKey, 'featuredImageKey');
+      if (thumbnailImageKey !== undefined) checkKey(thumbnailImageKey, 'thumbnailImageKey');
+      if (Array.isArray(galleryKeys)) for (const k of galleryKeys) checkKey(k, 'galleryKeys[]');
+      if (Array.isArray(embedKeys)) for (const k of embedKeys) checkKey(k, 'embedKeys[]');
+    } catch (e) {
+      return sendMessageResponse(res, 400, e.message);
+    }
+
+    // --- NEW: normalize tags from either `tags` or `replaceTagsWith`
+    const tagSource = Array.isArray(tags)
+      ? tags
+      : Array.isArray(tagsDirect)
+      ? tagsDirect
+      : undefined;
+    const tagNames = tagSource?.map((t) => String(t).trim()).filter(Boolean);
+
+    const updated = await updateBlogPost(
+      id,
+      {
+        title,
+        subTitle,
+        subject,
+        location,
+        slug,
+        content,
+        authorId,
+        authorName,
+        isPublished,
+        publishedAt,
+      },
+      {
+        replaceTagsWith: tagNames,   // undefined = no change; [] = clear
+        featuredImageKey,
+        thumbnailImageKey,
+        galleryKeys,
+        embedKeys,
+      }
+    );
+
+    myEmitterBlogs.emit('update-blog', req.user);
+    return sendDataResponse(res, 200, { post: updated });
+  } catch (err) {
+    const serverError = new ServerErrorEvent(req.user, 'Update blog post failed');
+    myEmitterErrors.emit('error', serverError);
+    return next(err);
+  }
+};
+
+export const deleteBlogPostByIdHandler = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return sendMessageResponse(res, 400, 'Missing blog post id.');
+    }
+
+    const deleted = await deleteBlogPostById(id);
+    if (!deleted) {
+      const notFound = new NotFoundEvent(
+        req.user,
+        EVENT_MESSAGES.blogNotFound,
+        EVENT_MESSAGES.blogTag
+      );
+      myEmitterErrors.emit('error', notFound);
+      return sendMessageResponse(res, notFound.code, notFound.message); // typically 404
+    }
+
+    myEmitterBlogs.emit('delete-blog', req.user);
+    return sendDataResponse(res, 200, { deleted });
+  } catch (err) {
+    const serverError = new ServerErrorEvent(
+      req.user,
+      'Delete blog post failed'
     );
     myEmitterErrors.emit('error', serverError);
     return sendMessageResponse(res, serverError.code, serverError.message);

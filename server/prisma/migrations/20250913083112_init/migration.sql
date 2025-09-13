@@ -2,6 +2,9 @@
 CREATE TYPE "Role" AS ENUM ('VISITOR', 'USER', 'ADMIN', 'DEVELOPER');
 
 -- CreateEnum
+CREATE TYPE "MediaRole" AS ENUM ('FEATURED', 'THUMBNAIL', 'GALLERY', 'EMBED');
+
+-- CreateEnum
 CREATE TYPE "EventType" AS ENUM ('ERROR', 'USER', 'ADMIN', 'VISITOR', 'DEVELOPER', 'TEST');
 
 -- CreateTable
@@ -180,6 +183,21 @@ CREATE TABLE "Review" (
 );
 
 -- CreateTable
+CREATE TABLE "Media" (
+    "id" TEXT NOT NULL,
+    "key" TEXT NOT NULL,
+    "contentType" TEXT,
+    "bytes" INTEGER,
+    "width" INTEGER,
+    "height" INTEGER,
+    "durationSec" INTEGER,
+    "uploadedById" INTEGER,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Media_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "BlogPost" (
     "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
@@ -188,12 +206,11 @@ CREATE TABLE "BlogPost" (
     "location" TEXT,
     "slug" TEXT NOT NULL,
     "content" JSONB NOT NULL,
-    "authorId" INTEGER,
+    "authorId" TEXT,
     "authorName" TEXT,
-    "featuredImage" TEXT,
     "thumbnailImage" TEXT,
     "isPublished" BOOLEAN NOT NULL DEFAULT false,
-    "publishedAt" TIMESTAMP(3),
+    "publishedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "viewCount" INTEGER NOT NULL DEFAULT 0,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -207,6 +224,18 @@ CREATE TABLE "BlogTag" (
     "name" TEXT NOT NULL,
 
     CONSTRAINT "BlogTag_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "BlogMedia" (
+    "blogPostId" TEXT NOT NULL,
+    "mediaId" TEXT NOT NULL,
+    "role" "MediaRole" NOT NULL DEFAULT 'GALLERY',
+    "position" INTEGER NOT NULL DEFAULT 0,
+    "alt" TEXT,
+    "caption" TEXT,
+
+    CONSTRAINT "BlogMedia_pkey" PRIMARY KEY ("blogPostId","mediaId","role")
 );
 
 -- CreateTable
@@ -261,6 +290,9 @@ CREATE UNIQUE INDEX "NewsletterSubscriber_email_key" ON "NewsletterSubscriber"("
 CREATE UNIQUE INDEX "NewsletterVerificationToken_subscriberId_key" ON "NewsletterVerificationToken"("subscriberId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Media_key_key" ON "Media"("key");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "BlogPost_slug_key" ON "BlogPost"("slug");
 
 -- CreateIndex
@@ -271,6 +303,15 @@ CREATE INDEX "BlogPost_publishedAt_idx" ON "BlogPost"("publishedAt");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "BlogTag_name_key" ON "BlogTag"("name");
+
+-- CreateIndex
+CREATE INDEX "BlogMedia_blogPostId_idx" ON "BlogMedia"("blogPostId");
+
+-- CreateIndex
+CREATE INDEX "BlogMedia_mediaId_idx" ON "BlogMedia"("mediaId");
+
+-- CreateIndex
+CREATE INDEX "BlogMedia_blogPostId_role_idx" ON "BlogMedia"("blogPostId", "role");
 
 -- CreateIndex
 CREATE INDEX "_BlogPostToBlogTag_B_index" ON "_BlogPostToBlogTag"("B");
@@ -289,6 +330,12 @@ ALTER TABLE "UserPermission" ADD CONSTRAINT "UserPermission_permissionId_fkey" F
 
 -- AddForeignKey
 ALTER TABLE "NewsletterVerificationToken" ADD CONSTRAINT "NewsletterVerificationToken_subscriberId_fkey" FOREIGN KEY ("subscriberId") REFERENCES "NewsletterSubscriber"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "BlogMedia" ADD CONSTRAINT "BlogMedia_blogPostId_fkey" FOREIGN KEY ("blogPostId") REFERENCES "BlogPost"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "BlogMedia" ADD CONSTRAINT "BlogMedia_mediaId_fkey" FOREIGN KEY ("mediaId") REFERENCES "Media"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Event" ADD CONSTRAINT "Event_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;

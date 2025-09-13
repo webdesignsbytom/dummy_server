@@ -95,7 +95,41 @@ export const getUserByIdHandler = async (req, res) => {
 
     myEmitterUsers.emit('get-user-by-id', req.user);
     return sendDataResponse(res, 200, { user: foundUser });
-    //
+  } catch (err) {
+    // Error
+    const serverError = new ServerErrorEvent(
+      req.user,
+      `Get user by ID failed ${err.message}`
+    );
+    myEmitterErrors.emit('error', serverError);
+    sendMessageResponse(res, serverError.code, serverError.message);
+    throw err;
+  }
+};
+
+export const getLoggedInUserHandler = async (req, res) => {
+  const user = req.user;
+  if (!user) {
+    return sendDataResponse(res, 400, {
+      message: 'Missing user ID.',
+    });
+  }
+
+  try {
+    const foundUser = await findUserById(user.id);
+    if (!foundUser) {
+      const notFound = new NotFoundEvent(
+        req.user,
+        EVENT_MESSAGES.notFound,
+        EVENT_MESSAGES.userNotFound
+      );
+      myEmitterErrors.emit('error', notFound);
+      return sendMessageResponse(res, notFound.code, notFound.message);
+    }
+
+    delete foundUser.password;
+
+    return sendDataResponse(res, 200, { user: foundUser });
   } catch (err) {
     // Error
     const serverError = new ServerErrorEvent(

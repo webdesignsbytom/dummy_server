@@ -88,15 +88,15 @@ async function seed() {
       // Give ADMIN and DEVELOPER all permissions
       if (role === 'ADMIN' || role === 'DEVELOPER') {
         await grantAllPermissionsToUser(created.id);
-        console.log(`   ↳ granted all permissions to ${created.email}`);
       }
     }
+    console.log(`granted all permissions to users`);
 
     // Reviews
     for (const review of reviewsSeedArray) {
       await dbClient.review.create({ data: review });
-      console.log(`✅ Review seeded: ${review.title || review.id}`);
     }
+    console.log(`✅ Reviews seeded`);
 
     // Events
     for (const event of eventsSeedArray) {
@@ -174,12 +174,9 @@ async function seed() {
         },
         include: { tags: true },
       });
-
-      console.log(
-        `✅ Blog seeded: ${created.title} (${created.slug}) with ${created.tags.length} tag(s)`
-      );
     }
-
+    console.log(`✅ Blogs seeded`);
+    
     console.log('🌱 All seeds completed.');
   } catch (error) {
     console.error('Seeding failed:', error.message);
