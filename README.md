@@ -31,3 +31,6 @@ Keep up to date for use in projects.
 `npm i express-rate-limit`
 `npm i google-auth-library`
 `npm i @upstash/qstash`
+S3
+`npm i @aws-sdk/client-s3 @aws-sdk/s3-request-presigner`
+`npm i tslib@^2`
