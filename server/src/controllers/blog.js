@@ -58,7 +58,8 @@ export const getAllBlogPostsPagedHandler = async (req, res) => {
   try {
     const rawLimit = Number(req.query.limit);
     const rawPage = Number(req.query.page);
-
+console.log('rawLimit', rawLimit);
+console.log('rawPage', rawPage);
     // clamp limit to a sane range
     const limit = Number.isFinite(rawLimit)
       ? Math.max(1, Math.min(rawLimit, 50))
@@ -67,7 +68,7 @@ export const getAllBlogPostsPagedHandler = async (req, res) => {
       Number.isFinite(rawPage) && rawPage > 0 ? Math.floor(rawPage) : 1;
 
     const result = await findBlogPostsPaged(limit, page);
-
+console.log('result', result);
     if (!result.items || result.items.length === 0) {
       const notFound = new NotFoundEvent(
         req.user,
@@ -213,27 +214,18 @@ export const getBlogPostsByTagHandler = async (req, res) => {
     return sendMessageResponse(res, serverError.code, serverError.message);
   }
 };
-export const createBlogPostHandler = async (req, res, next) => {
-  console.log('[createBlogPostHandler] called');
+
+export const createBlogPostHandler = async (req, res) => {
+  
   try {
     const {
-      // required
-      title,
-      slug,
-      content,
-
-      // optional scalars
-      authorId,
-      authorName,
-      subTitle,
-      subject,
-      location,
-
-      // tags + media
+      title, slug, content,
+      authorId, authorName,
+      subTitle, subject, location,
       tags,
       thumbnailImageKey,
       galleryKeys = [],
-      embedKeys = [],
+      embedKeys   = [],
     } = req.body || {};
 
     if (!title || !slug || !content) {
@@ -241,31 +233,25 @@ export const createBlogPostHandler = async (req, res, next) => {
     }
 
     if (thumbnailImageKey && !keyHasPrefix(thumbnailImageKey, 'blog')) {
-      return sendMessageResponse(
-        res,
-        400,
-        'thumbnailImageKey must be under blog/ prefix'
-      );
+      return sendMessageResponse(res, 400, 'thumbnailImageKey must be under blog/ prefix');
     }
 
+    // slug uniqueness
     const existing = await dbClient.blogPost.findUnique({
       where: { slug },
       select: { id: true },
     });
     if (existing) {
-      const conflict = new ConflictEvent(
-        req.user,
-        'Blog slug already in use.',
-        EVENT_MESSAGES.blogTag
-      );
+      const conflict = new ConflictEvent(req.user, 'Blog slug already in use.', EVENT_MESSAGES.blogTag);
       myEmitterErrors.emit('error', conflict);
-      return sendMessageResponse(res, conflict.code, conflict.message); // 409
+      return sendMessageResponse(res, conflict.code, conflict.message);
     }
 
     const tagNames = Array.isArray(tags)
-      ? tags.map(String).map((t) => t.trim()).filter(Boolean)
+      ? tags.map((t) => String(t).trim()).filter(Boolean)
       : [];
 
+    // CALL THE SERVICE ONCE
     const post = await createBlogPost(
       title,
       slug,
@@ -276,32 +262,26 @@ export const createBlogPostHandler = async (req, res, next) => {
       {
         thumbnailImageKey: thumbnailImageKey || null,
         galleryKeys: Array.isArray(galleryKeys) ? galleryKeys : [],
-        embedKeys: Array.isArray(embedKeys) ? embedKeys : [],
-        // NEW: pass the extra scalars through
+        embedKeys:  Array.isArray(embedKeys)  ? embedKeys  : [],
         subTitle: subTitle ?? null,
-        subject: subject ?? null,
+        subject:  subject  ?? null,
         location: location ?? null,
-      }
-      // isPublished stays default (false) unless you add it here
+      },
+      /* isPublished */ true
     );
 
     if (!post) {
-      const notFound = new NotFoundEvent(
-        req.user,
-        EVENT_MESSAGES.blogNotFound,
-        EVENT_MESSAGES.blogTag
-      );
+      const notFound = new NotFoundEvent(req.user, EVENT_MESSAGES.blogNotFound, EVENT_MESSAGES.blogTag);
       myEmitterErrors.emit('error', notFound);
       return sendMessageResponse(res, notFound.code, notFound.message);
     }
 
     myEmitterBlogs.emit('create-blog', req.user);
+
+    // return a small payload (your FE only uses title for the toast)
     return sendDataResponse(res, 201, { post });
   } catch (err) {
-    const serverError = new ServerErrorEvent(
-      req.user,
-      'Create blog post failed'
-    );
+    const serverError = new ServerErrorEvent(req.user, 'Create blog post failed');
     myEmitterErrors.emit('error', serverError);
     return sendMessageResponse(res, serverError.code, serverError.message);
   }

@@ -69,6 +69,7 @@ export const findBlogPostsByTag = (tag) =>
       },
     },
   });
+
 export async function createBlogPost(
   title,
   slug,
@@ -80,14 +81,12 @@ export async function createBlogPost(
     thumbnailImageKey = null,
     galleryKeys = [],
     embedKeys = [],
-    // NEW optional scalars
     subTitle = null,
     subject = null,
     location = null,
   } = {},
   isPublished = true
 ) {
-  // create post (keep legacy thumbnailImage column in case you still read it on FE)
   const post = await dbClient.blogPost.create({
     data: {
       title,
@@ -96,84 +95,100 @@ export async function createBlogPost(
       authorId,
       authorName,
       isPublished,
-      // persist the optional fields (nulls are fine)
-      subTitle: subTitle ?? null,
-      subject: subject ?? null,
-      location: location ?? null,
-      ...(Array.isArray(tagNames) && tagNames.length
-        ? {
-            tags: {
-              connectOrCreate: tagNames.map((name) => ({
-                where: { name },
-                create: { name },
-              })),
-            },
-          }
-        : {}),
+      subTitle,
+      subject,
+      location,
       ...(thumbnailImageKey ? { thumbnailImage: thumbnailImageKey } : {}),
     },
-    select: { id: true, slug: true },
+    select: { id: true, title: true, slug: true },
   });
 
-  const ensureMedia = async (key) =>
-    dbClient.media.upsert({
-      where: { key },
-      update: {},
-      create: { key },
+  const uniqueTagNames = Array.from(new Set((tagNames || []).map((s) => String(s).trim()).filter(Boolean)));
+  const allMediaKeys   = Array.from(new Set([thumbnailImageKey, ...galleryKeys, ...embedKeys].filter(Boolean)));
+
+  // Tags (BlogTag) — run independently, no transaction
+  const tagTask = (async () => {
+    if (!uniqueTagNames.length) return;
+
+    await dbClient.blogTag.createMany({
+      data: uniqueTagNames.map((name) => ({ name })),
+      skipDuplicates: true,
+    });
+
+    const tags = await dbClient.blogTag.findMany({
+      where: { name: { in: uniqueTagNames } },
       select: { id: true },
     });
 
-  const links = [];
+    if (tags.length) {
+      // If your relation field on BlogPost is named differently, change `tags` below.
+      await dbClient.blogPost.update({
+        where: { id: post.id },
+        data: { tags: { connect: tags.map((t) => ({ id: t.id })) } },
+        select: { id: true },
+      });
+    }
+  })();
 
-  // THUMBNAIL
-  if (thumbnailImageKey) {
-    const m = await ensureMedia(thumbnailImageKey);
-    links.push({
-      blogPostId: post.id,
-      mediaId: m.id,
-      role: 'THUMBNAIL',
-      position: 0,
+  // Media + links — run independently, no transaction
+  const mediaTask = (async () => {
+    if (!allMediaKeys.length) return;
+
+    await dbClient.media.createMany({
+      data: allMediaKeys.map((key) => ({ key })),
+      skipDuplicates: true,
     });
-  }
 
-  // GALLERY
-  let pos = 0;
-  for (const key of galleryKeys) {
-    const m = await ensureMedia(key);
-    links.push({
-      blogPostId: post.id,
-      mediaId: m.id,
-      role: 'GALLERY',
-      position: pos++,
+    const medias = await dbClient.media.findMany({
+      where: { key: { in: allMediaKeys } },
+      select: { id: true, key: true },
     });
-  }
+    const idByKey = Object.fromEntries(medias.map((m) => [m.key, m.id]));
 
-  // EMBED
-  pos = 0;
-  for (const key of embedKeys) {
-    const m = await ensureMedia(key);
-    links.push({
-      blogPostId: post.id,
-      mediaId: m.id,
-      role: 'EMBED',
-      position: pos++,
+    const links = [];
+
+    if (thumbnailImageKey && idByKey[thumbnailImageKey]) {
+      links.push({
+        blogPostId: post.id,
+        mediaId: idByKey[thumbnailImageKey],
+        role: 'THUMBNAIL',
+        position: 0,
+      });
+    }
+
+    galleryKeys.forEach((k, i) => {
+      if (idByKey[k]) {
+        links.push({
+          blogPostId: post.id,
+          mediaId: idByKey[k],
+          role: 'GALLERY',
+          position: i,
+        });
+      }
     });
-  }
 
-  if (links.length) {
-    await dbClient.blogMedia.createMany({ data: links, skipDuplicates: true });
-  }
+    embedKeys.forEach((k, i) => {
+      if (idByKey[k]) {
+        links.push({
+          blogPostId: post.id,
+          mediaId: idByKey[k],
+          role: 'EMBED',
+          position: i,
+        });
+      }
+    });
 
-  return dbClient.blogPost.findUnique({
-    where: { id: post.id },
-    include: {
-      tags: true,
-      mediaLinks: {
-        include: { media: true },
-        orderBy: [{ role: 'asc' }, { position: 'asc' }],
-      },
-    },
-  });
+    if (links.length) {
+      await dbClient.blogMedia.createMany({
+        data: links,
+        skipDuplicates: true,
+      });
+    }
+  })();
+
+  await Promise.all([tagTask, mediaTask]);
+
+  return post; // minimal shape already (id/title/slug)
 }
 
 export const findBlogPostsPaged = async (limit = 10, page = 1) => {
@@ -210,6 +225,8 @@ export const findBlogPostsPaged = async (limit = 10, page = 1) => {
     hasNextPage,
   };
 };
+
+
 export async function updateBlogPost(
   id,
   // scalars: only fields you provide (not undefined) will be updated
@@ -259,108 +276,86 @@ export async function updateBlogPost(
     }
   }
 
-  // ---- 3) MEDIA (skip gracefully if models don't exist) ---------------
   const canLinkMedia =
-    !!dbClient?.media?.createMany &&
-    !!dbClient?.media?.findMany &&
-    !!dbClient?.blogMedia?.createMany &&
-    !!dbClient?.blogMedia?.deleteMany &&
-    !!dbClient?.blogMedia?.create;
+  !!dbClient?.media?.createMany &&
+  !!dbClient?.media?.findMany &&
+  !!dbClient?.blogMedia?.createMany &&
+  !!dbClient?.blogMedia?.deleteMany &&
+  !!dbClient?.blogMedia?.create;
 
-  if (canLinkMedia) {
-    // Collect keys we might need to ensure exist in Media table
-    const keysToEnsure = [
-      ...(featuredImageKey ? [featuredImageKey] : []),
-      ...(thumbnailImageKey ? [thumbnailImageKey] : []),
-      ...(Array.isArray(galleryKeys) ? galleryKeys : []),
-      ...(Array.isArray(embedKeys) ? embedKeys : []),
-    ];
+if (canLinkMedia) {
+  // helpers
+  const uniq = (arr) => Array.from(new Set((arr || []).filter(Boolean)));
 
-    // Ensure Media rows exist (bulk insert then read back)
-    let idByKey = new Map();
-    if (keysToEnsure.length) {
-      await dbClient.media.createMany({
-        data: keysToEnsure.map((key) => ({ key })),
-        skipDuplicates: true,
-      });
-      const mediaRows = await dbClient.media.findMany({
-        where: { key: { in: keysToEnsure } },
-        select: { id: true, key: true },
-      });
-      idByKey = new Map(mediaRows.map((m) => [m.key, m.id]));
-    }
+  // sanitize inputs (undefined = no change; [] = replace with empty)
+  const sanitized = {
+    featuredImageKey,                      // string | null | undefined
+    thumbnailImageKey,                    // string | null | undefined
+    gallery:  (galleryKeys === undefined) ? undefined : uniq(galleryKeys),
+    embed:    (embedKeys   === undefined) ? undefined : uniq(embedKeys),
+  };
 
-    // FEATURED (replace if provided; clear if null)
-    if (featuredImageKey !== undefined) {
-      await dbClient.blogMedia.deleteMany({
-        where: { blogPostId: id, role: 'FEATURED' },
-      });
-      if (featuredImageKey) {
-        await dbClient.blogMedia.create({
-          data: {
-            blogPostId: id,
-            mediaId: idByKey.get(featuredImageKey),
-            role: 'FEATURED',
-            position: 0,
-          },
-        });
-      }
-    }
+  // Keys we must ensure exist in Media rows
+  const keysToEnsure = uniq([
+    ...(sanitized.featuredImageKey ? [sanitized.featuredImageKey] : []),
+    ...(sanitized.thumbnailImageKey ? [sanitized.thumbnailImageKey] : []),
+    ...(sanitized.gallery || []),
+    ...(sanitized.embed   || []),
+  ]);
 
-    // THUMBNAIL (replace if provided; clear if null)
-    if (thumbnailImageKey !== undefined) {
-      await dbClient.blogMedia.deleteMany({
-        where: { blogPostId: id, role: 'THUMBNAIL' },
-      });
-      if (thumbnailImageKey) {
-        await dbClient.blogMedia.create({
-          data: {
-            blogPostId: id,
-            mediaId: idByKey.get(thumbnailImageKey),
-            role: 'THUMBNAIL',
-            position: 0,
-          },
-        });
-      }
-    }
-
-    // GALLERY (replace if provided)
-    if (galleryKeys !== undefined) {
-      await dbClient.blogMedia.deleteMany({
-        where: { blogPostId: id, role: 'GALLERY' },
-      });
-      if (Array.isArray(galleryKeys) && galleryKeys.length) {
-        await dbClient.blogMedia.createMany({
-          data: galleryKeys.map((key, i) => ({
-            blogPostId: id,
-            mediaId: idByKey.get(key),
-            role: 'GALLERY',
-            position: i,
-          })),
-          skipDuplicates: true,
-        });
-      }
-    }
-
-    // EMBED (replace if provided)
-    if (embedKeys !== undefined) {
-      await dbClient.blogMedia.deleteMany({
-        where: { blogPostId: id, role: 'EMBED' },
-      });
-      if (Array.isArray(embedKeys) && embedKeys.length) {
-        await dbClient.blogMedia.createMany({
-          data: embedKeys.map((key, i) => ({
-            blogPostId: id,
-            mediaId: idByKey.get(key),
-            role: 'EMBED',
-            position: i,
-          })),
-          skipDuplicates: true,
-        });
-      }
-    }
+  // Ensure Media rows exist, then build idByKey map
+  let idByKey = new Map();
+  if (keysToEnsure.length) {
+    await dbClient.media.createMany({ data: keysToEnsure.map((key) => ({ key })), skipDuplicates: true });
+    const mediaRows = await dbClient.media.findMany({
+      where: { key: { in: keysToEnsure } },
+      select: { id: true, key: true },
+    });
+    idByKey = new Map(mediaRows.map((m) => [m.key, m.id]));
   }
 
+  // helper to replace all links for a given role atomically (delete then create)
+  const replaceRole = async (role, items /* [{key, pos}] */) => {
+    await dbClient.blogMedia.deleteMany({ where: { blogPostId: id, role } });
+    if (items && items.length) {
+      await dbClient.blogMedia.createMany({
+        data: items.map(({ key, pos }) => ({
+          blogPostId: id,
+          mediaId: idByKey.get(key),
+          role,
+          position: pos,
+        })),
+        skipDuplicates: true,
+      });
+    }
+  };
+
+  // build tasks; only run for fields explicitly provided
+  const tasks = [];
+
+  if (sanitized.featuredImageKey !== undefined) {
+    const items = sanitized.featuredImageKey ? [{ key: sanitized.featuredImageKey, pos: 0 }] : [];
+    tasks.push(replaceRole('FEATURED', items));
+  }
+
+  if (sanitized.thumbnailImageKey !== undefined) {
+    const items = sanitized.thumbnailImageKey ? [{ key: sanitized.thumbnailImageKey, pos: 0 }] : [];
+    tasks.push(replaceRole('THUMBNAIL', items));
+  }
+
+  if (sanitized.gallery !== undefined) {
+    const items = (sanitized.gallery || []).map((key, i) => ({ key, pos: i }));
+    tasks.push(replaceRole('GALLERY', items));
+  }
+
+  if (sanitized.embed !== undefined) {
+    const items = (sanitized.embed || []).map((key, i) => ({ key, pos: i }));
+    tasks.push(replaceRole('EMBED', items));
+  }
+
+  // run role updates in parallel
+  if (tasks.length) await Promise.all(tasks);
+}
   // ---- 4) RETURN hydrated post ---------------------------------------
   const include = {
     tags: true,
