@@ -19,7 +19,7 @@ const params = {
         AllowedHeaders: ['*'],
         AllowedMethods: ['GET', 'PUT', 'POST', 'HEAD'],
         AllowedOrigins: [
-          'http://localhost:3000', 'https://groundedandhealing.app'
+          'http://localhost:3000', 'https://groundedandhealing.app', 'https://outerclean.netlify.app'
         ],
         ExposeHeaders: ['ETag', 'x-amz-request-id'],
         MaxAgeSeconds: 3000,

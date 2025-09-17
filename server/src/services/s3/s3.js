@@ -12,6 +12,13 @@ const s3 = new S3Client({
   forcePathStyle: true // important for Hetzner
 });
 
+export const BUCKET = process.env.HZS3_BUCKET || process.env.BUCKET || '';
+if (!BUCKET) {
+  // log once so you notice in dev
+  console.warn('[S3] BUCKET env var is empty');
+}
+
+
 export async function signGetObject({ bucket, key, contentType, expiresIn = 300 }) {
   const cmd = new GetObjectCommand({
     Bucket: bucket,
