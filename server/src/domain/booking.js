@@ -212,3 +212,4 @@ export const deleteBookingById = async (id) => {
 export const deleteAllBookings = async () => {
   return dbClient.bookingItem.deleteMany({});
 };
+

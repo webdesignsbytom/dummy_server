@@ -97,35 +97,335 @@ model CallbackForm {
   updatedAt   DateTime? @updatedAt
 }
 
-// Booking
-model BookingItem {
-  id              String    @id @default(uuid())
-  time            Int       @default(0)
-  date            DateTime
-  fullName        String    @default("")
-  phoneNumber     String    @default("")
-  email           String    @default("")
-  uniqueString    String    @default("")
-  bookingApproved Boolean   @default(false)
-  denied          Boolean   @default(false)
-  cancelled       Boolean   @default(false)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime? @updatedAt
+/* ===== Booking Engine Enums ===== */
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  DENIED
+  NOSHOW
 }
 
-model OpeningTime {
-  id        Int     @id @default(autoincrement())
-  dayOfWeek Int     @unique
-  open      Boolean
-  start     String?
-  end       String?
+enum PaymentStatus {
+  PENDING
+  AUTHORIZED
+  CAPTURED
+  REFUNDED
+  FAILED
+  CANCELED
 }
 
-model DayClosed {
-  id        Int      @id @default(autoincrement())
-  date      DateTime @unique
-  reason    String?
-  createdAt DateTime @default(now())
+enum NotificationChannel {
+  EMAIL
+  SMS
+  WEBHOOK
+}
+
+enum NotificationStatus {
+  QUEUED
+  SENT
+  FAILED
+}
+
+enum RecurrenceFreq {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+/* ===== Booking Engine Core ===== */
+
+model Resource {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  timeZone    String                      // IANA tz, e.g. "Europe/London"
+  capacity    Int       @default(1)
+  active      Boolean   @default(true)
+  locationId  String?
+
+  location    Location? @relation(fields: [locationId], references: [id], onDelete: SetNull)
+
+  bookings    Booking[]
+  rules       AvailabilityRule[]
+  dated       AvailabilityDateWindow[]
+  exceptions  AvailabilityException[]
+  tags        ResourceTag[]
+  calendars   ExternalCalendar[]          // <— enabled
+  waitlists   Waitlist[]
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Service {
+  id               String   @id @default(uuid())
+  name             String   @unique
+  defaultDuration  Int      @default(60)      // minutes
+  bufferBefore     Int      @default(0)       // minutes
+  bufferAfter      Int      @default(0)       // minutes
+  minLeadMin       Int      @default(0)       // minutes
+  maxAdvanceDays   Int?                        // days
+  // clock-only cutoff (local) — store as TIME
+  sameDayCutoff    DateTime? @db.Time(6)
+
+  active           Boolean   @default(true)
+
+  bookings         Booking[]
+  waitlists        Waitlist[]
+
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+/* Availability:
+   - startTime/endTime as TIME via DateTime @db.Time(6)
+   - date-only values normalized to midnight UTC in your app
+*/
+
+model AvailabilityRule {
+  id          Int       @id @default(autoincrement())
+  resourceId  String
+  weekday     Int                     // 0..6 (Sun..Sat)
+  startTime   DateTime  @db.Time(6)   // local clock time
+  endTime     DateTime  @db.Time(6)
+  validFrom   DateTime?
+  validTo     DateTime?
+
+  resource    Resource  @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  @@index([resourceId, weekday])
+  @@index([resourceId, validFrom])
+}
+
+model AvailabilityDateWindow {
+  id          Int       @id @default(autoincrement())
+  resourceId  String
+  date        DateTime                // normalized to local date's midnight (UTC)
+  startTime   DateTime  @db.Time(6)   // local clock time
+  endTime     DateTime  @db.Time(6)
+  note        String?
+
+  resource    Resource  @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  @@index([resourceId, date])
+  @@unique([resourceId, date, startTime, endTime])
+}
+
+model AvailabilityException {
+  id          Int        @id @default(autoincrement())
+  resourceId  String
+  startAt     DateTime   @db.Timestamptz(6)   // absolute instants
+  endAt       DateTime   @db.Timestamptz(6)
+  reason      String?
+
+  resource    Resource   @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  @@index([resourceId, startAt])
+  @@index([resourceId, endAt])
+}
+
+/* Bookings (absolute instants in UTC) */
+
+model Booking {
+  id              String        @id @default(uuid())
+  resourceId      String
+  serviceId       String?
+  status          BookingStatus @default(PENDING)
+
+  startAt         DateTime      @db.Timestamptz(6)
+  endAt           DateTime      @db.Timestamptz(6)
+  timeZone        String                         // the tz used when scheduling
+
+  fullName        String        @default("")
+  email           String        @default("")
+  phoneNumber     String        @default("")
+
+  token           String        @unique
+  headcount       Int           @default(1)
+  expiresAt       DateTime?     @db.Timestamptz(6)
+  cancelledAt     DateTime?     @db.Timestamptz(6)
+  cancelledReason String?
+  notes           String?
+  meta            Json?
+
+  recurrenceId    String?
+  recurrenceSeq   Int?
+
+  resource        Resource      @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  service         Service?      @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+
+  /* Extras back-relations (enabled) */
+  payments        Payment[]
+  notifications   Notification[]
+  parties         BookingParty[]
+  history         BookingHistory[]
+  screening       ScreeningResponse?
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([resourceId, startAt])
+  @@index([status])
+  @@index([email])
+}
+
+/* Waitlist */
+
+model Waitlist {
+  id          String   @id @default(uuid())
+  resourceId  String
+  serviceId   String?
+  desiredDate DateTime             // normalized to local midnight (UTC)
+  fullName    String
+  email       String
+  phoneNumber String?
+  notes       String?
+
+  resource    Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  service     Service? @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+
+  createdAt   DateTime @default(now())
+
+  @@index([resourceId, desiredDate])
+}
+
+/* ===== Extras ===== */
+
+/* Recurrence definition for generating series (optional) */
+model RecurrencePattern {
+  id           String         @id @default(uuid())
+  resourceId   String
+  serviceId    String?
+  freq         RecurrenceFreq
+  interval     Int            @default(1)
+  count        Int?
+  until        DateTime?
+  byWeekday    String?                          // e.g. "TU,TH"
+  startTime    DateTime?     @db.Time(6)        // local start template
+  durationMin  Int?
+
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+/* Attendees for group bookings (if using one-row-per-booking) */
+model BookingParty {
+  id        String   @id @default(uuid())
+  bookingId String
+  name      String
+  email     String
+
+  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@unique([bookingId, email])
+}
+
+/* Payments */
+model Payment {
+  id            String        @id @default(uuid())
+  bookingId     String
+  provider      String                         // "stripe", "paypal", etc.
+  providerRef   String?
+  amountCents   Int
+  currency      String        @default("USD")
+  status        PaymentStatus @default(PENDING)
+  capturedAt    DateTime?
+  refundedAt    DateTime?
+  payload       Json?                           // gateway payload
+
+  booking       Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([bookingId, status])
+}
+
+/* Notifications (confirmations, reminders, webhooks) */
+model Notification {
+  id          String              @id @default(uuid())
+  bookingId   String
+  channel     NotificationChannel
+  status      NotificationStatus  @default(QUEUED)
+  toAddress   String?             // email or phone
+  sendAt      DateTime?           // schedule (e.g., 24h reminder)
+  sentAt      DateTime?
+  templateKey String?
+  payload     Json?
+
+  booking     Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([bookingId, channel, status])
+}
+
+/* External calendar sync (Google/Outlook) */
+model ExternalCalendar {
+  id            String   @id @default(uuid())
+  resourceId    String
+  provider      String                 // "google", "outlook"
+  externalId    String                 // calendar id
+  syncToken     String?
+  lastSyncedAt  DateTime?
+
+  resource      Resource  @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, externalId])
+  @@index([resourceId])
+}
+
+/* Screening / intake form answers */
+model ScreeningResponse {
+  id          String   @id @default(uuid())
+  bookingId   String   @unique
+  answers     Json
+  createdAt   DateTime @default(now())
+
+  booking     Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+}
+
+/* Booking status/audit history */
+model BookingHistory {
+  id          String        @id @default(uuid())
+  bookingId   String
+  fromStatus  BookingStatus?
+  toStatus    BookingStatus?
+  note        String?
+  actor       String?       // who changed it (userId/email/ip)
+  createdAt   DateTime      @default(now())
+
+  booking     Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId, createdAt])
+}
+
+/* ===== Content / Media / Blog (unchanged from your version) ===== */
+
+model Location {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  address   String?
+  timeZone  String?
+  active    Boolean  @default(true)
+  resources Resource[]
+}
+
+model Tag {
+  id        String       @id @default(uuid())
+  name      String       @unique
+  resources ResourceTag[]
+}
+
+model ResourceTag {
+  resourceId String
+  tagId      String
+  resource   Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  tag        Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([resourceId, tagId])
 }
 
 // Newsletter

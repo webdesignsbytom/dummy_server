@@ -1,0 +1,1761 @@
+type: collection.insomnia.rest/5.0
+name: Dummy Server
+meta:
+  id: wrk_a63420137a9046d6b09999701f3b8a31
+  created: 1758138576961
+  modified: 1758138576961
+  description: ""
+collection:
+  - name: Booking New
+    meta:
+      id: fld_e8779a10a4664ded81b293575951627d
+      created: 1758136038443
+      modified: 1758139999999
+      sortKey: -1758136038443
+      description: ""
+    children:
+      # =========================
+      # PUBLIC – Availability
+      # =========================
+      - url: http://localhost:4000/booking/availability/get-days
+        name: Availability – days (L)
+        meta:
+          id: req_bnew_av_days_l
+          created: 1758139000001
+          modified: 1758139000001
+          isPrivate: false
+          description: ""
+          sortKey: 0
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+      - url: http://localhost:4000/booking/availability/get-slots
+        name: Availability – slots (L)
+        meta:
+          id: req_bnew_av_slots_l
+          created: 1758139000002
+          modified: 1758139000002
+          isPrivate: false
+          description: ""
+          sortKey: 1
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      # =========================
+      # PUBLIC – Booking by token flow
+      # =========================
+      - url: http://localhost:4000/booking/create-new-booking-request
+        name: Create booking HOLD (L)
+        meta:
+          id: req_bnew_hold_create_l
+          created: 1758139000010
+          modified: 1758139000010
+          isPrivate: false
+          description: ""
+          sortKey: 2
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "serviceId": "svc_123",
+              "resourceId": "res_123",
+              "startAt": "2025-10-01T10:00:00.000Z",
+              "endAt": "2025-10-01T11:00:00.000Z",
+              "fullName": "Jane Doe",
+              "email": "jane@example.com",
+              "phoneNumber": "+15551234567",
+              "notes": "Optional notes"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/view-booking-by-token/00000000-0000-4000-a000-000000000000
+        name: View booking by token (L)
+        meta:
+          id: req_bnew_view_token_l
+          created: 1758139000011
+          modified: 1758139000011
+          isPrivate: false
+          description: ""
+          sortKey: 3
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/11111111-1111-4111-a111-111111111111/confirm-by-token/00000000-0000-4000-a000-000000000000
+        name: Confirm booking by token (L)
+        meta:
+          id: req_bnew_confirm_token_l
+          created: 1758139000012
+          modified: 1758139000012
+          isPrivate: false
+          description: ""
+          sortKey: 4
+        method: PATCH
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/11111111-1111-4111-a111-111111111111/cancel-by-token/00000000-0000-4000-a000-000000000000
+        name: Cancel booking by token (L)
+        meta:
+          id: req_bnew_cancel_token_l
+          created: 1758139000013
+          modified: 1758139000013
+          isPrivate: false
+          description: ""
+          sortKey: 5
+        method: PATCH
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      # =========================
+      # PUBLIC – Waitlist
+      # =========================
+      - url: http://localhost:4000/booking/join-waitlist
+        name: Join waitlist (L)
+        meta:
+          id: req_bnew_waitlist_join_l
+          created: 1758139000020
+          modified: 1758139000020
+          isPrivate: false
+          description: ""
+          sortKey: 6
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "resourceId": "res_123",
+              "date": "2025-10-01",
+              "email": "jane@example.com",
+              "fullName": "Jane Doe",
+              "phoneNumber": "+15551234567"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/waitlist/list-waitlist
+        name: List waitlist (L)
+        meta:
+          id: req_bnew_waitlist_list_l
+          created: 1758139000021
+          modified: 1758139000021
+          isPrivate: false
+          description: ""
+          sortKey: 7
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/waitlist/delete-waitlist-entry/00000000-0000-4000-a000-000000000000
+        name: Delete waitlist entry (L)
+        meta:
+          id: req_bnew_waitlist_delete_l
+          created: 1758139000022
+          modified: 1758139000022
+          isPrivate: false
+          description: ""
+          sortKey: 8
+        method: DELETE
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/admin/waitlist/delete-waitlist-entry
+        name: Admin delete waitlist entry (L)
+        meta:
+          id: req_bnew_waitlist_admin_delete_l
+          created: 1758139000023
+          modified: 1758139000023
+          isPrivate: false
+          description: ""
+          sortKey: 9
+        method: DELETE
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "email": "jane@example.com",
+              "date": "2025-10-01",
+              "resourceId": "res_123"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      # =========================
+      # AUTH – My bookings
+      # =========================
+      - url: http://localhost:4000/booking/user/get-my-bookings
+        name: My bookings (L)
+        meta:
+          id: req_bnew_me_list_l
+          created: 1758139000030
+          modified: 1758139000030
+          isPrivate: false
+          description: ""
+          sortKey: 10
+        method: GET
+        authentication:
+          type: bearer
+          token: "{{ _.token }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/user/get-booking-by-id/11111111-1111-4111-a111-111111111111
+        name: Get my booking by id (L)
+        meta:
+          id: req_bnew_me_get_l
+          created: 1758139000031
+          modified: 1758139000031
+          isPrivate: false
+          description: ""
+          sortKey: 11
+        method: GET
+        authentication:
+          type: bearer
+          token: "{{ _.token }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/user/11111111-1111-4111-a111-111111111111/reschedule
+        name: Reschedule my booking (L)
+        meta:
+          id: req_bnew_me_reschedule_l
+          created: 1758139000032
+          modified: 1758139000032
+          isPrivate: false
+          description: ""
+          sortKey: 12
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "startAt": "2025-10-02T10:00:00.000Z",
+              "endAt": "2025-10-02T11:00:00.000Z"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication:
+          type: bearer
+          token: "{{ _.token }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/user/11111111-1111-4111-a111-111111111111/cancel
+        name: Cancel my booking (L)
+        meta:
+          id: req_bnew_me_cancel_l
+          created: 1758139000033
+          modified: 1758139000033
+          isPrivate: false
+          description: ""
+          sortKey: 13
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "reason": "No longer available"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication:
+          type: bearer
+          token: "{{ _.token }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      # =========================
+      # AUTH – Screening
+      # =========================
+      - url: http://localhost:4000/booking/user/11111111-1111-4111-a111-111111111111/screening
+        name: Upsert screening (L)
+        meta:
+          id: req_bnew_me_screening_upsert_l
+          created: 1758139000040
+          modified: 1758139000040
+          isPrivate: false
+          description: ""
+          sortKey: 14
+        method: PUT
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "answers": {
+                "q1": "Yes",
+                "q2": "No"
+              }
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication:
+          type: bearer
+          token: "{{ _.token }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/user/11111111-1111-4111-a111-111111111111/screening
+        name: Get screening (L)
+        meta:
+          id: req_bnew_me_screening_get_l
+          created: 1758139000041
+          modified: 1758139000041
+          isPrivate: false
+          description: ""
+          sortKey: 15
+        method: GET
+        authentication:
+          type: bearer
+          token: "{{ _.token }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      # =========================
+      # AUTH – Payments (create/list)
+      # =========================
+      - url: http://localhost:4000/booking/user/11111111-1111-4111-a111-111111111111/payments
+        name: Create payment intent (L)
+        meta:
+          id: req_bnew_me_pay_create_l
+          created: 1758139000042
+          modified: 1758139000042
+          isPrivate: false
+          description: ""
+          sortKey: 16
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "amount": 12000,
+              "currency": "usd",
+              "provider": "stripe"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication:
+          type: bearer
+          token: "{{ _.token }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/user/11111111-1111-4111-a111-111111111111/payments
+        name: List my booking payments (L)
+        meta:
+          id: req_bnew_me_pay_list_l
+          created: 1758139000043
+          modified: 1758139000043
+          isPrivate: false
+          description: ""
+          sortKey: 17
+        method: GET
+        authentication:
+          type: bearer
+          token: "{{ _.token }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      # =========================
+      # ADMIN – Resources
+      # =========================
+      - url: http://localhost:4000/booking/admin/list-resources
+        name: List resources (L)
+        meta:
+          id: req_bnew_res_list_l
+          created: 1758139000050
+          modified: 1758139000050
+          isPrivate: false
+          description: ""
+          sortKey: 18
+        method: GET
+        authentication:
+          type: bearer
+          token: "{{ _.adminToken }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/admin/get-resource-by-id/res_123
+        name: Get resource (L)
+        meta:
+          id: req_bnew_res_get_l
+          created: 1758139000051
+          modified: 1758139000051
+          isPrivate: false
+          description: ""
+          sortKey: 19
+        method: GET
+        authentication:
+          type: bearer
+          token: "{{ _.adminToken }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/admin/create-resource
+        name: Create resource (L)
+        meta:
+          id: req_bnew_res_create_l
+          created: 1758139000052
+          modified: 1758139000052
+          isPrivate: false
+          description: ""
+          sortKey: 20
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "Room A",
+              "type": "ROOM",
+              "capacity": 1
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication:
+          type: bearer
+          token: "{{ _.adminToken }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/admin/update-resource/res_123
+        name: Update resource (L)
+        meta:
+          id: req_bnew_res_update_l
+          created: 1758139000053
+          modified: 1758139000053
+          isPrivate: false
+          description: ""
+          sortKey: 21
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "Room A (Updated)"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication:
+          type: bearer
+          token: "{{ _.adminToken }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/admin/delete-resource/res_123
+        name: Delete resource (L)
+        meta:
+          id: req_bnew_res_delete_l
+          created: 1758139000054
+          modified: 1758139000054
+          isPrivate: false
+          description: ""
+          sortKey: 22
+        method: DELETE
+        authentication:
+          type: bearer
+          token: "{{ _.adminToken }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      # Resource tags
+      - url: http://localhost:4000/booking/admin/add-resource-tag/res_123/tags
+        name: Attach tags to resource (L)
+        meta:
+          id: req_bnew_res_tag_attach_l
+          created: 1758139000055
+          modified: 1758139000055
+          isPrivate: false
+          description: ""
+          sortKey: 23
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "tags": ["portrait", "studio"]
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication:
+          type: bearer
+          token: "{{ _.adminToken }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/admin/delete-resource-tag/res_123/tags/portrait
+        name: Detach tag from resource (L)
+        meta:
+          id: req_bnew_res_tag_detach_l
+          created: 1758139000056
+          modified: 1758139000056
+          isPrivate: false
+          description: ""
+          sortKey: 24
+        method: DELETE
+        authentication:
+          type: bearer
+          token: "{{ _.adminToken }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      # =========================
+      # ADMIN – Services
+      # =========================
+      - url: http://localhost:4000/booking/admin/list-services
+        name: List services (L)
+        meta:
+          id: req_bnew_srv_list_l
+          created: 1758139000060
+          modified: 1758139000060
+          isPrivate: false
+          description: ""
+          sortKey: 25
+        method: GET
+        authentication:
+          type: bearer
+          token: "{{ _.adminToken }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/admin/get-service-by-id/svc_123
+        name: Get service (L)
+        meta:
+          id: req_bnew_srv_get_l
+          created: 1758139000061
+          modified: 1758139000061
+          isPrivate: false
+          description: ""
+          sortKey: 26
+        method: GET
+        authentication:
+          type: bearer
+          token: "{{ _.adminToken }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/admin/create-service
+        name: Create service (L)
+        meta:
+          id: req_bnew_srv_create_l
+          created: 1758139000062
+          modified: 1758139000062
+          isPrivate: false
+          description: ""
+          sortKey: 27
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "name": "Portrait Session",
+              "durationMins": 60,
+              "price": 12000
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication:
+          type: bearer
+          token: "{{ _.adminToken }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/admin/update-service/svc_123
+        name: Update service (L)
+        meta:
+          id: req_bnew_srv_update_l
+          created: 1758139000063
+          modified: 1758139000063
+          isPrivate: false
+          description: ""
+          sortKey: 28
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "price": 15000
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication:
+          type: bearer
+          token: "{{ _.adminToken }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/admin/delete-service/svc_123
+        name: Delete service (L)
+        meta:
+          id: req_bnew_srv_delete_l
+          created: 1758139000064
+          modified: 1758139000064
+          isPrivate: false
+          description: ""
+          sortKey: 29
+        method: DELETE
+        authentication:
+          type: bearer
+          token: "{{ _.adminToken }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      # =========================
+      # ADMIN – Rules (weekly)
+      # =========================
+      - url: http://localhost:4000/booking/admin/list-resource-rules/res_123
+        name: List rules (L)
+        meta:
+          id: req_bnew_rules_list_l
+          created: 1758139000070
+          modified: 1758139000070
+          isPrivate: false
+          description: ""
+          sortKey: 30
+        method: GET
+        authentication:
+          type: bearer
+          token: "{{ _.adminToken }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/admin/create-resource-rule/res_123
+        name: Create rule (L)
+        meta:
+          id: req_bnew_rules_create_l
+          created: 1758139000071
+          modified: 1758139000071
+          isPrivate: false
+          description: ""
+          sortKey: 31
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "dayOfWeek": 1,
+              "startTime": "09:00",
+              "endTime": "17:00"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication:
+          type: bearer
+          token: "{{ _.adminToken }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/admin/update-resource-rule/res_123/rule_123
+        name: Update rule (L)
+        meta:
+          id: req_bnew_rules_update_l
+          created: 1758139000072
+          modified: 1758139000072
+          isPrivate: false
+          description: ""
+          sortKey: 32
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "startTime": "10:00",
+              "endTime": "18:00"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication:
+          type: bearer
+          token: "{{ _.adminToken }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/admin/delete-resource-weekly-rule/rule_123
+        name: Delete rule (L)
+        meta:
+          id: req_bnew_rules_delete_l
+          created: 1758139000073
+          modified: 1758139000073
+          isPrivate: false
+          description: ""
+          sortKey: 33
+        method: DELETE
+        authentication:
+          type: bearer
+          token: "{{ _.adminToken }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      # =========================
+      # ADMIN – Dated windows
+      # =========================
+      - url: http://localhost:4000/booking/admin/list-dated-windows/res_123
+        name: List dated windows (L)
+        meta:
+          id: req_bnew_windows_list_l
+          created: 1758139000080
+          modified: 1758139000080
+          isPrivate: false
+          description: ""
+          sortKey: 34
+        method: GET
+        authentication:
+          type: bearer
+          token: "{{ _.adminToken }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/admin/create-dated-window/res_123
+        name: Create dated window (L)
+        meta:
+          id: req_bnew_windows_create_l
+          created: 1758139000081
+          modified: 1758139000081
+          isPrivate: false
+          description: ""
+          sortKey: 35
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "date": "2025-10-05",
+              "startTime": "12:00",
+              "endTime": "16:00"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication:
+          type: bearer
+          token: "{{ _.adminToken }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/admin/update-dated-window/res_123/win_123
+        name: Update dated window (L)
+        meta:
+          id: req_bnew_windows_update_l
+          created: 1758139000082
+          modified: 1758139000082
+          isPrivate: false
+          description: ""
+          sortKey: 36
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "startTime": "13:00",
+              "endTime": "17:00"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication:
+          type: bearer
+          token: "{{ _.adminToken }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/admin/delete-dated-window/res_123/win_123
+        name: Delete dated window (L)
+        meta:
+          id: req_bnew_windows_delete_l
+          created: 1758139000083
+          modified: 1758139000083
+          isPrivate: false
+          description: ""
+          sortKey: 37
+        method: DELETE
+        authentication:
+          type: bearer
+          token: "{{ _.adminToken }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      # =========================
+      # ADMIN – Exceptions
+      # =========================
+      - url: http://localhost:4000/booking/admin/exceptions/resources/list-resource-exceptions/res_123
+        name: List exceptions (L)
+        meta:
+          id: req_bnew_exc_list_l
+          created: 1758139000090
+          modified: 1758139000090
+          isPrivate: false
+          description: ""
+          sortKey: 38
+        method: GET
+        authentication:
+          type: bearer
+          token: "{{ _.adminToken }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/admin/exceptions/resources/create-resource-exception/res_123
+        name: Create exception (L)
+        meta:
+          id: req_bnew_exc_create_l
+          created: 1758139000091
+          modified: 1758139000091
+          isPrivate: false
+          description: ""
+          sortKey: 39
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "date": "2025-10-10",
+              "startTime": "09:00",
+              "endTime": "12:00",
+              "reason": "Maintenance"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication:
+          type: bearer
+          token: "{{ _.adminToken }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/admin/exceptions/update-resource-exception/res_123/ex_123
+        name: Update exception (L)
+        meta:
+          id: req_bnew_exc_update_l
+          created: 1758139000092
+          modified: 1758139000092
+          isPrivate: false
+          description: ""
+          sortKey: 40
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "endTime": "13:00",
+              "reason": "Extended maintenance"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication:
+          type: bearer
+          token: "{{ _.adminToken }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/admin/exceptions/delete-resources-exception/res_123/ex_123
+        name: Delete exception (L)
+        meta:
+          id: req_bnew_exc_delete_l
+          created: 1758139000093
+          modified: 1758139000093
+          isPrivate: false
+          description: ""
+          sortKey: 41
+        method: DELETE
+        authentication:
+          type: bearer
+          token: "{{ _.adminToken }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/admin/exceptions/delete-full-day-exception/res_123/2025-10-10
+        name: Delete full-day exception (L)
+        meta:
+          id: req_bnew_exc_delete_day_l
+          created: 1758139000094
+          modified: 1758139000094
+          isPrivate: false
+          description: ""
+          sortKey: 42
+        method: DELETE
+        authentication:
+          type: bearer
+          token: "{{ _.adminToken }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      # =========================
+      # ADMIN – Bookings ops
+      # =========================
+      - url: http://localhost:4000/booking/admin/list-all-bookings
+        name: List all bookings (L)
+        meta:
+          id: req_bnew_admin_list_bookings_l
+          created: 1758139000100
+          modified: 1758139000100
+          isPrivate: false
+          description: ""
+          sortKey: 43
+        method: GET
+        authentication:
+          type: bearer
+          token: "{{ _.adminToken }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/admin/view-booking-history/11111111-1111-4111-a111-111111111111
+        name: View booking history (L)
+        meta:
+          id: req_bnew_admin_history_l
+          created: 1758139000101
+          modified: 1758139000101
+          isPrivate: false
+          description: ""
+          sortKey: 44
+        method: GET
+        authentication:
+          type: bearer
+          token: "{{ _.adminToken }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/admin/confirm-booking/11111111-1111-4111-a111-111111111111
+        name: Confirm booking (L)
+        meta:
+          id: req_bnew_admin_confirm_l
+          created: 1758139000102
+          modified: 1758139000102
+          isPrivate: false
+          description: ""
+          sortKey: 45
+        method: PATCH
+        authentication:
+          type: bearer
+          token: "{{ _.adminToken }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/admin/deny-booking/11111111-1111-4111-a111-111111111111
+        name: Deny booking (L)
+        meta:
+          id: req_bnew_admin_deny_l
+          created: 1758139000103
+          modified: 1758139000103
+          isPrivate: false
+          description: ""
+          sortKey: 46
+        method: PATCH
+        authentication:
+          type: bearer
+          token: "{{ _.adminToken }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/admin/cancel-booking/11111111-1111-4111-a111-111111111111
+        name: Cancel booking (L)
+        meta:
+          id: req_bnew_admin_cancel_l
+          created: 1758139000104
+          modified: 1758139000104
+          isPrivate: false
+          description: ""
+          sortKey: 47
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "cancelledReason": "Client no-show"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication:
+          type: bearer
+          token: "{{ _.adminToken }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/admin/delete-booking/11111111-1111-4111-a111-111111111111
+        name: Delete booking (L)
+        meta:
+          id: req_bnew_admin_delete_l
+          created: 1758139000105
+          modified: 1758139000105
+          isPrivate: false
+          description: ""
+          sortKey: 48
+        method: DELETE
+        authentication:
+          type: bearer
+          token: "{{ _.adminToken }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/admin/delete-all-bookings
+        name: Delete all bookings (L)
+        meta:
+          id: req_bnew_admin_delete_all_l
+          created: 1758139000106
+          modified: 1758139000106
+          isPrivate: false
+          description: ""
+          sortKey: 49
+        method: DELETE
+        authentication:
+          type: bearer
+          token: "{{ _.adminToken }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      # =========================
+      # ADMIN – Payments
+      # =========================
+      - url: http://localhost:4000/booking/admin/payments/pay_123/capture
+        name: Capture payment (L)
+        meta:
+          id: req_bnew_pay_capture_l
+          created: 1758139000110
+          modified: 1758139000110
+          isPrivate: false
+          description: ""
+          sortKey: 50
+        method: PATCH
+        authentication:
+          type: bearer
+          token: "{{ _.adminToken }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/admin/payments/pay_123/refund
+        name: Refund payment (L)
+        meta:
+          id: req_bnew_pay_refund_l
+          created: 1758139000111
+          modified: 1758139000111
+          isPrivate: false
+          description: ""
+          sortKey: 51
+        method: PATCH
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "amount": 5000
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication:
+          type: bearer
+          token: "{{ _.adminToken }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/webhooks/stripe
+        name: Stripe webhook (PUBLIC)
+        meta:
+          id: req_bnew_pay_webhook_stripe_l
+          created: 1758139000112
+          modified: 1758139000112
+          isPrivate: false
+          description: ""
+          sortKey: 52
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "type": "payment_intent.succeeded",
+              "data": { "object": { "id": "pi_123" } }
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: Stripe-Signature
+            value: t=123,v1=deadbeef
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      # =========================
+      # ADMIN – Notifications
+      # =========================
+      - url: http://localhost:4000/booking/admin/list-booking-notifications/11111111-1111-4111-a111-111111111111
+        name: List notifications (L)
+        meta:
+          id: req_bnew_notif_list_l
+          created: 1758139000120
+          modified: 1758139000120
+          isPrivate: false
+          description: ""
+          sortKey: 53
+        method: GET
+        authentication:
+          type: bearer
+          token: "{{ _.adminToken }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/admin/send-notification/11111111-1111-4111-a111-111111111111
+        name: Send notification (L)
+        meta:
+          id: req_bnew_notif_send_l
+          created: 1758139000121
+          modified: 1758139000121
+          isPrivate: false
+          description: ""
+          sortKey: 54
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "template": "booking_confirmed",
+              "channel": "email"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication:
+          type: bearer
+          token: "{{ _.adminToken }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/admin/bookings/11111111-1111-4111-a111-111111111111/notifications/reminder
+        name: Schedule reminder (L)
+        meta:
+          id: req_bnew_notif_reminder_l
+          created: 1758139000122
+          modified: 1758139000122
+          isPrivate: false
+          description: ""
+          sortKey: 55
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "sendAt": "2025-10-01T08:00:00.000Z"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication:
+          type: bearer
+          token: "{{ _.adminToken }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/admin/notifications/notif_123/resend
+        name: Resend notification (L)
+        meta:
+          id: req_bnew_notif_resend_l
+          created: 1758139000123
+          modified: 1758139000123
+          isPrivate: false
+          description: ""
+          sortKey: 56
+        method: POST
+        authentication:
+          type: bearer
+          token: "{{ _.adminToken }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      # =========================
+      # ADMIN – External Calendars
+      # =========================
+      - url: http://localhost:4000/booking/admin/list-connected-calendars/res_123
+        name: List connected calendars (L)
+        meta:
+          id: req_bnew_cal_list_l
+          created: 1758139000130
+          modified: 1758139000130
+          isPrivate: false
+          description: ""
+          sortKey: 57
+        method: GET
+        authentication:
+          type: bearer
+          token: "{{ _.adminToken }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/admin/connect-to-calendar/res_123
+        name: Connect calendar (L)
+        meta:
+          id: req_bnew_cal_connect_l
+          created: 1758139000131
+          modified: 1758139000131
+          isPrivate: false
+          description: ""
+          sortKey: 58
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "provider": "google",
+              "externalId": "cal_123"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+        authentication:
+          type: bearer
+          token: "{{ _.adminToken }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/admin/disconnect-calendar/res_123/calendar/cal_123
+        name: Disconnect calendar (L)
+        meta:
+          id: req_bnew_cal_disconnect_l
+          created: 1758139000132
+          modified: 1758139000132
+          isPrivate: false
+          description: ""
+          sortKey: 59
+        method: DELETE
+        authentication:
+          type: bearer
+          token: "{{ _.adminToken }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/admin/trigger-calendar-sync/res_123/calendars/cal_123
+        name: Trigger calendar sync (L)
+        meta:
+          id: req_bnew_cal_sync_l
+          created: 1758139000133
+          modified: 1758139000133
+          isPrivate: false
+          description: ""
+          sortKey: 60
+        method: POST
+        authentication:
+          type: bearer
+          token: "{{ _.adminToken }}"
+          prefix: BEARER
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/webhooks/calendar/google
+        name: Google calendar webhook (PUBLIC)
+        meta:
+          id: req_bnew_cal_webhook_google_l
+          created: 1758139000134
+          modified: 1758139000134
+          isPrivate: false
+          description: ""
+          sortKey: 61
+        method: POST
+        body:
+          mimeType: application/json
+          text: |-
+            {
+              "channel_id": "chan_123",
+              "resource_id": "res_123"
+            }
+        headers:
+          - name: Content-Type
+            value: application/json
+          - name: X-Goog-Resource-State
+            value: sync
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      # =========================
+      # ADMIN – Reports
+      # =========================
+      - url: http://localhost:4000/booking/admin/get-reports/booking-summary
+        name: Report – booking summary (L)
+        meta:
+          id: req_bnew_report_summary_l
+          created: 1758139000140
+          modified: 1758139000140
+          isPrivate: false
+          description: ""
+          sortKey: 62
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+
+      - url: http://localhost:4000/booking/admin/get-reports/availability-health
+        name: Report – availability health (L)
+        meta:
+          id: req_bnew_report_avhealth_l
+          created: 1758139000141
+          modified: 1758139000141
+          isPrivate: false
+          description: ""
+          sortKey: 63
+        method: GET
+        settings:
+          renderRequestBody: true
+          encodeUrl: true
+          followRedirects: global
+          cookies:
+            send: true
+            store: true
+          rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_d8a6d84927664322a8f0360ddddd5a8e
+    created: 1745590222782
+    modified: 1745590222782
+environments:
+  name: Base Environment
+  meta:
+    id: env_8e507d4870e54a3f9b8c82377ddabb99
+    created: 1745590222776
+    modified: 1745590222776
+    isPrivate: false
+  data:
+    token: YOUR_JWT_HERE
+    adminToken: YOUR_ADMIN_JWT_HERE
