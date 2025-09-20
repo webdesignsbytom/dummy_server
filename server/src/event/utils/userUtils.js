@@ -1,46 +1,59 @@
 import { createEvent } from './events.js';
 
-// Exported event creation functions
+// --- SAFE HELPERS ---
+const normalizeUser = (user) => {
+  if (user && typeof user === 'object') {
+    return {
+      id: user.id ?? null,
+      email: user.email ?? 'anonymous',
+      role: user.role ?? 'USER',
+    };
+  }
+  return { id: null, email: 'anonymous', role: 'USER' };
+};
+
+// --- USER EVENT CREATORS ---
 export const createGetAllEvent = async (user) => {
-  await createEvent(user, 'ADMIN', 'Get all users', `Success getting all users for ${user.email}`, 200);
+  const u = normalizeUser(user);
+  await createEvent(u, 'ADMIN', 'Get All Users', `Success getting all users for ${u.email}`, 200);
 };
 
 export const createGetByIdEvent = async (user) => {
-  const type = user.role || 'USER';
-  await createEvent(user, type, 'Get user by Id', `Success getting user with ID: ${user.id}`, 200);
+  const u = normalizeUser(user);
+  await createEvent(u, u.role, 'Get User By Id', `Success getting user with ID: ${u.id}`, 200);
 };
 
 export const createRegisterEvent = async (user) => {
-  const type = user.role || 'USER';
-  await createEvent(user, type, 'Register', `Register successful for ${user.email} as a ${user.role}`, 201);
+  const u = normalizeUser(user);
+  await createEvent(u, u.role, 'Register', `Register successful for ${u.email} as a ${u.role}`, 201);
 };
 
 export const createVerifyEmailEvent = async (user) => {
-  const type = user.role || 'USER';
-  await createEvent(user, type, 'Verify User email', `Verification successful for ${user.email} as a ${user.role}`, 201);
+  const u = normalizeUser(user);
+  await createEvent(u, u.role, 'Verify User Email', `Verification successful for ${u.email} as a ${u.role}`, 201);
 };
 
 export const createNewEmailVerifyEvent = async (user) => {
-  const type = user.role || 'USER';
-  await createEvent(user, type, 'Verification email resend creation', `Resend verification successful for ${user.email}`, 201);
+  const u = normalizeUser(user);
+  await createEvent(u, u.role, 'Verification Email Resend', `Resend verification successful for ${u.email}`, 201);
 };
 
 export const createPasswordResetEvent = async (user) => {
-  const type = user.role || 'USER';
-  await createEvent(user, type, 'Password Reset', `Reset password successful for ${user.email}`, 200);
+  const u = normalizeUser(user);
+  await createEvent(u, u.role, 'Password Reset', `Reset password successful for ${u.email}`, 200);
 };
 
 export const createUpdateUserEvent = async (user) => {
-  const type = user.role || 'USER';
-  await createEvent(user, type, 'Updated User', `Updated user account successful for ${user.email}`, 200);
+  const u = normalizeUser(user);
+  await createEvent(u, u.role, 'Update User', `Updated user account successful for ${u.email}`, 200);
 };
 
 export const createChangeUserRoleEvent = async (user) => {
-  const type = user.role || 'USER';
-  await createEvent(user, type, 'Change User Role', `Changed user role for ${user.email}`, 200);
+  const u = normalizeUser(user);
+  await createEvent(u, u.role, 'Change User Role', `Changed user role for ${u.email}`, 200);
 };
 
 export const createDeleteUserEvent = async (user) => {
-  const type = user.role || 'USER';
-  await createEvent(user, type, 'Deleted User', `Account deleted successfully for ${user.email}`, 204);
+  const u = normalizeUser(user);
+  await createEvent(u, u.role, 'Delete User', `Account deleted successfully for ${u.email}`, 204);
 };

@@ -1,11 +1,15 @@
 import { myEmitter } from '../utils/eventEmitter.js';
-// Error events
-import { createGenericErrorEvent, createLoginErrorEvent, createResendVerifyErrorEvent } from './utils/errorUtils.js'
+import { createGenericErrorEvent } from './utils/errorUtils.js';
 
-export const myEmitterErrors = myEmitter
+export const myEmitterErrors = myEmitter;
 
-// General
-myEmitterErrors.on('error', async (error) => createGenericErrorEvent(error));
-// User
-myEmitterErrors.on('error-login', async (error) => createLoginErrorEvent(error));
-myEmitterErrors.on('verification-not-found', async (error) => createResendVerifyErrorEvent(error));
+const safe = (fn) => async (error) => {
+  try {
+    await fn(error);
+  } catch (e) {
+    console.error('[myEmitterErrors] listener error:', e);
+  }
+};
+
+// General errors
+myEmitterErrors.on('error', safe(createGenericErrorEvent));

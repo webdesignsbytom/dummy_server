@@ -1,25 +1,33 @@
 import { myEmitter } from '../utils/eventEmitter.js';
 import {
   createGetAllEvent,
+  createGetByIdEvent,
   createRegisterEvent,
   createVerifyEmailEvent,
   createNewEmailVerifyEvent,
   createPasswordResetEvent,
-  createDeleteUserEvent,
   createUpdateUserEvent,
-  createGetByIdEvent
+  createChangeUserRoleEvent,
+  createDeleteUserEvent,
 } from './utils/userUtils.js';
 
 export const myEmitterUsers = myEmitter;
 
-// Event listeners for user events
-myEmitterUsers.on('get-all-users', async (user) => createGetAllEvent(user));
-myEmitterUsers.on('get-user-by-id', async (user) => createGetByIdEvent(user));
-myEmitterUsers.on('register', async (user) => createRegisterEvent(user));
-myEmitterUsers.on('verified-email', async (user) => createVerifyEmailEvent(user));
-myEmitterUsers.on('resend-verification', async (user) => createNewEmailVerifyEvent(user));
-myEmitterUsers.on('verification-email-created', async (user) => createNewEmailVerifyEvent(user));
-myEmitterUsers.on('password-reset-request', async (user) => createPasswordResetEvent(user));
-myEmitterUsers.on('update-user-data', async (user) => createUpdateUserEvent(user));
-myEmitterUsers.on('change-user-role', async (user) => createChangeUserRoleEvent(user));
-myEmitterUsers.on('deleted-user', async (user) => createDeleteUserEvent(user));
+const safe = (fn) => async (user) => {
+  try {
+    await fn(user);
+  } catch (e) {
+    console.error('[myEmitterUsers] listener error:', e);
+  }
+};
+
+myEmitterUsers.on('get-all-users', safe(createGetAllEvent));
+myEmitterUsers.on('get-user-by-id', safe(createGetByIdEvent));
+myEmitterUsers.on('register', safe(createRegisterEvent));
+myEmitterUsers.on('verified-email', safe(createVerifyEmailEvent));
+myEmitterUsers.on('resend-verification', safe(createNewEmailVerifyEvent));
+myEmitterUsers.on('verification-email-created', safe(createNewEmailVerifyEvent));
+myEmitterUsers.on('password-reset-request', safe(createPasswordResetEvent));
+myEmitterUsers.on('update-user-data', safe(createUpdateUserEvent));
+myEmitterUsers.on('change-user-role', safe(createChangeUserRoleEvent));
+myEmitterUsers.on('deleted-user', safe(createDeleteUserEvent));

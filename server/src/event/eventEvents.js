@@ -1,12 +1,20 @@
 import { myEmitter } from '../utils/eventEmitter.js';
 import {
-    createDeleteAllEventsEvent,
-    createDeleteEventsByIdEvent,
-    createGetAllEventsEvent,
+  createGetAllEventsEvent,
+  createDeleteEventsByIdEvent,
+  createDeleteAllEventsEvent,
 } from './utils/eventEventsUtils.js';
 
 export const myEmitterEvents = myEmitter;
 
-myEmitterEvents.on('get-all-events', async (user) => createGetAllEventsEvent(user));
-myEmitterEvents.on('delete-event-by-id', async (user) => createDeleteEventsByIdEvent(user));
-myEmitterEvents.on('delete-all-events', async (user) => createDeleteAllEventsEvent(user));
+const safe = (fn) => async (user) => {
+  try {
+    await fn(user);
+  } catch (e) {
+    console.error('[myEmitterEvents] listener error:', e);
+  }
+};
+
+myEmitterEvents.on('get-all-events', safe(createGetAllEventsEvent));
+myEmitterEvents.on('delete-event-by-id', safe(createDeleteEventsByIdEvent));
+myEmitterEvents.on('delete-all-events', safe(createDeleteAllEventsEvent));

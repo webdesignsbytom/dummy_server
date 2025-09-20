@@ -1,19 +1,33 @@
 // Response strings
 import { RESPONSE_MESSAGES } from '../../utils/responses.js';
-// Error event creation functions
 import { createErrorEvent } from './events.js';
 
-// Exported error event creation functions
+// --- SAFE HELPERS ---
+const normalizeUser = (user) => {
+  if (user && typeof user === 'object') {
+    return {
+      id: user.id ?? null,
+      email: user.email ?? 'anonymous',
+      role: user.role ?? 'USER',
+    };
+  }
+  return { id: null, email: 'anonymous', role: 'USER' };
+};
+
+// --- GENERIC ERROR EVENT CREATOR ---
 export const createGenericErrorEvent = async (errorEvent) => {
-  await createErrorEvent(errorEvent);
-};
+  const u = normalizeUser(errorEvent?.user || {});
+  const message =
+    errorEvent?.message || `An unknown error occurred for ${u.email}`;
+  const code = errorEvent?.code || 500;
 
-export const createLoginErrorEvent = async (errorEvent) => {
-  await createErrorEvent(errorEvent, errorEvent.user?.email || 'unknown');
-};
-
-export const createResendVerifyErrorEvent = async (errorEvent) => {
-  await createErrorEvent(errorEvent, errorEvent.user?.email || 'unknown');
+  await createErrorEvent({
+    user: u,
+    role: u.role,
+    action: 'Generic Error',
+    message,
+    code,
+  });
 };
 
 // Define error event classes
