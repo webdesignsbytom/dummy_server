@@ -7,6 +7,12 @@ export const findAllEvents = () =>
     },
   });
 
+export const findEventById = async (eventId) => {
+  return dbClient.event.findUnique({
+    where: { id: eventId },
+  });
+};
+
 export const deleteEventId = async (id) => {
   return dbClient.event.delete({
     where: {

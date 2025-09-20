@@ -46,6 +46,19 @@ export const createGetAllEventsEvent = async (user) => {
   );
 };
 
+export const createGetByIdEvent = async (user) => {
+  const u = normalizeUser(user);
+  checkDeveloperRole(u);
+
+  await createEvent(
+    u,
+    u.role,
+    'Get event by ID',
+    `Event retrieved by ${u.id}`,
+    200
+  );
+};
+
 export const createDeleteEventsByIdEvent = async (user) => {
   const u = normalizeUser(user);
   checkDeveloperRole(u);

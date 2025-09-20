@@ -22,7 +22,8 @@ export const EVENT_MESSAGES = {
   createCallbackFormFail: `Failed to create callback form.`,
   // Events
   eventTag: `Event database.`,
-  eventNotFound: `Failed to find event.`,
+  eventNotFound: `Failed to find event(s).`,
+  deleteEventFailed: `Failed to delete event(s).`,
   createEventFail: `Failed to create event.`,
   // Blogs
   blogTag: `Blog database.`,
